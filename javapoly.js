@@ -11,7 +11,7 @@ function createEntity(name, parent) {
 
   const proxy = new Proxy(object, {
     get: function(target, property) {
-      if (! (property in target)) {
+      if (!target.hasOwnProperty(property)) {
         target[property] = createEntity(property, target);
         console.log("New entity created: " + target[property]._identifier);
       }
