@@ -1,6 +1,6 @@
 function createEntity(name, parent) {
 
-  // We don't now in advance is it a function ar just an Object
+  // We don't now in advance is it a function or just an Object
   // But objects cannot be called, so it is a function
   const object = function() {};
   object._parent = parent;
