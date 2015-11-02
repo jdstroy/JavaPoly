@@ -2,21 +2,22 @@ function createEntity(name, parent) {
 
   // We don't now in advance is it a function or just an Object
   // But objects cannot be called, so it is a function
-  const object = function () {};
+  const object = function() {};
   object._parent = parent;
-  object._identifier = (parent === null ? "" : parent._identifier + ".") + name, object._call = function (thisArg, argumentsList) {
+  object._identifier = (parent === null ? "" : parent._identifier + ".") + name,
+  object._call = function(thisArg, argumentsList) {
     console.log("Function called: " + this._identifier + "(" + argumentsList + ")");
-  };
+  }
 
   const proxy = new Proxy(object, {
-    get: function (target, property) {
+    get: function(target, property) {
       if (!target.hasOwnProperty(property)) {
         target[property] = createEntity(property, target);
         console.log("New entity created: " + target[property]._identifier);
       }
       return target[property];
     },
-    apply: function (target, thisArg, argumentsList) {
+    apply: function(target, thisArg, argumentsList) {
       target._call(thisArg, argumentsList);
     }
   });
