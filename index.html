@@ -1,11 +1,24 @@
 <html>
 <head>
+  <!-- needs to be before inserting javapoly.js -->
+  <script type="text/java">
+    java.lang.Integer.toHexString(42)
+      .then((result, err) => {
+        console.log('YES: ' + result)
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  </script>
+
   <script type="text/javascript" src="vendors/browserfs.min.js"></script>
   <script type="text/javascript" src="doppio/doppio.js"></script>
-  <script type="text/javascript" src="javapoly.js"></script>
+  <script type="text/javascript" src="src/main.js"></script>
+
+
   <script type="text/javascript">
     // TODO: do not know how to get rid of this call atm
-    executeWithJvm(() => {
+    executeWithJvm(function() {
       java.lang.Integer.toHexString(42).then(result => {
         console.log('Hello from Java, method java.lang.Integer.toHexString(42) returned ' + result);
 
@@ -15,7 +28,7 @@
           java.lang.Integer.toHexString(142).then(result => {
             console.log('It will not load class again, result: ' + result);
           });
-        });
+        });aa
 
         // TODO: Doesn't work in case of overloading (doppio returns only one method)
         // TODO: Doesn't work for 2 arguments

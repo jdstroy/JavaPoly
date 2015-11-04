@@ -100,13 +100,46 @@ function createEntity(name, parent) {
 }
 
 var jvm;
-
 var java;
 
 function executeWithJvm(userCode) {
   loadJvm().then(jvmObject => {
     jvm = jvmObject;
     java = createEntity("Ljava", null);
-    userCode();
+    userCode.call(this, jvm, java); //FIX: sometimes it's working, sometimes 'jvm is undefined'
   });
 }
+
+// TODO: in the future it should use web worker if doppio is thread safe and does not contain any race condition
+function _processJavaCode(code) {
+  executeWithJvm(function(jvm, java) {
+    // 'use strict';
+    return eval(code);
+  });
+}
+
+function _processScripts() {
+  // we need to process scripts in order
+  var scripts = _findScriptTags('text/java');
+
+  for (var s of scripts) {
+    if (s.src) {
+      //TODO: load java from file in src param
+    } else if (s.textContent) {
+      // process content inside script tag
+      _processJavaCode(s.textContent);
+    }
+  }
+
+}
+
+function _findScriptTags(type) {
+  // console.log(document.querySelector('script[type="text/java"]').textContent);
+  return window.document.querySelectorAll('script[type="' + type + '"]');
+}
+
+(function() {
+  // find all script tags and handle them approprietaly
+  _processScripts();
+
+})();
