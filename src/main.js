@@ -56,10 +56,8 @@ function runMethod(methodObject, argumentsList) {
             // TODO parse different type of arguments and return type
             console.log('LOG: Start running method: ' + method.name);
             jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
-              var message = rv.fields['Ljava/lang/String;value'].array.map(
-                c => { return String.fromCharCode(c); }
-              ).join('');
-              resolve(message);
+              var returnValue = mapToJsObject(rv);
+              resolve(returnValue);
             });
             break;
           }
@@ -67,6 +65,20 @@ function runMethod(methodObject, argumentsList) {
       });
     }
   );
+}
+
+function mapToJsObject(rv) {
+  if (typeof rv !== 'object') {
+    // It is basic types, no need to convert it additionally
+    return rv;
+  }
+  if (rv.cls.className === 'Ljava/lang/String;') {
+    return rv.fields['Ljava/lang/String;value'].array.map(
+      c => { return String.fromCharCode(c); }
+    ).join('');
+  }
+  // Leave as it is, let user parse his object himself
+  return rv;
 }
 
 function createEntity(name, parent) {
