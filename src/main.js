@@ -29,6 +29,32 @@ function loadJvm() {
   );
 }
 
+function getJvm() {
+  if (typeof this.jvm === 'undefined') {
+    this.jvm = null;
+    this.jvmIsLoading = false;
+    this.promisesQueue = [];
+  }
+  return new Promise(
+    (resolve, reject) => {
+      if (jvm != null) {
+        resolve(jvm);
+      } else {
+        promisesQueue.push(jvm => resolve(jvm));
+        if (! jvmIsLoading) {
+          jvmIsLoading = true;
+          loadJvm().then(jvmObject => {
+            jvm = jvmObject;
+            for (var i = 0; i < promisesQueue.length; i++) {
+              promisesQueue[i](jvm);
+            }
+          });
+        }
+      }
+    }
+  );
+}
+
 function getClass(classObject) {
   const className = classObject._identifier + ';';
   return new Promise(
@@ -37,9 +63,11 @@ function getClass(classObject) {
         resolve(classObject.cache);
       } else {
         console.log('LOG: Start loading class: ' + className);
-        jvm.getSystemClassLoader().initializeClass(jvm.firstThread, className, cls => {
-          classObject.cache = cls;
-          resolve(cls);
+        getJvm().then((jvm) => {
+          jvm.getSystemClassLoader().initializeClass(jvm.firstThread, className, cls => {
+            classObject.cache = cls;
+            resolve(cls);
+          });
         });
       }
     }
@@ -55,9 +83,11 @@ function runMethod(methodObject, argumentsList) {
           if (method.name === methodObject._name && method.num_args === argumentsList.length) {
             // TODO parse different type of arguments and return type
             console.log('LOG: Start running method: ' + method.name);
-            jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
-              var returnValue = mapToJsObject(rv);
-              resolve(returnValue);
+            getJvm().then((jvm) => {
+              jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
+                var returnValue = mapToJsObject(rv);
+                resolve(returnValue);
+              });
             });
             break;
           }
@@ -111,23 +141,11 @@ function createEntity(name, parent) {
   return proxy;
 }
 
-var jvm;
-var java;
-
-function executeWithJvm(userCode) {
-  loadJvm().then(jvmObject => {
-    jvm = jvmObject;
-    java = createEntity("Ljava", null);
-    userCode.call(this, jvm, java); //FIX: sometimes it's working, sometimes 'jvm is undefined'
-  });
-}
+var java = createEntity("Ljava", null);
 
 // TODO: in the future it should use web worker if doppio is thread safe and does not contain any race condition
 function _processJavaCode(code) {
-  executeWithJvm(function(jvm, java) {
-    // 'use strict';
-    return eval(code);
-  });
+  return eval(code);
 }
 
 function _processScripts() {
