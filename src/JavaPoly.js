@@ -2,6 +2,7 @@ import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaClassFile';
 import JavaSourceFile from './JavaSourceFile';
+import createRootEntity from './JavaEntity.js';
 
 const JAVA_MIME = [
   { // for compiled Java-class
@@ -66,6 +67,12 @@ class JavaPoly {
      */
     this.storageDir = '/tmp/data/';
 
+    /**
+     * [java description]
+     * @type {[type]}
+     */
+    this.java = null;
+
     // initialization of BrowserFS
     let mfs = new BrowserFS.FileSystem.MountableFileSystem();
     this.fs = BrowserFS.BFSRequire('fs');
@@ -116,6 +123,10 @@ class JavaPoly {
     );
   }
 
+  initJavaEntity() {
+    this.java = createRootEntity(this);
+  }
+
   /**
    * Initialize JVM for this JavaPoly:
    * 1. Ensure that all loading promises are finished
@@ -139,6 +150,7 @@ class JavaPoly {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, (err, jvm) => {
+          this.initJavaEntity();
           this.dispatchReadyEvent();
         }
       );

@@ -1643,7 +1643,161 @@ var JavaClassFile = (function (_JavaFile) {
 exports.default = JavaClassFile;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaFile":3}],3:[function(require,module,exports){
+},{"./JavaFile":4}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
+var jvm = null;
+
+function callInQueue(callback) {
+  if (typeof callInQueue.callbackQueue === 'undefined') {
+    callInQueue.callbackQueue = [];
+  }
+  callInQueue.callbackQueue.push(callback);
+  asyncExecute();
+}
+
+// Makes asynchronous calls synchronized
+function asyncExecute() {
+  if (typeof asyncExecute.isExecuting === 'undefined') {
+    asyncExecute.isExecuting = false;
+  }
+  if (!asyncExecute.isExecuting && callInQueue.callbackQueue.length > 0) {
+    asyncExecute.isExecuting = true;
+    var callback = callInQueue.callbackQueue[0];
+    callInQueue.callbackQueue.shift();
+    callback(function () {
+      asyncExecute.isExecuting = false;
+      asyncExecute();
+    });
+  }
+}
+
+function getClass(classObject) {
+  var className = classObject._identifier + ';';
+  return new Promise(function (resolve, reject) {
+    if (classObject.cache !== undefined) {
+      resolve(classObject.cache);
+    } else {
+      callInQueue(function (nextCallback) {
+        jvm.getSystemClassLoader().initializeClass(jvm.firstThread, className, function (cls) {
+          classObject.cache = cls;
+          resolve(cls);
+          nextCallback();
+        });
+      });
+    }
+  });
+}
+
+function runMethod(methodObject, argumentsList) {
+  return new Promise(function (resolve, reject) {
+    getClass(methodObject._parent).then(function (cls) {
+      for (var i = 0; i < cls.methods.length; i++) {
+        var method = cls.methods[i];
+        if (method.name === methodObject._name && method.num_args === argumentsList.length) {
+          // TODO parse different type of arguments and return type
+          callInQueue(function (nextCallback) {
+            jvm.firstThread.runMethod(method, argumentsList, function (e, rv) {
+              var returnValue = mapToJsObject(rv);
+              resolve(returnValue);
+              nextCallback();
+            });
+          });
+          break;
+        }
+      }
+    });
+  });
+}
+
+function mapToJsObject(rv) {
+  if ((typeof rv === 'undefined' ? 'undefined' : _typeof(rv)) !== 'object') {
+    // It is basic types, no need to convert it additionally
+    return rv;
+  }
+  if (rv.cls.className === 'Ljava/lang/String;') {
+    return rv.fields['Ljava/lang/String;value'].array.map(function (c) {
+      return String.fromCharCode(c);
+    }).join('');
+  }
+  // Leave as it is, let user parse his object himself
+  return rv;
+}
+
+function createEntity(name, parent) {
+  // We don't now in advance is it a function or just an Object
+  // But objects cannot be called, so it is a function
+  var object = function object() {};
+  object._parent = parent;
+  object._name = name;
+  object._identifier = (parent === null ? "" : parent._identifier + "/") + name;
+  object._call = function (thisArg, argumentsList) {
+    return new Promise(function (resolve, reject) {
+      runMethod(object, argumentsList).then(function (rv) {
+        return resolve(rv);
+      });
+    });
+  };
+
+  var proxy = new Proxy(object, {
+    get: function get(target, property) {
+      if (!target.hasOwnProperty(property)) {
+        target[property] = createEntity(property, target);
+      }
+      return target[property];
+    },
+    apply: function apply(target, thisArg, argumentsList) {
+      return target._call(thisArg, argumentsList);
+    }
+  });
+
+  return proxy;
+}
+
+function createEntity(name, parent) {
+  // We don't now in advance is it a function or just an Object
+  // But objects cannot be called, so it is a function
+  var object = function object() {};
+  object._parent = parent;
+  object._name = name;
+  object._identifier = (parent === null ? "" : parent._identifier + "/") + name;
+  object._call = function (thisArg, argumentsList) {
+    return new Promise(function (resolve, reject) {
+      runMethod(object, argumentsList).then(function (rv) {
+        return resolve(rv);
+      });
+    });
+  };
+
+  var proxy = new Proxy(object, {
+    get: function get(target, property) {
+      if (!target.hasOwnProperty(property)) {
+        target[property] = createEntity(property, target);
+      }
+      return target[property];
+    },
+    apply: function apply(target, thisArg, argumentsList) {
+      return target._call(thisArg, argumentsList);
+    }
+  });
+
+  return proxy;
+}
+
+function createRootEntity(javapoly) {
+  jvm = javapoly.jvm;
+  return createEntity("Ljava", null);
+}
+
+exports.default = createRootEntity;
+
+},{}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1661,7 +1815,7 @@ var JavaFile = function JavaFile(javaPoly, script) {
 
 exports.default = JavaFile;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -1682,6 +1836,10 @@ var _JavaClassFile2 = _interopRequireDefault(_JavaClassFile);
 var _JavaSourceFile = require('./JavaSourceFile');
 
 var _JavaSourceFile2 = _interopRequireDefault(_JavaSourceFile);
+
+var _JavaEntity = require('./JavaEntity.js');
+
+var _JavaEntity2 = _interopRequireDefault(_JavaEntity);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1753,6 +1911,12 @@ var JavaPoly = (function () {
      */
     this.storageDir = '/tmp/data/';
 
+    /**
+     * [java description]
+     * @type {[type]}
+     */
+    this.java = null;
+
     // initialization of BrowserFS
     var mfs = new BrowserFS.FileSystem.MountableFileSystem();
     this.fs = BrowserFS.BFSRequire('fs');
@@ -1806,6 +1970,11 @@ var JavaPoly = (function () {
     value: function dispatchReadyEvent() {
       global.document.dispatchEvent(new CustomEvent('JVMReady', { detail: this }));
     }
+  }, {
+    key: 'initJavaEntity',
+    value: function initJavaEntity() {
+      this.java = (0, _JavaEntity2.default)(this);
+    }
 
     /**
      * Initialize JVM for this JavaPoly:
@@ -1834,6 +2003,7 @@ var JavaPoly = (function () {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, function (err, jvm) {
+          _this2.initJavaEntity();
           _this2.dispatchReadyEvent();
         });
       });
@@ -1846,7 +2016,7 @@ var JavaPoly = (function () {
 exports.default = JavaPoly;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaClassFile":2,"./JavaSourceFile":5,"underscore":1}],5:[function(require,module,exports){
+},{"./JavaClassFile":2,"./JavaEntity.js":3,"./JavaSourceFile":6,"underscore":1}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1879,7 +2049,7 @@ var JavaSourceFile = (function (_JavaFile) {
 
 exports.default = JavaSourceFile;
 
-},{"./JavaFile":3}],6:[function(require,module,exports){
+},{"./JavaFile":4}],7:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -1892,4 +2062,4 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 global.window.JavaPoly = _JavaPoly2.default;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaPoly":4}]},{},[6]);
+},{"./JavaPoly":5}]},{},[7]);

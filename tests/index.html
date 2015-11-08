@@ -8,21 +8,59 @@
   <script type="application/java-vm" src="classes/Main.class"></script>  
 
   <script type="text/javascript">
-    var java = new JavaPoly();
+    (new JavaPoly());
 
     document.addEventListener('JVMReady', function(e) {
-      var jvmObject = e.detail.jvm;
+      var jp = e.detail;
+      var jvmObject = jp.jvm;
 
-      jvmObject.getSystemClassLoader().initializeClass(jvmObject.firstThread, 'LMain;', function(cls) {
-        var m = cls.methodLookup(jvmObject.firstThread, 'test()Ljava/lang/String;');
-        jvmObject.firstThread.runMethod(m, [], function (e, rv) {
-          console.log(
-            rv.fields["Ljava/lang/String;value"].array.map(
-              function(char) {return String.fromCharCode(char)}
-            ).join('')
-          );
+      function testJavaClassFile() {
+        jvmObject.getSystemClassLoader().initializeClass(jvmObject.firstThread, 'LMain;', function(cls) {
+          var m = cls.methodLookup(jvmObject.firstThread, 'test()Ljava/lang/String;');
+          jvmObject.firstThread.runMethod(m, [], function (e, rv) {
+            console.log(
+              rv.fields["Ljava/lang/String;value"].array.map(
+                function(char) {return String.fromCharCode(char)}
+              ).join('')
+            );
+          });
         });
+      }
+
+      jp.java.lang.Integer.toHexString(42).then(result => {
+        if (result !== '2a') {
+          console.error('ERROR: java.lang.Integer.toHexString(42): ' + result + ' instead of 2a');
+        } else {
+          console.log('PASSED');
+        }
       });
+
+      jp.java.lang.Integer.reverse(42).then(result => {
+        if (result !== 1409286144) {
+          console.error('ERROR: java.lang.Integer.reverse(42): ' + result + ' instead of 1409286144');
+        } else {
+          console.log('PASSED');
+        }
+      });
+
+      jp.java.lang.Double.toHexString(42).then(result => {
+        if (result !== '0x1.5p5') {
+          console.error('ERROR: java.lang.Double.toHexString(42): ' + result + ' instead of 0x1.5p5');
+        } else {
+          console.log('PASSED');
+        }
+      });
+
+      jp.java.lang.Integer.toString(42, 16).then(result => {
+        if (result !== '2a') {
+          console.error('ERROR: java.lang.Integer.toString(42, 16): ' + result + ' instead of 2a');
+        } else {
+          console.log('PASSED');
+        }
+
+        testJavaClassFile();
+      });
+
     }, false);
   </script>
 </head>
