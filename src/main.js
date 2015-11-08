@@ -55,6 +55,30 @@ function getJvm() {
   );
 }
 
+function callInQueue(callback) {
+  if (typeof callInQueue.callbackQueue === 'undefined') {
+    callInQueue.callbackQueue = [];
+  }
+  callInQueue.callbackQueue.push(callback);
+  asyncExecute();
+}
+
+// Makes asynchronous calls synchronized
+function asyncExecute() {
+  if (typeof asyncExecute.isExecuting === 'undefined') {
+    asyncExecute.isExecuting = false;
+  }
+  if (!asyncExecute.isExecuting && callInQueue.callbackQueue.length > 0) {
+    asyncExecute.isExecuting = true;
+    var callback = callInQueue.callbackQueue[0];
+    callInQueue.callbackQueue.shift();
+    callback(() => {
+      asyncExecute.isExecuting = false;
+      asyncExecute();
+    });
+  }
+}
+
 function getClass(classObject) {
   const className = classObject._identifier + ';';
   return new Promise(
@@ -62,13 +86,15 @@ function getClass(classObject) {
       if (classObject.cache !== undefined) {
         resolve(classObject.cache);
       } else {
-        console.log('LOG: Start loading class: ' + className);
-        getJvm().then((jvm) => {
-          jvm.getSystemClassLoader().initializeClass(jvm.firstThread, className, cls => {
-            classObject.cache = cls;
-            resolve(cls);
-          });
-        });
+        getJvm().then(jvm =>
+          callInQueue(nextCallback => {
+            jvm.getSystemClassLoader().initializeClass(jvm.firstThread, className, cls => {
+              classObject.cache = cls;
+              resolve(cls);
+              nextCallback();
+            });
+          })
+        );
       }
     }
   );
@@ -82,13 +108,15 @@ function runMethod(methodObject, argumentsList) {
           var method = cls.methods[i];
           if (method.name === methodObject._name && method.num_args === argumentsList.length) {
             // TODO parse different type of arguments and return type
-            console.log('LOG: Start running method: ' + method.name);
-            getJvm().then((jvm) => {
-              jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
-                var returnValue = mapToJsObject(rv);
-                resolve(returnValue);
-              });
-            });
+            getJvm().then(jvm =>
+              callInQueue(nextCallback => {
+                jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
+                  var returnValue = mapToJsObject(rv);
+                  resolve(returnValue);
+                  nextCallback();
+                });
+              })
+            );
             break;
           }
         }
