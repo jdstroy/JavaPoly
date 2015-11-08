@@ -1,0 +1,27 @@
+{
+  "name": "javapoly",
+  "version": "0.1.0",
+  "description": "JavaPoly.js is a library that polyfills native JVM support in the browser. It allows you to import your existing Java code, and invoke the code directly from Javascript.",
+  "main": "javapoly.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://git.javadeploy.net/jimsproch/JavaPoly.git"
+  },
+  "keywords": [
+    "javapoly",
+    "jvm",
+    "java",
+    "browser",
+    "javascript"
+  ],
+  "author": "Jim Sproch",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-babel": "^6.0.0",
+    "gulp-rename": "^1.2.2"
+  }
+}

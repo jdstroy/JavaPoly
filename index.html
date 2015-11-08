@@ -1,0 +1,54 @@
+<html>
+<head>
+  <!-- needs to be before inserting javapoly.js -->
+  <script type="text/java">
+    java.lang.Integer.toHexString(42)
+      .then((result, err) => {
+        console.log('YES: ' + result)
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  </script>
+
+  <script type="text/javascript" src="vendors/browserfs.min.js"></script>
+  <script type="text/javascript" src="doppio/doppio.js"></script>
+  <script type="text/javascript" src="src/main.js"></script>
+
+  <script type="text/javascript">
+    // TODO: Use some testing framework for more convenient syntax
+    java.lang.Integer.toHexString(42).then(result => {
+      if (result !== '2a') {
+        console.error('ERROR: java.lang.Integer.toHexString(42): ' + result + ' instead of 2a');
+      } else {
+        console.log('PASSED');
+      }
+    });
+
+    java.lang.Integer.reverse(42).then(result => {
+      if (result !== 1409286144) {
+        console.error('ERROR: java.lang.Integer.reverse(42): ' + result + ' instead of 1409286144');
+      } else {
+        console.log('PASSED');
+      }
+    });
+
+    java.lang.Double.toHexString(42).then(result => {
+      if (result !== '0x1.5p5') {
+        console.error('ERROR: java.lang.Double.toHexString(42): ' + result + ' instead of 0x1.5p5');
+      } else {
+        console.log('PASSED');
+      }
+    });
+
+    java.lang.Integer.toString(42, 16).then(result => {
+      if (result !== '2a') {
+        console.error('ERROR: java.lang.Integer.toString(42, 16): ' + result + ' instead of 2a');
+      } else {
+        console.log('PASSED');
+      }
+    });
+  </script>
+</head>
+<body>Hello JavaPoly!</body>
+</html>
