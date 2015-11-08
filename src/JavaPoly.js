@@ -19,13 +19,25 @@ const JAVA_MIME = [
     mime: ['application/java-archive'],
     srcRequired: true
   }
-]
+];
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   // when page is loading look for all corresponding MIME-types and create objects for Java automatically
   initOnStart: true 
 }
 
+/**
+ * Main JavaPoly class that do all underliying job for initialization
+ * Simple usage:
+ * 1. Create object: (new JavaPoly());
+ * 2. And catch document event 'JVMReady' where event.details contains JavaPoly object that emmitted this event
+ *
+ * (new JavaPoly());
+ * document.addEventListener('JVMReady', function(e) {
+ *   var javaPoly = e.detail;
+ *   // place for your jvm code
+ * });
+ */
 class JavaPoly {
   constructor(_options) {
     let options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
@@ -39,7 +51,7 @@ class JavaPoly {
      * Array of all registered Java classes, jars, or sources
      * @type {Array}
      */
-    this.hub = [];
+    this.scripts = [];
 
     /**
      * Array that contains all promises that should be resolved before JVM running.
@@ -47,14 +59,6 @@ class JavaPoly {
      * @type {Array}
      */
     this.loadingHub = [];
-
-
-    /**
-     * Array that contains all promises that sould be resolved before JVMReady action
-     * This promises need for analysing classes because this analysis is async
-     * @type {Array}
-     */
-    this.analysingHub = [];
 
     /**
      * Directory name that stores all class-files, jars and/or java-files
@@ -85,13 +89,13 @@ class JavaPoly {
 
             switch(scriptType) {
               case 'class':
-                this.hub.push(new JavaClassFile(this, script));
+                this.scripts.push(new JavaClassFile(this, script));
                 break;
               case 'java':
-                this.hub.push(new JavaSourceFile(this, script));
+                this.scripts.push(new JavaSourceFile(this, script));
                 break;
               case 'jar':
-                this.hub.push(new JavaArchiveFile(this, script));
+                this.scripts.push(new JavaArchiveFile(this, script));
                 break;
             }
           }
@@ -99,7 +103,7 @@ class JavaPoly {
 
         // after all call initJVM
         this.initJVM();
-      }, false)
+      }, false);
     }
   }
 
@@ -116,8 +120,7 @@ class JavaPoly {
    * Initialize JVM for this JavaPoly:
    * 1. Ensure that all loading promises are finished
    * 2. Create object for JVM
-   * 3. Ensure that all analysing promises are finished
-   * 4. Dispatch event that JVM is ready
+   * 3. Dispatch event that JVM is ready
    */
   initJVM() {
     // ensure that all promises are finished and 
@@ -136,13 +139,7 @@ class JavaPoly {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, (err, jvm) => {
-
-          Promise.all(this.analysingHub).then(() => {
-            delete this.analysingHub;
-            this.analysingHub = [];
-            this.dispatchReadyEvent();
-          });
-
+          this.dispatchReadyEvent();
         }
       );
 

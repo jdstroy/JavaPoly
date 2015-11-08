@@ -3,6 +3,10 @@ import JavaFile from './JavaFile';
 const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
 const path   = global.BrowserFS.BFSRequire('path');
 
+/**
+ * Class for loading java class files from script. This class loads files from scripts like this:
+ * <script type="application/java-vm" src="Main.class"></script>
+ */
 class JavaClassFile extends JavaFile {
   constructor(javaPoly, script) {
     super(javaPoly, script);
@@ -20,12 +24,11 @@ class JavaClassFile extends JavaFile {
             this.javaPoly.fs.writeFile(path.join(this.javaPoly.storageDir, classFile),
               new Buffer(xmlr.response), (err) => {
                 if (err) {
-                  this.javaPoly.analysingHub.push(
-                    this.analyseClass(path.basename(classFile, '.class'))
-                  );                  
                   reject();
                 } else {
-                  resolve();
+                  this.analyseClass(path.basename(classFile, '.class')).then(()=> {
+                    resolve();
+                  });
                 }
               }
             );
@@ -47,7 +50,7 @@ class JavaClassFile extends JavaFile {
    */
   analyseClass(className, packageName = '') {
     return new Promise((resolve, reject) => {
-      console.log(className);
+      console.log('loading',className);
       resolve();
     });
   }

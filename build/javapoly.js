@@ -1573,6 +1573,11 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
 var path = global.BrowserFS.BFSRequire('path');
 
+/**
+ * Class for loading java class files from script. This class loads files from scripts like this:
+ * <script type="application/java-vm" src="Main.class"></script>
+ */
+
 var JavaClassFile = (function (_JavaFile) {
   _inherits(JavaClassFile, _JavaFile);
 
@@ -1594,10 +1599,11 @@ var JavaClassFile = (function (_JavaFile) {
               var classFile = path.basename(scriptSrc);
               _this.javaPoly.fs.writeFile(path.join(_this.javaPoly.storageDir, classFile), new Buffer(xmlr.response), function (err) {
                 if (err) {
-                  _this.javaPoly.analysingHub.push(_this.analyseClass(path.basename(classFile, '.class')));
                   reject();
                 } else {
-                  resolve();
+                  _this.analyseClass(path.basename(classFile, '.class')).then(function () {
+                    resolve();
+                  });
                 }
               });
             })();
@@ -1625,7 +1631,7 @@ var JavaClassFile = (function (_JavaFile) {
       var packageName = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
 
       return new Promise(function (resolve, reject) {
-        console.log(className);
+        console.log('loading', className);
         resolve();
       });
     }
@@ -1702,6 +1708,19 @@ var DEFAULT_JAVAPOLY_OPTIONS = {
   initOnStart: true
 };
 
+/**
+ * Main JavaPoly class that do all underliying job for initialization
+ * Simple usage:
+ * 1. Create object: (new JavaPoly());
+ * 2. And catch document event 'JVMReady' where event.details contains JavaPoly object that emmitted this event
+ *
+ * (new JavaPoly());
+ * document.addEventListener('JVMReady', function(e) {
+ *   var javaPoly = e.detail;
+ *   // place for your jvm code
+ * });
+ */
+
 var JavaPoly = (function () {
   function JavaPoly(_options) {
     var _this = this;
@@ -1719,7 +1738,7 @@ var JavaPoly = (function () {
      * Array of all registered Java classes, jars, or sources
      * @type {Array}
      */
-    this.hub = [];
+    this.scripts = [];
 
     /**
      * Array that contains all promises that should be resolved before JVM running.
@@ -1727,13 +1746,6 @@ var JavaPoly = (function () {
      * @type {Array}
      */
     this.loadingHub = [];
-
-    /**
-     * Array that contains all promises that sould be resolved before JVMReady action
-     * This promises need for analysing classes because this analysis is async
-     * @type {Array}
-     */
-    this.analysingHub = [];
 
     /**
      * Directory name that stores all class-files, jars and/or java-files
@@ -1767,13 +1779,13 @@ var JavaPoly = (function () {
 
             switch (scriptType) {
               case 'class':
-                _this.hub.push(new _JavaClassFile2.default(_this, script));
+                _this.scripts.push(new _JavaClassFile2.default(_this, script));
                 break;
               case 'java':
-                _this.hub.push(new _JavaSourceFile2.default(_this, script));
+                _this.scripts.push(new _JavaSourceFile2.default(_this, script));
                 break;
               case 'jar':
-                _this.hub.push(new _JavaClassFile2.default(_this, script));
+                _this.scripts.push(new _JavaClassFile2.default(_this, script));
                 break;
             }
           }
@@ -1799,8 +1811,7 @@ var JavaPoly = (function () {
      * Initialize JVM for this JavaPoly:
      * 1. Ensure that all loading promises are finished
      * 2. Create object for JVM
-     * 3. Ensure that all analysing promises are finished
-     * 4. Dispatch event that JVM is ready
+     * 3. Dispatch event that JVM is ready
      */
 
   }, {
@@ -1823,12 +1834,7 @@ var JavaPoly = (function () {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, function (err, jvm) {
-
-          Promise.all(_this2.analysingHub).then(function () {
-            delete _this2.analysingHub;
-            _this2.analysingHub = [];
-            _this2.dispatchReadyEvent();
-          });
+          _this2.dispatchReadyEvent();
         });
       });
     }
