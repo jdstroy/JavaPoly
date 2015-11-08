@@ -1,0 +1,26 @@
+{
+  "name": "javapoly",
+  "version": "0.1.0",
+  "description": "JavaPoly.js is a library that polyfills native JVM support in the browser. It allows you to import your existing Java code, and invoke the code directly from Javascript.",
+  "repository": {
+    "type": "git",
+    "url": "http://git.javadeploy.net/jimsproch/JavaPoly.git"
+  },
+  "keywords": [
+    "java",
+    "javascript",
+    "doppio"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.0.15",
+    "babelify": "^7.2.0",
+    "grunt": "^0.4.5",
+    "grunt-babel": "^6.0.0",
+    "grunt-browserify": "^4.0.1",
+    "grunt-contrib-copy": "^0.8.2",
+    "grunt-contrib-watch": "^0.6.1",
+    "underscore": "^1.8.3"
+  }
+}

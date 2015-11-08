@@ -1,0 +1,31 @@
+<html>
+<head>
+  <script type="text/javascript" src="browserfs.min.js"></script>
+  <script type="text/javascript" src="doppio/doppio.js"></script>
+
+  <script type="text/javascript" src="build/javapoly.js"></script>
+
+  <script type="application/java-vm" src="classes/Main.class"></script>  
+
+  <script type="text/javascript">
+    var java = new JavaPoly();
+
+    document.addEventListener('JVMReady', function(e) {
+      var jvmObject = e.detail.jvm;
+
+      jvmObject.getSystemClassLoader().initializeClass(jvmObject.firstThread, 'LMain;', function(cls) {
+        var m = cls.methodLookup(jvmObject.firstThread, 'test()Ljava/lang/String;');
+        jvmObject.firstThread.runMethod(m, [], function (e, rv) {
+          console.log(
+            rv.fields["Ljava/lang/String;value"].array.map(
+              function(char) {return String.fromCharCode(char)}
+            ).join('')
+          );
+        });
+      });
+    }, false);
+  </script>
+</head>
+<body>
+</body>
+</html>
