@@ -86,37 +86,11 @@ function createEntity(name, parent) {
   const object = function() {};
   object._parent = parent;
   object._name = name;
-  object._identifier = (parent === null ? "" : parent._identifier + "/") + name;
-  object._call = function(thisArg, argumentsList) {
-    return new Promise(
-      (resolve, reject) => {
-        runMethod(object, argumentsList).then(rv => resolve(rv));
-      }
-    );
-  };
-
-  const proxy = new Proxy(object, {
-    get: (target, property) => {
-      if (!target.hasOwnProperty(property)) {
-        target[property] = createEntity(property, target);
-      }
-      return target[property];
-    },
-    apply: (target, thisArg, argumentsList) => {
-      return target._call(thisArg, argumentsList);
-    }
-  });
-
-  return proxy;
-}
-
-function createEntity(name, parent) {
-  // We don't now in advance is it a function or just an Object
-  // But objects cannot be called, so it is a function
-  const object = function() {};
-  object._parent = parent;
-  object._name = name;
-  object._identifier = (parent === null ? "" : parent._identifier + "/") + name;
+  if (name === 'root') {
+    object._identifier = 'root';
+  } else {
+    object._identifier = (parent._identifier === 'root' ? 'L' : parent._identifier + '/') + name;
+  }
   object._call = function(thisArg, argumentsList) {
     return new Promise(
       (resolve, reject) => {
@@ -142,7 +116,7 @@ function createEntity(name, parent) {
 
 function createRootEntity(javapoly) {
   jvm = javapoly.jvm;
-  return createEntity("Ljava", null);
+  return createEntity('root', null);
 }
 
 export default createRootEntity;
