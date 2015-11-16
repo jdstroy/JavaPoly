@@ -2,7 +2,7 @@
 
 *.sublime-project
 *.sublime-workspace
-tests/doppio
+test/doppio
 
 ### OSX ###
 .DS_Store
