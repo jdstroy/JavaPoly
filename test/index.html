@@ -4,7 +4,7 @@
   <title>Mocha Tests</title>
   <link href="mocha/mocha.css" rel="stylesheet" />
 
-  <script type="text/javascript" src="browserfs.min.js"></script>
+  <script type="text/javascript" src="mocha/browserfs.min.js"></script>
   <script type="text/javascript" src="doppio/doppio.js"></script>
 
   <script type="text/javascript" src="build/javapoly.js"></script>
@@ -18,70 +18,65 @@
   <script src="mocha/expect.js"></script>
   <script src="mocha/mocha.js"></script>
 
-  <script>mocha.setup('bdd')</script>
-  <script>
-    mocha.checkLeaks();
-    mocha.run();
-  </script>
+  <script type="text/javascript">
 
-<script type="text/javascript">
     (new JavaPoly());
 
     document.addEventListener('JVMReady', function(e) {
+      mocha.setup('bdd')
+
       var jp = e.detail;
       var J = jp.J; // It invoked explicitly at the moment
 
-      function testJavaClassFile() {
-        J.Main.test().then(result => {
-          if (result !== 'test message') {
-            console.error('ERROR: Main.test(): ' + result + ' instead of "test message"');
-          } else {
-            console.log('PASSED');
-          }
+      describe('JVMReady', function() {
+        it('test', function() {})
+
+        describe('java.lang.Integer', function() {
+          it('toHexString', function() {
+            J.java.lang.Integer.toHexString(42).then(function(result) {
+              expect(result).to.eql('2a');
+            });
+          });
+
+          it('reverse', function() {
+            J.java.lang.Integer.reverse(42).then(function(result) {
+              expect(result).to.eql(1409286144);
+            });
+          });
+
+          it('toString', function() {
+            J.java.lang.Integer.toString(42, 16).then(function(result) {
+              expect(result).to.eql('2a');
+            });
+          });
+
+          it('compare', function() {
+            J.java.lang.Integer.compare(42, 41).then(function(result) {
+              expect(result).to.eql(1);
+            });
+          });
         });
-      }
 
-      J.java.lang.Integer.toHexString(42).then(result => {
-        if (result !== '2a') {
-          console.error('ERROR: java.lang.Integer.toHexString(42): ' + result + ' instead of 2a');
-        } else {
-          console.log('PASSED');
-        }
+        describe('java.lang.Double', function() {
+          it('toHexString', function() {
+            J.java.lang.Double.toHexString(42).then(function(result) {
+              expect(result).to.eql('0x1.5p5');
+            });
+          });
+        })
+
+        describe('classes/Main.class', function() {
+          it('static test()', function() {
+            J.Main.test().then(function(result) {
+              expect(result).to.eql('test message');
+            });
+          })
+        });
+
       });
 
-      J.java.lang.Integer.reverse(42).then(result => {
-        if (result !== 1409286144) {
-          console.error('ERROR: java.lang.Integer.reverse(42): ' + result + ' instead of 1409286144');
-        } else {
-          console.log('PASSED');
-        }
-      });
-
-      J.java.lang.Double.toHexString(42).then(result => {
-        if (result !== '0x1.5p5') {
-          console.error('ERROR: java.lang.Double.toHexString(42): ' + result + ' instead of 0x1.5p5');
-        } else {
-          console.log('PASSED');
-        }
-      });
-
-      J.java.lang.Integer.toString(42, 16).then(result => {
-        if (result !== '2a') {
-          console.error('ERROR: java.lang.Integer.toString(42, 16): ' + result + ' instead of 2a');
-        } else {
-          console.log('PASSED');
-        }
-      });
-
-      J.java.lang.Integer.compare(42, 41).then(result => {
-        if (result !== 1) {
-          console.error('ERROR: java.lang.Integer.toString(42, 41): ' + result + ' instead of 1');
-        } else {
-          console.log('PASSED');
-        }
-      });
-
-      testJavaClassFile();
+      mocha.checkLeaks();
+      mocha.run();
 
     }, false);
   </script>

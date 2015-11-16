@@ -12,7 +12,7 @@
     "doppio"
   ],
   "scripts": {
-    "test": "node_modules/http-server/bin/http-server tests/"
+    "test": "node_modules/http-server/bin/http-server test/"
   },
   "author": "",
   "license": "ISC",

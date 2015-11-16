@@ -15,7 +15,7 @@ module.exports = function(grunt) {
     copy: {
       distToTests: {
         files: [
-          {expand: true, src: ['build/*'], dest: 'tests/', filter: 'isFile'}
+          {expand: true, src: ['build/*'], dest: 'test/', filter: 'isFile'}
         ]
       },
     },
