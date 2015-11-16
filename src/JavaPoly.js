@@ -131,8 +131,8 @@ class JavaPoly {
     );
   }
 
-  initJavaEntity() {
-    this.java = createRootEntity(this);
+  initRootEntity() {
+    this.J = createRootEntity(this);
   }
 
   /**
@@ -142,7 +142,7 @@ class JavaPoly {
    * 3. Dispatch event that JVM is ready
    */
   initJVM() {
-    // ensure that all promises are finished and 
+    // ensure that all promises are finished and
     // after this dispatch event JVMReady
     Promise.all(this.loadingHub).then(()=> {
       // delete loadingHub (if somewhere else it is used so it's gonna be runtime error of that using)
@@ -158,7 +158,7 @@ class JavaPoly {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, (err, jvm) => {
-          this.initJavaEntity();
+          this.initRootEntity();
           this.dispatchReadyEvent();
         }
       );

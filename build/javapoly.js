@@ -1639,7 +1639,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 var jvm = null;
 
@@ -1725,37 +1725,11 @@ function createEntity(name, parent) {
   var object = function object() {};
   object._parent = parent;
   object._name = name;
-  object._identifier = (parent === null ? "" : parent._identifier + "/") + name;
-  object._call = function (thisArg, argumentsList) {
-    return new Promise(function (resolve, reject) {
-      runMethod(object, argumentsList).then(function (rv) {
-        return resolve(rv);
-      });
-    });
-  };
-
-  var proxy = new Proxy(object, {
-    get: function get(target, property) {
-      if (!target.hasOwnProperty(property)) {
-        target[property] = createEntity(property, target);
-      }
-      return target[property];
-    },
-    apply: function apply(target, thisArg, argumentsList) {
-      return target._call(thisArg, argumentsList);
-    }
-  });
-
-  return proxy;
-}
-
-function createEntity(name, parent) {
-  // We don't now in advance is it a function or just an Object
-  // But objects cannot be called, so it is a function
-  var object = function object() {};
-  object._parent = parent;
-  object._name = name;
-  object._identifier = (parent === null ? "" : parent._identifier + "/") + name;
+  if (name === 'root') {
+    object._identifier = 'root';
+  } else {
+    object._identifier = (parent._identifier === 'root' ? 'L' : parent._identifier + '/') + name;
+  }
   object._call = function (thisArg, argumentsList) {
     return new Promise(function (resolve, reject) {
       runMethod(object, argumentsList).then(function (rv) {
@@ -1781,7 +1755,7 @@ function createEntity(name, parent) {
 
 function createRootEntity(javapoly) {
   jvm = javapoly.jvm;
-  return createEntity("Ljava", null);
+  return createEntity('root', null);
 }
 
 exports.default = createRootEntity;
@@ -1968,9 +1942,9 @@ var JavaPoly = (function () {
       global.document.dispatchEvent(new CustomEvent('JVMReady', { detail: this }));
     }
   }, {
-    key: 'initJavaEntity',
-    value: function initJavaEntity() {
-      this.java = (0, _JavaEntity2.default)(this);
+    key: 'initRootEntity',
+    value: function initRootEntity() {
+      this.J = (0, _JavaEntity2.default)(this);
     }
 
     /**
@@ -2000,7 +1974,7 @@ var JavaPoly = (function () {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, function (err, jvm) {
-          _this2.initJavaEntity();
+          _this2.initRootEntity();
           _this2.dispatchReadyEvent();
         });
       });
