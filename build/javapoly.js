@@ -1612,6 +1612,8 @@ var JavaClassFile = (function (_JavaFile) {
       var className = path.basename(classFileInfo.this_class);
       var packageName = path.dirname(classFileInfo.this_class);
 
+      _this.javaPoly.fsext.rmkdirSync(path.join(_this.javaPoly.options.storageDir, packageName));
+
       return new Promise(function (resolve, reject) {
         _this.javaPoly.fs.writeFile(path.join(_this.javaPoly.options.storageDir, classFileInfo.this_class + '.class'), classFileData, function (err) {
           if (err) {
@@ -1639,7 +1641,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 var jvm = null;
 
@@ -1858,10 +1860,22 @@ var JavaPoly = (function () {
 
     var options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
     /**
-     * Store referense to the BrowserFS object
+     * Stores referense to the BrowserFS fs-library
      * @type {BrowserFS}
      */
     this.fs = null;
+
+    /**
+     * Stores referense to the BrowserFS path-library
+     * @type {[type]}
+     */
+    this.path = null;
+
+    /**
+     * Stores referense to the special extension for fs (for example it contains recursive mkdir)
+     * @type {[type]}
+     */
+    this.fsext = null;
 
     /**
      * Array of all registered Java classes, jars, or sources
@@ -1888,15 +1902,17 @@ var JavaPoly = (function () {
 
     // initialization of BrowserFS
     var mfs = new BrowserFS.FileSystem.MountableFileSystem();
+
     this.fs = BrowserFS.BFSRequire('fs');
+    this.path = BrowserFS.BFSRequire('path');
+    this.fsext = require('./tools/fsext')(this.fs, this.path);
+
     BrowserFS.initialize(mfs);
     mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
 
-    this.fs.mkdirSync(this.options.storageDir);
-    this.fs.mkdirSync('/tmp/data/com');
-    this.fs.mkdirSync('/tmp/data/com/javapoly');
+    this.fsext.rmkdirSync(this.options.storageDir);
 
     if (options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', function (e) {
@@ -1987,7 +2003,7 @@ var JavaPoly = (function () {
 exports.default = JavaPoly;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaClassFile":2,"./JavaEntity":3,"./JavaSourceFile":6,"underscore":1}],6:[function(require,module,exports){
+},{"./JavaClassFile":2,"./JavaEntity":3,"./JavaSourceFile":6,"./tools/fsext":9,"underscore":1}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2142,5 +2158,64 @@ function analyze(data) {
 }
 
 module.exports.analyze = analyze;
+
+},{}],9:[function(require,module,exports){
+'use strict';
+
+function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
+module.exports = function (fs, path) {
+    'use strict';
+
+    var _0777 = parseInt('0777', 8);
+
+    /**
+     * mkdir that creates folders recursive
+     * it's based on https://github.com/substack/node-mkdirp
+     */
+    var rmkdirSync = function sync(p, opts, made) {
+        if (!opts || (typeof opts === 'undefined' ? 'undefined' : _typeof(opts)) !== 'object') {
+            opts = { mode: opts };
+        }
+
+        var mode = opts.mode;
+        var xfs = opts.fs || fs;
+
+        if (!made) made = null;
+
+        p = path.resolve(p);
+
+        try {
+            xfs.mkdirSync(p, mode);
+            made = made || p;
+        } catch (err0) {
+            switch (err0.code) {
+                case 'ENOENT':
+                    made = sync(path.dirname(p), opts, made);
+                    sync(p, opts, made);
+                    break;
+
+                // In the case of any other error, just see if there's a dir
+                // there already.  If so, then hooray!  If not, then something
+                // is borked.
+                default:
+                    var stat;
+                    try {
+                        stat = xfs.statSync(p);
+                    } catch (err1) {
+                        throw err0;
+                    }
+                    if (!stat.isDirectory()) throw err0;
+                    break;
+            }
+        }
+
+        return made;
+    };
+
+    return {
+        rmkdirSync: rmkdirSync
+    };
+};
 
 },{}]},{},[7]);

@@ -51,10 +51,23 @@ class JavaPoly {
   constructor(_options) {
     let options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
     /**
-     * Store referense to the BrowserFS object
+     * Stores referense to the BrowserFS fs-library
      * @type {BrowserFS}
      */
     this.fs = null;
+
+    /**
+     * Stores referense to the BrowserFS path-library
+     * @type {[type]}
+     */
+    this.path = null;
+
+
+    /**
+     * Stores referense to the special extension for fs (for example it contains recursive mkdir)
+     * @type {[type]}
+     */
+    this.fsext = null;
 
     /**
      * Array of all registered Java classes, jars, or sources
@@ -81,15 +94,18 @@ class JavaPoly {
 
     // initialization of BrowserFS
     let mfs = new BrowserFS.FileSystem.MountableFileSystem();
+
     this.fs = BrowserFS.BFSRequire('fs');
+    this.path = BrowserFS.BFSRequire('path');
+    this.fsext = require('./tools/fsext')(this.fs, this.path);
+
     BrowserFS.initialize(mfs);
     mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
 
-    this.fs.mkdirSync(this.options.storageDir);
-    this.fs.mkdirSync('/tmp/data/com');
-    this.fs.mkdirSync('/tmp/data/com/javapoly');
+    
+    this.fsext.rmkdirSync(this.options.storageDir);
 
     if (options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', e => {
