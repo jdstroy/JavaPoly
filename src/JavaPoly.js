@@ -2,7 +2,7 @@ import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaClassFile';
 import JavaSourceFile from './JavaSourceFile';
-import createRootEntity from './JavaEntity.js';
+import createRootEntity from './JavaEntity';
 
 const JAVA_MIME = [
   { // for compiled Java-class
@@ -23,8 +23,16 @@ const JAVA_MIME = [
 ];
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
-  // when page is loading look for all corresponding MIME-types and create objects for Java automatically
-  initOnStart: true 
+  /**
+   * when page is loading look for all corresponding MIME-types and create objects for Java automatically
+   * @type {Boolean}
+   */
+  initOnStart: true,
+  /**
+   * Directory name that stores all class-files, jars and/or java-files
+   * @type {String}
+   */
+  storageDir: '/tmp/data'
 }
 
 /**
@@ -61,11 +69,9 @@ class JavaPoly {
      */
     this.loadingHub = [];
 
-    /**
-     * Directory name that stores all class-files, jars and/or java-files
-     * @type {String}
-     */
-    this.storageDir = '/tmp/data/';
+    this.storageDir = null;
+
+    this.options = options;
 
     /**
      * [java description]
@@ -81,7 +87,9 @@ class JavaPoly {
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
 
-    this.fs.mkdirSync(this.storageDir);
+    this.fs.mkdirSync(this.options.storageDir);
+    this.fs.mkdirSync('/tmp/data/com');
+    this.fs.mkdirSync('/tmp/data/com/javapoly');
 
     if (options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', e => {
@@ -144,7 +152,7 @@ class JavaPoly {
       this.jvm = new doppio.JVM(
         {
           bootstrapClasspath: ['/sys/vendor/java_home/classes'],
-          classpath: [this.storageDir],
+          classpath: [this.options.storageDir],
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
           nativeClasspath: ['/sys/src/natives'],

@@ -1,13 +1,30 @@
 <html>
 <head>
+  <meta charset="utf-8">
+  <title>Mocha Tests</title>
+  <link href="mocha/mocha.css" rel="stylesheet" />
+
   <script type="text/javascript" src="browserfs.min.js"></script>
   <script type="text/javascript" src="doppio/doppio.js"></script>
 
   <script type="text/javascript" src="build/javapoly.js"></script>
 
-  <script type="application/java-vm" src="classes/Main.class"></script>  
+  <script type="application/java-vm" src="classes/Main.class"></script>
+  <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
+</head>
+<body>
+  <div id="mocha"></div>
 
-  <script type="text/javascript">
+  <script src="mocha/expect.js"></script>
+  <script src="mocha/mocha.js"></script>
+
+  <script>mocha.setup('bdd')</script>
+  <script>
+    mocha.checkLeaks();
+    mocha.run();
+  </script>
+
+<script type="text/javascript">
     (new JavaPoly());
 
     document.addEventListener('JVMReady', function(e) {
@@ -15,7 +32,7 @@
       var jvmObject = jp.jvm;
 
       function testJavaClassFile() {
-        jvmObject.getSystemClassLoader().initializeClass(jvmObject.firstThread, 'LMain;', function(cls) {
+        jvmObject.getSystemClassLoader().initializeClass(jvmObject.firstThread, 'Lcom/javapoly/MainWithPackage;', function(cls) {
           var m = cls.methodLookup(jvmObject.firstThread, 'test()Ljava/lang/String;');
           jvmObject.firstThread.runMethod(m, [], function (e, rv) {
             console.log(
@@ -27,7 +44,7 @@
         });
       }
 
-      jp.java.lang.Integer.toHexString(42).then(result => {
+      jp.java.lang.Integer.toHexString(42).then(function(result) {
         if (result !== '2a') {
           console.error('ERROR: java.lang.Integer.toHexString(42): ' + result + ' instead of 2a');
         } else {
@@ -35,7 +52,7 @@
         }
       });
 
-      jp.java.lang.Integer.reverse(42).then(result => {
+      jp.java.lang.Integer.reverse(42).then(function(result) {
         if (result !== 1409286144) {
           console.error('ERROR: java.lang.Integer.reverse(42): ' + result + ' instead of 1409286144');
         } else {
@@ -43,7 +60,7 @@
         }
       });
 
-      jp.java.lang.Double.toHexString(42).then(result => {
+      jp.java.lang.Double.toHexString(42).then(function(result) {
         if (result !== '0x1.5p5') {
           console.error('ERROR: java.lang.Double.toHexString(42): ' + result + ' instead of 0x1.5p5');
         } else {
@@ -51,7 +68,7 @@
         }
       });
 
-      jp.java.lang.Integer.toString(42, 16).then(result => {
+      jp.java.lang.Integer.toString(42, 16).then(function(result) {
         if (result !== '2a') {
           console.error('ERROR: java.lang.Integer.toString(42, 16): ' + result + ' instead of 2a');
         } else {
@@ -63,7 +80,5 @@
 
     }, false);
   </script>
-</head>
-<body>
 </body>
 </html>

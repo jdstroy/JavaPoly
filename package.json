@@ -11,6 +11,9 @@
     "javascript",
     "doppio"
   ],
+  "scripts": {
+    "test": "node_modules/http-server/bin/http-server tests/"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -21,6 +24,7 @@
     "grunt-browserify": "^4.0.1",
     "grunt-contrib-copy": "^0.8.2",
     "grunt-contrib-watch": "^0.6.1",
+    "http-server": "^0.8.5",
     "underscore": "^1.8.3"
   }
 }

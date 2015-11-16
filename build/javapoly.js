@@ -1552,8 +1552,6 @@
 (function (global){
 'use strict';
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -1573,6 +1571,26 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
 var path = global.BrowserFS.BFSRequire('path');
 
+var classfile = require('./tools/classfile.js');
+
+var http_retrieve_buffer = function http_retrieve_buffer(url) {
+  return new Promise(function (resolve, reject) {
+    var xmlr = new XMLHttpRequest();
+    xmlr.open('GET', url, true);
+    xmlr.responseType = 'arraybuffer';
+    xmlr.onreadystatechange = function () {
+      if (xmlr.readyState === 4) {
+        if (xmlr.status === 200) {
+          resolve(xmlr.response);
+        } else {
+          reject();
+        }
+      }
+    };
+    xmlr.send(null);
+  });
+};
+
 /**
  * Class for loading java class files from script. This class loads files from scripts like this:
  * <script type="application/java-vm" src="Main.class"></script>
@@ -1588,54 +1606,25 @@ var JavaClassFile = (function (_JavaFile) {
 
     var scriptSrc = script.src;
 
-    var promise = new Promise(function (resolve, reject) {
-      var xmlr = new XMLHttpRequest();
-      xmlr.open('GET', scriptSrc, true);
-      xmlr.responseType = 'arraybuffer';
-      xmlr.onreadystatechange = function () {
-        if (xmlr.readyState === 4) {
-          if (xmlr.status === 200) {
-            (function () {
-              var classFile = path.basename(scriptSrc);
-              _this.javaPoly.fs.writeFile(path.join(_this.javaPoly.storageDir, classFile), new Buffer(xmlr.response), function (err) {
-                if (err) {
-                  reject();
-                } else {
-                  _this.analyseClass(path.basename(classFile, '.class')).then(function () {
-                    resolve();
-                  });
-                }
-              });
-            })();
-          } else {
-            reject();
-          }
-        }
-      };
-      xmlr.send(null);
-    });
-    _this.javaPoly.loadingHub.push(promise);
-    return _this;
-  }
-
-  /**
-   * Analyse java-class and return promise of this
-   * @param  {String} className – name of the class (without '.class')
-   * @param  {String} package   - package of the class (can be empty)
-   * @return {Promise}          - promise of this job
-   */
-
-  _createClass(JavaClassFile, [{
-    key: 'analyseClass',
-    value: function analyseClass(className) {
-      var packageName = arguments.length <= 1 || arguments[1] === undefined ? '' : arguments[1];
+    _this.javaPoly.loadingHub.push(http_retrieve_buffer(scriptSrc).then(function (data) {
+      var classFileData = new Buffer(data);
+      var classFileInfo = classfile.analyze(classFileData);
+      var className = path.basename(classFileInfo.this_class);
+      var packageName = path.dirname(classFileInfo.this_class);
 
       return new Promise(function (resolve, reject) {
-        console.log('loading', className);
-        resolve();
+        _this.javaPoly.fs.writeFile(path.join(_this.javaPoly.options.storageDir, classFileInfo.this_class + '.class'), classFileData, function (err) {
+          if (err) {
+            console.error(err.message);
+            reject();
+          } else {
+            resolve();
+          }
+        });
       });
-    }
-  }]);
+    }));
+    return _this;
+  }
 
   return JavaClassFile;
 })(_JavaFile3.default);
@@ -1643,7 +1632,7 @@ var JavaClassFile = (function (_JavaFile) {
 exports.default = JavaClassFile;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaFile":4}],3:[function(require,module,exports){
+},{"./JavaFile":4,"./tools/classfile.js":8}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1837,7 +1826,7 @@ var _JavaSourceFile = require('./JavaSourceFile');
 
 var _JavaSourceFile2 = _interopRequireDefault(_JavaSourceFile);
 
-var _JavaEntity = require('./JavaEntity.js');
+var _JavaEntity = require('./JavaEntity');
 
 var _JavaEntity2 = _interopRequireDefault(_JavaEntity);
 
@@ -1862,8 +1851,16 @@ var JAVA_MIME = [{ // for compiled Java-class
 }];
 
 var DEFAULT_JAVAPOLY_OPTIONS = {
-  // when page is loading look for all corresponding MIME-types and create objects for Java automatically
-  initOnStart: true
+  /**
+   * when page is loading look for all corresponding MIME-types and create objects for Java automatically
+   * @type {Boolean}
+   */
+  initOnStart: true,
+  /**
+   * Directory name that stores all class-files, jars and/or java-files
+   * @type {String}
+   */
+  storageDir: '/tmp/data'
 };
 
 /**
@@ -1905,11 +1902,9 @@ var JavaPoly = (function () {
      */
     this.loadingHub = [];
 
-    /**
-     * Directory name that stores all class-files, jars and/or java-files
-     * @type {String}
-     */
-    this.storageDir = '/tmp/data/';
+    this.storageDir = null;
+
+    this.options = options;
 
     /**
      * [java description]
@@ -1925,7 +1920,9 @@ var JavaPoly = (function () {
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
 
-    this.fs.mkdirSync(this.storageDir);
+    this.fs.mkdirSync(this.options.storageDir);
+    this.fs.mkdirSync('/tmp/data/com');
+    this.fs.mkdirSync('/tmp/data/com/javapoly');
 
     if (options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', function (e) {
@@ -1997,7 +1994,7 @@ var JavaPoly = (function () {
 
         _this2.jvm = new doppio.JVM({
           bootstrapClasspath: ['/sys/vendor/java_home/classes'],
-          classpath: [_this2.storageDir],
+          classpath: [_this2.options.storageDir],
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
           nativeClasspath: ['/sys/src/natives'],
@@ -2016,7 +2013,7 @@ var JavaPoly = (function () {
 exports.default = JavaPoly;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaClassFile":2,"./JavaEntity.js":3,"./JavaSourceFile":6,"underscore":1}],6:[function(require,module,exports){
+},{"./JavaClassFile":2,"./JavaEntity":3,"./JavaSourceFile":6,"underscore":1}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2062,4 +2059,114 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 global.window.JavaPoly = _JavaPoly2.default;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaPoly":5}]},{},[7]);
+},{"./JavaPoly":5}],8:[function(require,module,exports){
+'use strict';
+
+var MAGIC_NUMBER = 'cafebabe';
+var CP_TAG_SIZE = 1;
+
+function uintFromBuffer(buffer, from, count) {
+  var res = 0;
+  for (var i = 0; i < count; i++) {
+    res = res * 256 + buffer.get(from + i);
+  }
+  return res;
+}
+
+function stringFromBuffer(buffer, from, count) {
+  var res = '';
+  for (var i = 0; i < count; i++) {
+    res += String.fromCharCode(buffer.get(from + i));
+  }
+  return res;
+}
+
+function hexFromBuffer(buffer, from, count) {
+  var res = '';
+  for (var i = 0; i < count; i++) {
+    res += buffer.get(from + i).toString(16);
+  }
+  return res;
+}
+
+function ConstantPoolClassRef(buffer, from) {
+  this.ref = uintFromBuffer(buffer, from, 2);
+}
+
+/**
+ * This function analyze buffer that contains class-file and returns basic info about it.
+ * @param  {Buffer} buffer that contains binary data of class-file
+ * @return {Object}        object that represents key-value info of file
+ */
+function analyze(data) {
+  'use strict';
+
+  var magic_number = hexFromBuffer(data, 0, 4);
+  if (magic_number !== MAGIC_NUMBER) throw 'Class file should starts with ' + MAGIC_NUMBER + ' string';
+
+  var minor_version = uintFromBuffer(data, 4, 2);
+  var major_version = uintFromBuffer(data, 6, 2);
+  var constant_pool_count = uintFromBuffer(data, 8, 2);
+
+  var constant_pool = [];
+
+  var cpsize = 10;
+
+  for (var i = 1; i < constant_pool_count; i++) {
+    var cp_tag = uintFromBuffer(data, cpsize, CP_TAG_SIZE);
+    var size = 0;
+    switch (cp_tag) {
+      case 1:
+        size = 2 + uintFromBuffer(data, cpsize + 1, 2);
+        constant_pool[i] = stringFromBuffer(data, cpsize + 3, size - 2);
+        break;
+      case 3:
+        size = 4;break;
+      case 4:
+        size = 4;break;
+      case 5:
+        size = 8;i++;break;
+      case 6:
+        size = 8;i++;break;
+      case 7:
+        size = 2;
+        constant_pool[i] = new ConstantPoolClassRef(data, cpsize + 1);
+        break;
+      case 8:
+        size = 2;break;
+      case 9:
+        size = 4;break;
+      case 10:
+        size = 4;break;
+      case 11:
+        size = 4;break;
+      case 12:
+        size = 4;break;
+      case 15:
+        size = 3;break;
+      case 16:
+        size = 2;break;
+      case 18:
+        size = 4;break;
+      default:
+        throw 'Wrong cp_tag: ' + cp_tag;
+    }
+    cpsize += CP_TAG_SIZE + size;
+  }
+
+  var access_flags = uintFromBuffer(data, cpsize, 2);
+  var this_class = uintFromBuffer(data, cpsize + 2, 2);
+  var super_class = uintFromBuffer(data, cpsize + 4, 2);
+
+  return {
+    minor_version: minor_version,
+    major_version: major_version,
+    constant_pool: constant_pool,
+    this_class: constant_pool[constant_pool[this_class].ref],
+    super_class: constant_pool[constant_pool[super_class].ref]
+  };
+}
+
+module.exports.analyze = analyze;
+
+},{}]},{},[7]);
