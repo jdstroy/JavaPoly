@@ -3,6 +3,8 @@
 *.sublime-project
 *.sublime-workspace
 test/doppio
+build/javapoly.js
+test/build/javapoly.js
 
 ### OSX ###
 .DS_Store

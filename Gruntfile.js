@@ -12,13 +12,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    copy: {
-      distToTests: {
-        files: [
-          {expand: true, src: ['build/*'], dest: 'test/', filter: 'isFile'}
-        ]
-      },
-    },
     watch: {
       scripts: {
         files: 'src/**/*.js',
@@ -27,14 +20,21 @@ module.exports = function(grunt) {
           interrupt: true,
         },
       },
+    },
+    symlink: {
+      distToTests: {
+        src: './build',
+        dest: './test/build'
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-symlink');
 
-  grunt.registerTask('build:test', ['browserify:build', 'copy:distToTests']);
+  grunt.registerTask('build:test', ['browserify:build', 'symlink:distToTests']);
   grunt.registerTask('build', ['browserify:build']);  
 
   grunt.registerTask('default', ['build']);
