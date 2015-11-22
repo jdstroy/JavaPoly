@@ -25,55 +25,82 @@
     document.addEventListener('JVMReady', function(e) {
       mocha.setup('bdd')
 
-      var jp = e.detail;
-      var J = jp.J; // It invoked explicitly at the moment
-
       describe('JVMReady', function() {
-        it('test', function() {})
+        it('load jvm', function() {
+          expect(J).to.exist;
+          expect(Java).to.exist;
+        });
 
-        describe('java.lang.Integer', function() {
-          it('toHexString', function() {
-            J.java.lang.Integer.toHexString(42).then(function(result) {
-              expect(result).to.eql('2a');
+        describe('Proxy access', function() {
+          describe('java.lang.Integer', function() {
+            it('toHexString', function() {
+              J.java.lang.Integer.toHexString(42).then(function(result) {
+                expect(result).to.eql('2a');
+                console.log('+');
+              });
+            });
+
+            it('reverse', function() {
+              J.java.lang.Integer.reverse(42).then(function(result) {
+                expect(result).to.eql(1409286144);
+                console.log('+');
+              });
+            });
+
+            it('toString', function() {
+              J.java.lang.Integer.toString(42, 16).then(function(result) {
+                expect(result).to.eql('2a');
+                console.log('+');
+              });
+            });
+
+            it('compare', function() {
+              J.java.lang.Integer.compare(42, 41).then(function(result) {
+                expect(result).to.eql(1);
+                console.log('+');
+              });
             });
           });
 
-          it('reverse', function() {
-            J.java.lang.Integer.reverse(42).then(function(result) {
-              expect(result).to.eql(1409286144);
+          describe('java.lang.Double', function() {
+            it('toHexString', function() {
+              J.java.lang.Double.toHexString(42).then(function(result) {
+                expect(result).to.eql('0x1.5p5');
+                console.log('+');
+              });
             });
           });
 
-          it('toString', function() {
-            J.java.lang.Integer.toString(42, 16).then(function(result) {
-              expect(result).to.eql('2a');
-            });
-          });
-
-          it('compare', function() {
-            J.java.lang.Integer.compare(42, 41).then(function(result) {
-              expect(result).to.eql(1);
-            });
+          describe('classes/Main.class', function() {
+            it('static test()', function() {
+              J.Main.test().then(function(result) {
+                expect(result).to.eql('test message');
+                console.log('+');
+              });
+            })
           });
         });
 
-        describe('java.lang.Double', function() {
-          it('toHexString', function() {
-            J.java.lang.Double.toHexString(42).then(function(result) {
-              expect(result).to.eql('0x1.5p5');
+        describe('String identifiers access', function() {
+          describe('java.lang.Integer', function() {
+            it('calls methods', function() {
+              Java.type('java.lang.Integer').then(function(Integer) {
+                Integer.toHexString(42).then(function(result) {
+                  expect(result).to.eql('2a');
+                  console.log('+');
+                });
+                Integer.toString(42, 16).then(function(result) {
+                  expect(result).to.eql('2a');
+                  console.log('+');
+                });
+              });
             });
           });
-        })
-
-        describe('classes/Main.class', function() {
-          it('static test()', function() {
-            J.Main.test().then(function(result) {
-              expect(result).to.eql('test message');
-            });
-          })
         });
-
       });
+
+      // FIXME: now it is required to put '+' to make sure we have executed all tests
+      // fix it with proper Promises tests
 
       mocha.checkLeaks();
       mocha.run();

@@ -1637,11 +1637,17 @@ exports.default = JavaClassFile;
 },{"./JavaFile":4,"./tools/classfile.js":8}],3:[function(require,module,exports){
 'use strict';
 
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getClassWrapperByName = getClassWrapperByName;
+exports.createRootEntity = createRootEntity;
 
-function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var jvm = null;
 
@@ -1669,16 +1675,18 @@ function asyncExecute() {
   }
 }
 
-function getClass(classObject) {
-  var className = classObject._identifier + ';';
+function getClassWrapperByName(clsName) {
+  clsName = toByteCodeClassName(clsName);
   return new Promise(function (resolve, reject) {
-    if (classObject.cache !== undefined) {
-      resolve(classObject.cache);
+    if (getClassWrapperByName.cache === undefined) getClassWrapperByName.cache = {};
+    if (getClassWrapperByName.cache[clsName] !== undefined) {
+      resolve(getClassWrapperByName.cache[clsName]);
     } else {
       callInQueue(function (nextCallback) {
-        jvm.getSystemClassLoader().initializeClass(jvm.firstThread, className, function (cls) {
-          classObject.cache = cls;
-          resolve(cls);
+        jvm.getSystemClassLoader().initializeClass(jvm.firstThread, clsName, function (cls) {
+          var javaClassWrapper = new JavaClassWrapper(cls, clsName);
+          getClassWrapperByName.cache[clsName] = javaClassWrapper;
+          resolve(javaClassWrapper);
           nextCallback();
         });
       });
@@ -1686,23 +1694,60 @@ function getClass(classObject) {
   });
 }
 
+function toByteCodeClassName(clsName) {
+  return 'L' + clsName.replace(/\./g, '/') + ';';
+}
+
+var JavaClassWrapper = (function () {
+  function JavaClassWrapper(jvmClass, clsName) {
+    _classCallCheck(this, JavaClassWrapper);
+
+    this.jvmClass = jvmClass;
+    this.clsName = clsName;
+    for (var i = 0; i < jvmClass.methods.length; i++) {
+      var name = jvmClass.methods[i].name;
+      this[name] = (function (name, wrapper) {
+        return function () {
+          return wrapper.runClassMethod(name, arguments);
+        };
+      })(name, this);
+    }
+  }
+
+  _createClass(JavaClassWrapper, [{
+    key: 'runClassMethod',
+    value: function runClassMethod(methodName, argumentsList) {
+      var _this = this;
+
+      return new Promise(function (resolve, reject) {
+        for (var i = 0; i < _this.jvmClass.methods.length; i++) {
+          var method = _this.jvmClass.methods[i];
+          // TODO make some more precise signature matching logic
+          if (method.name === methodName && method.num_args === argumentsList.length) {
+            // TODO parse different type of arguments and return type
+            callInQueue(function (nextCallback) {
+              jvm.firstThread.runMethod(method, argumentsList, function (e, rv) {
+                var returnValue = mapToJsObject(rv);
+                resolve(returnValue);
+                nextCallback();
+              });
+            });
+            break;
+          }
+        }
+      });
+    }
+  }]);
+
+  return JavaClassWrapper;
+})();
+
 function runMethod(methodObject, argumentsList) {
   return new Promise(function (resolve, reject) {
-    getClass(methodObject._parent).then(function (cls) {
-      for (var i = 0; i < cls.methods.length; i++) {
-        var method = cls.methods[i];
-        if (method.name === methodObject._name && method.num_args === argumentsList.length) {
-          // TODO parse different type of arguments and return type
-          callInQueue(function (nextCallback) {
-            jvm.firstThread.runMethod(method, argumentsList, function (e, rv) {
-              var returnValue = mapToJsObject(rv);
-              resolve(returnValue);
-              nextCallback();
-            });
-          });
-          break;
-        }
-      }
+    getClassWrapperByName(methodObject._parent._identifier).then(function (classWrapper) {
+      classWrapper.runClassMethod(methodObject._name, argumentsList).then(function (returnValue) {
+        return resolve(returnValue);
+      });
     });
   });
 }
@@ -1730,7 +1775,7 @@ function createEntity(name, parent) {
   if (name === 'root') {
     object._identifier = 'root';
   } else {
-    object._identifier = (parent._identifier === 'root' ? 'L' : parent._identifier + '/') + name;
+    object._identifier = (parent._identifier === 'root' ? '' : parent._identifier + '.') + name;
   }
   object._call = function (thisArg, argumentsList) {
     return new Promise(function (resolve, reject) {
@@ -1759,8 +1804,6 @@ function createRootEntity(javapoly) {
   jvm = javapoly.jvm;
   return createEntity('root', null);
 }
-
-exports.default = createRootEntity;
 
 },{}],4:[function(require,module,exports){
 "use strict";
@@ -1803,8 +1846,6 @@ var _JavaSourceFile = require('./JavaSourceFile');
 var _JavaSourceFile2 = _interopRequireDefault(_JavaSourceFile);
 
 var _JavaEntity = require('./JavaEntity');
-
-var _JavaEntity2 = _interopRequireDefault(_JavaEntity);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1958,9 +1999,12 @@ var JavaPoly = (function () {
       global.document.dispatchEvent(new CustomEvent('JVMReady', { detail: this }));
     }
   }, {
-    key: 'initRootEntity',
-    value: function initRootEntity() {
-      this.J = (0, _JavaEntity2.default)(this);
+    key: 'initGlobalObjects',
+    value: function initGlobalObjects() {
+      global.window.J = (0, _JavaEntity.createRootEntity)(this);
+      global.window.Java = {
+        type: _JavaEntity.getClassWrapperByName
+      };
     }
 
     /**
@@ -1990,7 +2034,7 @@ var JavaPoly = (function () {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, function (err, jvm) {
-          _this2.initRootEntity();
+          _this2.initGlobalObjects();
           _this2.dispatchReadyEvent();
         });
       });
@@ -2162,7 +2206,7 @@ module.exports.analyze = analyze;
 },{}],9:[function(require,module,exports){
 'use strict';
 
-function _typeof(obj) { return obj && obj.constructor === Symbol ? "symbol" : typeof obj; }
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 module.exports = function (fs, path) {
     'use strict';

@@ -24,17 +24,20 @@ function asyncExecute() {
   }
 }
 
-function getClass(classObject) {
-  const className = classObject._identifier + ';';
+export function getClassWrapperByName(clsName) {
+  clsName = toByteCodeClassName(clsName);
   return new Promise(
     (resolve, reject) => {
-      if (classObject.cache !== undefined) {
-        resolve(classObject.cache);
+      if (getClassWrapperByName.cache === undefined)
+        getClassWrapperByName.cache = {};
+      if (getClassWrapperByName.cache[clsName] !== undefined) {
+        resolve(getClassWrapperByName.cache[clsName]);
       } else {
         callInQueue(nextCallback => {
-          jvm.getSystemClassLoader().initializeClass(jvm.firstThread, className, cls => {
-            classObject.cache = cls;
-            resolve(cls);
+          jvm.getSystemClassLoader().initializeClass(jvm.firstThread, clsName, cls => {
+            const javaClassWrapper = new JavaClassWrapper(cls, clsName);
+            getClassWrapperByName.cache[clsName] = javaClassWrapper;
+            resolve(javaClassWrapper);
             nextCallback();
           });
         })
@@ -43,14 +46,31 @@ function getClass(classObject) {
   );
 }
 
-function runMethod(methodObject, argumentsList) {
-  return new Promise(
-    (resolve, reject) => {
-      getClass(methodObject._parent).then(cls => {
-        for (var i = 0; i < cls.methods.length; i++) {
-          var method = cls.methods[i];
-          if (method.name === methodObject._name && method.num_args === argumentsList.length) {
-            // TODO parse different type of arguments and return type
+function toByteCodeClassName(clsName) {
+  return 'L' + clsName.replace(/\./g, '/') + ';';
+}
+
+class JavaClassWrapper {
+  constructor(jvmClass, clsName) {
+    this.jvmClass = jvmClass;
+    this.clsName = clsName;
+    for (var i = 0; i < jvmClass.methods.length; i++) {
+      var name = jvmClass.methods[i].name;
+      this[name] = function(name, wrapper) {
+        return function() {
+          return wrapper.runClassMethod(name, arguments)
+        };
+      } (name, this);
+    }
+  }
+
+  runClassMethod(methodName, argumentsList) {
+    return new Promise(
+      (resolve, reject) => {
+        for (var i = 0; i < this.jvmClass.methods.length; i++) {
+          var method = this.jvmClass.methods[i];
+          // TODO make some more precise signature matching logic
+          if (method.name === methodName && method.num_args === argumentsList.length) {
             callInQueue(nextCallback => {
               jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
                 var returnValue = mapToJsObject(rv);
@@ -61,6 +81,16 @@ function runMethod(methodObject, argumentsList) {
             break;
           }
         }
+      }
+    );
+  }
+}
+
+function runMethod(methodObject, argumentsList) {
+  return new Promise(
+    (resolve, reject) => {
+      getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
+        classWrapper.runClassMethod(methodObject._name, argumentsList).then(returnValue => resolve(returnValue));
       });
     }
   );
@@ -89,7 +119,7 @@ function createEntity(name, parent) {
   if (name === 'root') {
     object._identifier = 'root';
   } else {
-    object._identifier = (parent._identifier === 'root' ? 'L' : parent._identifier + '/') + name;
+    object._identifier = (parent._identifier === 'root' ? '' : parent._identifier + '.') + name;
   }
   object._call = function(thisArg, argumentsList) {
     return new Promise(
@@ -114,9 +144,7 @@ function createEntity(name, parent) {
   return proxy;
 }
 
-function createRootEntity(javapoly) {
+export function createRootEntity(javapoly) {
   jvm = javapoly.jvm;
   return createEntity('root', null);
 }
-
-export default createRootEntity;

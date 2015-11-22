@@ -2,7 +2,8 @@ import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaClassFile';
 import JavaSourceFile from './JavaSourceFile';
-import createRootEntity from './JavaEntity';
+import { createRootEntity } from './JavaEntity';
+import { getClassWrapperByName } from './JavaEntity';
 
 const JAVA_MIME = [
   { // for compiled Java-class
@@ -104,7 +105,7 @@ class JavaPoly {
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
 
-    
+
     this.fsext.rmkdirSync(this.options.storageDir);
 
     if (options.initOnStart === true) {
@@ -147,8 +148,11 @@ class JavaPoly {
     );
   }
 
-  initRootEntity() {
-    this.J = createRootEntity(this);
+  initGlobalObjects() {
+    global.window.J = createRootEntity(this);
+    global.window.Java = {
+      type: getClassWrapperByName
+    };
   }
 
   /**
@@ -174,7 +178,7 @@ class JavaPoly {
           nativeClasspath: ['/sys/src/natives'],
           assertionsEnabled: false
         }, (err, jvm) => {
-          this.initRootEntity();
+          this.initGlobalObjects();
           this.dispatchReadyEvent();
         }
       );
