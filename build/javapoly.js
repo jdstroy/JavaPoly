@@ -1571,6 +1571,86 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
 var path = global.BrowserFS.BFSRequire('path');
 
+// TODO need to reuse the code in JavaClassFile rather than copy
+var http_retrieve_buffer = function http_retrieve_buffer(url) {
+  return new Promise(function (resolve, reject) {
+    var xmlr = new XMLHttpRequest();
+    xmlr.open('GET', url, true);
+    xmlr.responseType = 'arraybuffer';
+    xmlr.onreadystatechange = function () {
+      if (xmlr.readyState === 4) {
+        if (xmlr.status === 200) {
+          resolve(xmlr.response);
+        } else {
+          reject();
+        }
+      }
+    };
+    xmlr.send(null);
+  });
+};
+
+var JavaArchiveFile = (function (_JavaFile) {
+  _inherits(JavaArchiveFile, _JavaFile);
+
+  function JavaArchiveFile(javaPoly, script) {
+    _classCallCheck(this, JavaArchiveFile);
+
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(JavaArchiveFile).call(this, javaPoly, script));
+
+    var scriptSrc = script.src;
+
+    _this.javaPoly.loadingHub.push(http_retrieve_buffer(scriptSrc).then(function (data) {
+      var jarFileData = new Buffer(data);
+      var jarName = path.basename(scriptSrc);
+
+      return new Promise(function (resolve, reject) {
+        var jarStorePath = path.join(_this.javaPoly.options.storageDir, jarName);
+        // store the .jar file to $storageDir
+        _this.javaPoly.fs.writeFile(jarStorePath, jarFileData, function (err) {
+          if (err) {
+            console.error(err.message);
+            reject();
+          } else {
+            // add .jar file path to classpath
+            _this.javaPoly.classpath.push(jarStorePath);
+            resolve();
+          }
+        });
+      });
+    }));
+    return _this;
+  }
+
+  return JavaArchiveFile;
+})(_JavaFile3.default);
+
+exports.default = JavaArchiveFile;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./JavaFile":5}],3:[function(require,module,exports){
+(function (global){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _JavaFile2 = require('./JavaFile');
+
+var _JavaFile3 = _interopRequireDefault(_JavaFile2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
+var path = global.BrowserFS.BFSRequire('path');
+
 var classfile = require('./tools/classfile.js');
 
 var http_retrieve_buffer = function http_retrieve_buffer(url) {
@@ -1634,7 +1714,7 @@ var JavaClassFile = (function (_JavaFile) {
 exports.default = JavaClassFile;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaFile":4,"./tools/classfile.js":8}],3:[function(require,module,exports){
+},{"./JavaFile":5,"./tools/classfile.js":9}],4:[function(require,module,exports){
 'use strict';
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -1724,7 +1804,6 @@ var JavaClassWrapper = (function () {
           var method = _this.jvmClass.methods[i];
           // TODO make some more precise signature matching logic
           if (method.name === methodName && method.num_args === argumentsList.length) {
-            // TODO parse different type of arguments and return type
             callInQueue(function (nextCallback) {
               jvm.firstThread.runMethod(method, argumentsList, function (e, rv) {
                 var returnValue = mapToJsObject(rv);
@@ -1805,7 +1884,7 @@ function createRootEntity(javapoly) {
   return createEntity('root', null);
 }
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1823,7 +1902,7 @@ var JavaFile = function JavaFile(javaPoly, script) {
 
 exports.default = JavaFile;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -1840,6 +1919,10 @@ var _ = _interopRequireWildcard(_underscore);
 var _JavaClassFile = require('./JavaClassFile');
 
 var _JavaClassFile2 = _interopRequireDefault(_JavaClassFile);
+
+var _JavaArchiveFile = require('./JavaArchiveFile');
+
+var _JavaArchiveFile2 = _interopRequireDefault(_JavaArchiveFile);
 
 var _JavaSourceFile = require('./JavaSourceFile');
 
@@ -1936,6 +2019,12 @@ var JavaPoly = (function () {
     this.options = options;
 
     /**
+     * Array that contains classpath, include the root path of class files , jar file path.
+     * @type {Array}
+     */
+    this.classpath = [this.options.storageDir];
+
+    /**
      * [java description]
      * @type {[type]}
      */
@@ -1977,7 +2066,7 @@ var JavaPoly = (function () {
                 _this.scripts.push(new _JavaSourceFile2.default(_this, script));
                 break;
               case 'jar':
-                _this.scripts.push(new _JavaClassFile2.default(_this, script));
+                _this.scripts.push(new _JavaArchiveFile2.default(_this, script));
                 break;
             }
           }
@@ -2028,7 +2117,7 @@ var JavaPoly = (function () {
 
         _this2.jvm = new doppio.JVM({
           bootstrapClasspath: ['/sys/vendor/java_home/classes'],
-          classpath: [_this2.options.storageDir],
+          classpath: _this2.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
           nativeClasspath: ['/sys/src/natives'],
@@ -2047,7 +2136,7 @@ var JavaPoly = (function () {
 exports.default = JavaPoly;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaClassFile":2,"./JavaEntity":3,"./JavaSourceFile":6,"./tools/fsext":9,"underscore":1}],6:[function(require,module,exports){
+},{"./JavaArchiveFile":2,"./JavaClassFile":3,"./JavaEntity":4,"./JavaSourceFile":7,"./tools/fsext":10,"underscore":1}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2080,7 +2169,7 @@ var JavaSourceFile = (function (_JavaFile) {
 
 exports.default = JavaSourceFile;
 
-},{"./JavaFile":4}],7:[function(require,module,exports){
+},{"./JavaFile":5}],8:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -2093,7 +2182,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 global.window.JavaPoly = _JavaPoly2.default;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./JavaPoly":5}],8:[function(require,module,exports){
+},{"./JavaPoly":6}],9:[function(require,module,exports){
 'use strict';
 
 var MAGIC_NUMBER = 'cafebabe';
@@ -2203,7 +2292,7 @@ function analyze(data) {
 
 module.exports.analyze = analyze;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
@@ -2262,4 +2351,4 @@ module.exports = function (fs, path) {
     };
 };
 
-},{}]},{},[7]);
+},{}]},{},[8]);

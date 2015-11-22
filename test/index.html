@@ -11,6 +11,7 @@
 
   <script type="application/java-vm" src="classes/Main.class"></script>
   <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
+  <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
 </head>
 <body>
   <div id="mocha"></div>
@@ -79,6 +80,16 @@
               });
             })
           });
+
+          describe('jars/javapoly-utils.jar', function() {
+            it('jar static test()', function() {
+              J.com.javapoly.utils.Test.test().then(function(result) {
+                expect(result).to.eql('test message in jar');
+                console.log('+');
+              });
+            })
+          });
+
         });
 
         describe('String identifiers access', function() {

@@ -1,6 +1,6 @@
 import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
-import JavaArchiveFile from './JavaClassFile';
+import JavaArchiveFile from './JavaArchiveFile';
 import JavaSourceFile from './JavaSourceFile';
 import { createRootEntity } from './JavaEntity';
 import { getClassWrapperByName } from './JavaEntity';
@@ -88,6 +88,12 @@ class JavaPoly {
     this.options = options;
 
     /**
+     * Array that contains classpath, include the root path of class files , jar file path.
+     * @type {Array}
+     */
+    this.classpath = [this.options.storageDir];
+
+    /**
      * [java description]
      * @type {[type]}
      */
@@ -172,7 +178,7 @@ class JavaPoly {
       this.jvm = new doppio.JVM(
         {
           bootstrapClasspath: ['/sys/vendor/java_home/classes'],
-          classpath: [this.options.storageDir],
+          classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
           nativeClasspath: ['/sys/src/natives'],
