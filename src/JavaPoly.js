@@ -2,21 +2,20 @@ import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaArchiveFile';
 import JavaSourceFile from './JavaSourceFile';
-import { createRootEntity } from './JavaEntity';
-import { getClassWrapperByName } from './JavaEntity';
+import { createRootEntity, getClassWrapperByName } from './JavaEntity';
 
 const JAVA_MIME = [
-  { // for compiled Java-class
+  { // For compiled Java-class
     type: 'class',
     mime: ['application/java-vm'],
     srcRequired: true
   },
-  { // for Java source files
+  { // For Java source files
     type: 'java',
     mime: ['text/x-java-source'],
     srcRequired: false
   },
-  { // for JAR-files
+  { // For JAR-files
     type: 'jar',
     mime: ['application/java-archive'],
     srcRequired: true
@@ -25,7 +24,7 @@ const JAVA_MIME = [
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**
-   * when page is loading look for all corresponding MIME-types and create objects for Java automatically
+   * When page is loading look for all corresponding MIME-types and create objects for Java automatically
    * @type {Boolean}
    */
   initOnStart: true,
@@ -63,7 +62,6 @@ class JavaPoly {
      */
     this.path = null;
 
-
     /**
      * Stores referense to the special extension for fs (for example it contains recursive mkdir)
      * @type {[type]}
@@ -77,14 +75,22 @@ class JavaPoly {
     this.scripts = [];
 
     /**
+     * Array of all registered Java sources.
+     * @type {Array}
+     */
+    this.sources = [];
+
+    /**
      * Array that contains all promises that should be resolved before JVM running.
      * This array should be used for loading script
-     * @type {Array}
+     * @type {Array<Promise>}
      */
     this.loadingHub = [];
 
-    this.storageDir = null;
-
+    /**
+     * Object with options of JavaPoly
+     * @type {Object}
+     */
     this.options = options;
 
     /**
@@ -99,7 +105,7 @@ class JavaPoly {
      */
     this.java = null;
 
-    // initialization of BrowserFS
+    // Initialization of BrowserFS
     let mfs = new BrowserFS.FileSystem.MountableFileSystem();
 
     this.fs = BrowserFS.BFSRequire('fs');
@@ -119,7 +125,7 @@ class JavaPoly {
         _.each(global.document.scripts, script => {
           let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
 
-          // create only when scriptTypes is only 1
+          // Create only when scriptTypes is only 1
           if (scriptTypes.length === 1) {
             let scriptType = scriptTypes[0].type;
             if (scriptTypes[0].srcRequired && !script.src)
@@ -130,7 +136,9 @@ class JavaPoly {
                 this.scripts.push(new JavaClassFile(this, script));
                 break;
               case 'java':
-                this.scripts.push(new JavaSourceFile(this, script));
+                let javaSource = new JavaSourceFile(this, script);
+                this.scripts.push(javaSource);
+                this.sources.push(javaSource);
                 break;
               case 'jar':
                 this.scripts.push(new JavaArchiveFile(this, script));
@@ -139,7 +147,7 @@ class JavaPoly {
           }
         });
 
-        // after all call initJVM
+        // After all call initJVM
         this.initJVM();
       }, false);
     }
@@ -168,27 +176,30 @@ class JavaPoly {
    * 3. Dispatch event that JVM is ready
    */
   initJVM() {
-    // ensure that all promises are finished and
-    // after this dispatch event JVMReady
+    // Ensure that all promises are finished 
+    // and after this dispatch event JVMReady
     Promise.all(this.loadingHub).then(()=> {
-      // delete loadingHub (if somewhere else it is used so it's gonna be runtime error of that using)
+      // Delete loadingHub (if somewhere else it is used so 
+      // it's gonna be runtime error of that usage)
       delete this.loadingHub;
       this.loadingHub = [];
 
-      this.jvm = new doppio.JVM(
-        {
-          bootstrapClasspath: ['/sys/vendor/java_home/classes'],
-          classpath: this.classpath,
-          javaHomePath: '/sys/vendor/java_home',
-          extractionPath: '/tmp',
-          nativeClasspath: ['/sys/src/natives'],
-          assertionsEnabled: false
-        }, (err, jvm) => {
+      this.jvm = new doppio.JVM({
+        bootstrapClasspath: ['/sys/vendor/java_home/classes'],
+        classpath: this.classpath,
+        javaHomePath: '/sys/vendor/java_home',
+        extractionPath: '/tmp',
+        nativeClasspath: ['/sys/src/natives'],
+        assertionsEnabled: false
+      }, (err, jvm) => {
           this.initGlobalObjects();
-          this.dispatchReadyEvent();
-        }
-      );
 
+          // Compilation of Java sorces
+          let compilationHub = this.sources.map( (src) => src.compile() );
+
+          // Dispatch event when all compilations are finished 
+          Promise.all(compilationHub).then(() => this.dispatchReadyEvent());          
+      });
     });
   }
 }

@@ -1,0 +1,54 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mocha Tests (JavaSourceFile)</title>
+  <link href="mocha/mocha.css" rel="stylesheet" />
+
+  <script type="text/javascript" src="mocha/browserfs.min.js"></script>
+  <script type="text/javascript" src="doppio/doppio.js"></script>
+
+  <script type="text/javascript" src="build/javapoly.js"></script>
+
+  <script type="text/x-java-source">
+  public class TestCompile {
+      public static String test() {
+        return "TestCompile.test()";
+      }
+  }
+  </script>
+
+</head>
+<body>
+  <div id="mocha"></div>
+
+  <script src="mocha/expect.js"></script>
+  <script src="mocha/mocha.js"></script>
+
+  <script type="text/javascript">
+
+    (new JavaPoly());
+
+    document.addEventListener('JVMReady', function(e) {
+      mocha.setup('bdd')
+
+      describe('JVMReady', function() {
+        it('load jvm', function() {
+          expect(J).to.exist;
+          expect(Java).to.exist;
+        });
+
+        
+        
+
+      });
+
+      // FIXME: now it is required to put '+' to make sure we have executed all tests
+      // fix it with proper Promises tests
+
+      mocha.checkLeaks();
+      mocha.run();
+
+    }, false);
+  </script>
+</body>
+</html>
