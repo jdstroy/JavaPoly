@@ -2,7 +2,7 @@ import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaArchiveFile';
 import JavaSourceFile from './JavaSourceFile';
-import { createRootEntity, getClassWrapperByName } from './JavaEntity';
+import { createRootEntity, JavaClassWrapper } from './JavaClassWrapper';
 
 const JAVA_MIME = [
   { // For compiled Java-class
@@ -165,7 +165,7 @@ class JavaPoly {
   initGlobalObjects() {
     global.window.J = createRootEntity(this);
     global.window.Java = {
-      type: getClassWrapperByName
+      type: JavaClassWrapper.getClassWrapperByName
     };
   }
 
@@ -176,10 +176,10 @@ class JavaPoly {
    * 3. Dispatch event that JVM is ready
    */
   initJVM() {
-    // Ensure that all promises are finished 
+    // Ensure that all promises are finished
     // and after this dispatch event JVMReady
     Promise.all(this.loadingHub).then(()=> {
-      // Delete loadingHub (if somewhere else it is used so 
+      // Delete loadingHub (if somewhere else it is used so
       // it's gonna be runtime error of that usage)
       delete this.loadingHub;
       this.loadingHub = [];
@@ -197,8 +197,8 @@ class JavaPoly {
           // Compilation of Java sorces
           let compilationHub = this.sources.map( (src) => src.compile() );
 
-          // Dispatch event when all compilations are finished 
-          Promise.all(compilationHub).then(() => this.dispatchReadyEvent());          
+          // Dispatch event when all compilations are finished
+          Promise.all(compilationHub).then(() => this.dispatchReadyEvent());
       });
     });
   }

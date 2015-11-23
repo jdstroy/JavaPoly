@@ -1,56 +1,32 @@
+import QueueExecutor from './QueueExecutor';
+
+let queueExecutor = new QueueExecutor();
+
 let jvm = null;
 
-function callInQueue(callback) {
-  if (typeof callInQueue.callbackQueue === 'undefined') {
-    callInQueue.callbackQueue = [];
-  }
-  callInQueue.callbackQueue.push(callback);
-  asyncExecute();
-}
-
-// Makes asynchronous calls synchronized
-function asyncExecute() {
-  if (typeof asyncExecute.isExecuting === 'undefined') {
-    asyncExecute.isExecuting = false;
-  }
-  if (!asyncExecute.isExecuting && callInQueue.callbackQueue.length > 0) {
-    asyncExecute.isExecuting = true;
-    var callback = callInQueue.callbackQueue[0];
-    callInQueue.callbackQueue.shift();
-    callback(() => {
-      asyncExecute.isExecuting = false;
-      asyncExecute();
-    });
-  }
-}
-
-export function getClassWrapperByName(clsName) {
-  clsName = toByteCodeClassName(clsName);
-  return new Promise(
-    (resolve, reject) => {
-      if (getClassWrapperByName.cache === undefined)
-        getClassWrapperByName.cache = {};
-      if (getClassWrapperByName.cache[clsName] !== undefined) {
-        resolve(getClassWrapperByName.cache[clsName]);
-      } else {
-        callInQueue(nextCallback => {
-          jvm.getSystemClassLoader().initializeClass(jvm.firstThread, clsName, cls => {
-            const javaClassWrapper = new JavaClassWrapper(cls, clsName);
-            getClassWrapperByName.cache[clsName] = javaClassWrapper;
-            resolve(javaClassWrapper);
-            nextCallback();
-          });
-        })
+export class JavaClassWrapper {
+  static getClassWrapperByName(clsName) {
+    clsName = toByteCodeClassName(clsName);
+    return new Promise(
+      (resolve, reject) => {
+        if (JavaClassWrapper.cache === undefined)
+          JavaClassWrapper.cache = {};
+        if (JavaClassWrapper.cache[clsName] !== undefined) {
+          resolve(JavaClassWrapper.cache[clsName]);
+        } else {
+          queueExecutor.execute(nextCallback => {
+            jvm.getSystemClassLoader().initializeClass(jvm.firstThread, clsName, cls => {
+              const javaClassWrapper = new JavaClassWrapper(cls, clsName);
+              JavaClassWrapper.cache[clsName] = javaClassWrapper;
+              resolve(javaClassWrapper);
+              nextCallback();
+            });
+          })
+        }
       }
-    }
-  );
-}
+    );
+  }
 
-function toByteCodeClassName(clsName) {
-  return 'L' + clsName.replace(/\./g, '/') + ';';
-}
-
-class JavaClassWrapper {
   constructor(jvmClass, clsName) {
     this.jvmClass = jvmClass;
     this.clsName = clsName;
@@ -71,7 +47,7 @@ class JavaClassWrapper {
           var method = this.jvmClass.methods[i];
           // TODO make some more precise signature matching logic
           if (method.name === methodName && method.num_args === argumentsList.length) {
-            callInQueue(nextCallback => {
+            queueExecutor.execute(nextCallback => {
               jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
                 var returnValue = mapToJsObject(rv);
                 resolve(returnValue);
@@ -89,11 +65,15 @@ class JavaClassWrapper {
 function runMethod(methodObject, argumentsList) {
   return new Promise(
     (resolve, reject) => {
-      getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
+      JavaClassWrapper.getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
         classWrapper.runClassMethod(methodObject._name, argumentsList).then(returnValue => resolve(returnValue));
       });
     }
   );
+}
+
+function toByteCodeClassName(clsName) {
+  return 'L' + clsName.replace(/\./g, '/') + ';';
 }
 
 function mapToJsObject(rv) {
