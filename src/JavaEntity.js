@@ -58,7 +58,7 @@ class JavaClassWrapper {
       var name = jvmClass.methods[i].name;
       this[name] = function(name, wrapper) {
         return function() {
-          return wrapper.runClassMethod(name, Array.prototype.splice.call(arguments, 1))
+          return wrapper.runClassMethod(name, Array.prototype.slice.call(arguments))
         };
       } (name, this);
     }
