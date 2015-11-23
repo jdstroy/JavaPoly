@@ -116,10 +116,8 @@ function createEntity(name, parent) {
   const object = function() {};
   object._parent = parent;
   object._name = name;
-  if (name === 'root') {
-    object._identifier = 'root';
-  } else {
-    object._identifier = (parent._identifier === 'root' ? '' : parent._identifier + '.') + name;
+  if (parent !== null) {
+    object._identifier = (parent._name === null ? '' : parent._identifier + '.') + name;
   }
   object._call = function(thisArg, argumentsList) {
     return new Promise(
@@ -146,5 +144,5 @@ function createEntity(name, parent) {
 
 export function createRootEntity(javapoly) {
   jvm = javapoly.jvm;
-  return createEntity('root', null);
+  return createEntity(null, null);
 }
