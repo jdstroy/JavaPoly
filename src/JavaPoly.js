@@ -32,7 +32,15 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * Directory name that stores all class-files, jars and/or java-files
    * @type {String}
    */
-  storageDir: '/tmp/data'
+  storageDir: '/tmp/data',
+  /**
+   * URL where we download the doppio library.
+   * @type {String}
+   * 1.'doppio/', download from user owner domain(${your.domain}/doppio), eg. localhost for locally test
+   * 2. or a public url, eg. http://www.javapoly.com/doppio/
+   */
+  doppioLibUrl: 'doppio/'
+  //doppioLibUrl: 'http://www.javapoly.com/doppio/'
 }
 
 /**
@@ -115,8 +123,7 @@ class JavaPoly {
     BrowserFS.initialize(mfs);
     mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
-    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
-
+    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', options.doppioLibUrl));
 
     this.fsext.rmkdirSync(this.options.storageDir);
 
