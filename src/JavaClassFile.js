@@ -1,7 +1,7 @@
 import JavaFile from './JavaFile';
 
-const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
-const path   = global.BrowserFS.BFSRequire('path');
+//const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
+//const path   = global.BrowserFS.BFSRequire('path');
 
 const classfile = require('./tools/classfile.js');
 
@@ -29,6 +29,9 @@ const http_retrieve_buffer = function(url) {
  */
 class JavaClassFile extends JavaFile {
   constructor(javaPoly, script) {
+  	let Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
+  	let path   = global.BrowserFS.BFSRequire('path');
+
     super(javaPoly, script);
 
     let scriptSrc = script.src;

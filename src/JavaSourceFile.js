@@ -1,6 +1,6 @@
 import JavaFile from './JavaFile';
 
-const path = global.BrowserFS.BFSRequire('path');
+//const path = global.BrowserFS.BFSRequire('path');
 
 class JavaSourceFile extends JavaFile  {
   constructor(javaPoly, script) {
@@ -13,6 +13,8 @@ class JavaSourceFile extends JavaFile  {
     this.source = script.text;
 
     this.classname = 'TestCompile';
+
+    let path = global.BrowserFS.BFSRequire('path');
 
     this.filename = path.join(javaPoly.options.storageDir, this.classname + '.java');
 

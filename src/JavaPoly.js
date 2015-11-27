@@ -109,10 +109,6 @@ class JavaPoly {
      */
     this.classpath = [this.options.storageDir];
 
-    this.fs = BrowserFS.BFSRequire('fs');
-    this.path = BrowserFS.BFSRequire('path');
-    this.fsext = require('./tools/fsext')(this.fs, this.path);
-
     this.queueExecutor = new QueueExecutor().waitFor('JVMReady');
     this.initJavaPoly();
 
@@ -122,21 +118,17 @@ class JavaPoly {
 
   // Will be called from queueExecutor lazily
   initJavaPoly() {
-    // Initialization of BrowserFS
-    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
-
-    BrowserFS.initialize(mfs);
-    mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
-    mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
-    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
-
-    this.fsext.rmkdirSync(this.options.storageDir);
-
     if (this.options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', e => {
-        _.each(global.document.scripts, script => {
-          let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
+       // Ensure we have loaded the browserfs.js file before handling Java/class file
+       Promise.all([this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js')]).then(()=> {
+      	 this.initBrowserFS();
+      	 // Load doppio.js file
+      	 this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));
 
+      	 // Load java mime files
+      	 _.each(global.document.scripts, script => {
+          let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
           // Create only when scriptTypes is only 1
           if (scriptTypes.length === 1) {
             let scriptType = scriptTypes[0].type;
@@ -161,9 +153,57 @@ class JavaPoly {
 
         // After all call initJVM
         this.initJVM();
+    	 });
       }, false);
     }
   }
+
+  /**
+   * Initialization of BrowserFS 
+   */
+  initBrowserFS(){
+    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
+    BrowserFS.initialize(mfs);
+    mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
+    mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
+    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
+
+    this.fs = BrowserFS.BFSRequire('fs');
+    this.path = BrowserFS.BFSRequire('path');
+    this.fsext = require('./tools/fsext')(this.fs, this.path);
+    this.fsext.rmkdirSync(this.options.storageDir);
+  }
+  
+  /**
+   * load js library file.
+   * @param fileSrc
+   * 		the uri src of the file
+   * @return Promise
+   * 		we could use Promise to wait for js loaded finished.
+   */
+  loadExternalJs(fileSrc){
+  	return new Promise((resolve, reject) => {
+    	let jsElm = global.document.createElement("script");
+    	jsElm.type = "text/javascript";
+    	
+    	if(jsElm.readyState){
+    		jsElm.onreadystatechange = function(){
+    			if (jsElm.readyState=="loaded" || jsElm.readyState=="complete"){
+    				jsElm.onreadysteatechange=null;
+    				resolve();
+    			}
+    		}
+    	}else{
+    		jsElm.onload=function(){
+    			resolve();
+    			// FIXME reject when timeout
+    		}
+    	}
+    	
+    	jsElm.src = fileSrc;
+    	global.document.getElementsByTagName("head")[0].appendChild(jsElm);
+  	});
+  };
 
   /**
    * Dispatching JVMReady event to window
