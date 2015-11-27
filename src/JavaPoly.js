@@ -2,8 +2,9 @@ import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaArchiveFile';
 import JavaSourceFile from './JavaSourceFile';
-import { createRootEntity, JavaClassWrapper } from './JavaClassWrapper';
+import JavaClassWrapper from './JavaClassWrapper';
 import QueueExecutor from './QueueExecutor';
+import ProxyWrapper from './ProxyWrapper';
 
 const JAVA_MIME = [
   { // For compiled Java-class
@@ -174,7 +175,7 @@ class JavaPoly {
   }
 
   initGlobalApiObjects() {
-    global.window.J = createRootEntity(this);
+    global.window.J = ProxyWrapper.createRootEntity();
     global.window.Java = {
       type: JavaClassWrapper.getClassWrapperByName
     };

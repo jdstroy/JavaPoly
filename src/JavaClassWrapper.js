@@ -1,6 +1,15 @@
-let javapoly;
+class JavaClassWrapper {
 
-export class JavaClassWrapper {
+  static runProxyMethod(methodObject, argumentsList) {
+    return new Promise(
+      (resolve, reject) => {
+        JavaClassWrapper.getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
+          classWrapper.runClassMethod(methodObject._name, argumentsList).then(returnValue => resolve(returnValue));
+        });
+      }
+    );
+  }
+
   static getClassWrapperByName(clsName) {
     clsName = toByteCodeClassName(clsName);
     return new Promise(
@@ -58,16 +67,6 @@ export class JavaClassWrapper {
   }
 }
 
-function runMethod(methodObject, argumentsList) {
-  return new Promise(
-    (resolve, reject) => {
-      JavaClassWrapper.getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
-        classWrapper.runClassMethod(methodObject._name, argumentsList).then(returnValue => resolve(returnValue));
-      });
-    }
-  );
-}
-
 function toByteCodeClassName(clsName) {
   return 'L' + clsName.replace(/\./g, '/') + ';';
 }
@@ -86,39 +85,4 @@ function mapToJsObject(rv) {
   return rv;
 }
 
-function createEntity(name, parent) {
-  // We don't now in advance is it a function or just an Object
-  // But objects cannot be called, so it is a function
-  const object = function() {};
-  object._parent = parent;
-  object._name = name;
-  if (parent !== null) {
-    object._identifier = (parent._name === null ? '' : parent._identifier + '.') + name;
-  }
-  object._call = function(thisArg, argumentsList) {
-    return new Promise(
-      (resolve, reject) => {
-        runMethod(object, argumentsList).then(rv => resolve(rv));
-      }
-    );
-  };
-
-  const proxy = new Proxy(object, {
-    get: (target, property) => {
-      if (!target.hasOwnProperty(property)) {
-        target[property] = createEntity(property, target);
-      }
-      return target[property];
-    },
-    apply: (target, thisArg, argumentsList) => {
-      return target._call(thisArg, argumentsList);
-    }
-  });
-
-  return proxy;
-}
-
-export function createRootEntity(javapolyObject) {
-  javapoly = javapolyObject;
-  return createEntity(null, null);
-}
+export default JavaClassWrapper;
