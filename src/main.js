@@ -1,3 +1,4 @@
 import JavaPoly from './JavaPoly';
 
-global.window.JavaPoly = JavaPoly;
+// Create main object that will be accessed via global objects J and Java
+new JavaPoly();

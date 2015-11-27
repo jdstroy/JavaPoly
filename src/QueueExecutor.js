@@ -1,7 +1,9 @@
 class QueueExecutor {
+
   constructor() {
     this.callbackQueue = [];
     this.isExecuting = false;
+    this.isInitialized = false;
   }
 
   execute(callback) {
@@ -10,6 +12,10 @@ class QueueExecutor {
   }
 
   continueExecution() {
+    if (! this.isInitialized) {
+      // Wait until initialized
+      return;
+    }
     if (!this.isExecuting && this.callbackQueue.length > 0) {
       this.isExecuting = true;
       const callback = this.callbackQueue[0];
@@ -19,6 +25,15 @@ class QueueExecutor {
         this.continueExecution();
       });
     }
+  }
+
+  waitFor(eventName) {
+    let self = this;
+    document.addEventListener(eventName, function(e) {
+      self.isInitialized = true;
+      self.continueExecution();
+    });
+    return this;
   }
 }
 

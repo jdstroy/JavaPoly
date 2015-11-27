@@ -3,6 +3,7 @@ import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaArchiveFile';
 import JavaSourceFile from './JavaSourceFile';
 import { createRootEntity, JavaClassWrapper } from './JavaClassWrapper';
+import QueueExecutor from './QueueExecutor';
 
 const JAVA_MIME = [
   { // For compiled Java-class
@@ -107,27 +108,30 @@ class JavaPoly {
      */
     this.classpath = [this.options.storageDir];
 
-    /**
-     * [java description]
-     * @type {[type]}
-     */
-    this.java = null;
-
-    // Initialization of BrowserFS
-    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
-
     this.fs = BrowserFS.BFSRequire('fs');
     this.path = BrowserFS.BFSRequire('path');
     this.fsext = require('./tools/fsext')(this.fs, this.path);
 
+    this.queueExecutor = new QueueExecutor().waitFor('JVMReady');
+    this.initJavaPoly();
+
+    // Init objects for user to make possible start to work with JavaPoly instantly
+    this.initGlobalApiObjects();
+  }
+
+  // Will be called from queueExecutor lazily
+  initJavaPoly() {
+    // Initialization of BrowserFS
+    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
+
     BrowserFS.initialize(mfs);
     mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
-    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', options.doppioLibUrl));
+    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
 
     this.fsext.rmkdirSync(this.options.storageDir);
 
-    if (options.initOnStart === true) {
+    if (this.options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', e => {
         _.each(global.document.scripts, script => {
           let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
@@ -169,7 +173,7 @@ class JavaPoly {
     );
   }
 
-  initGlobalObjects() {
+  initGlobalApiObjects() {
     global.window.J = createRootEntity(this);
     global.window.Java = {
       type: JavaClassWrapper.getClassWrapperByName
@@ -199,8 +203,6 @@ class JavaPoly {
         nativeClasspath: ['/sys/src/natives'],
         assertionsEnabled: false
       }, (err, jvm) => {
-          this.initGlobalObjects();
-
           // Compilation of Java sorces
           let compilationHub = this.sources.map( (src) => src.compile() );
 

@@ -1,8 +1,4 @@
-import QueueExecutor from './QueueExecutor';
-
-let queueExecutor = new QueueExecutor();
-
-let jvm = null;
+let javapoly;
 
 export class JavaClassWrapper {
   static getClassWrapperByName(clsName) {
@@ -14,8 +10,8 @@ export class JavaClassWrapper {
         if (JavaClassWrapper.cache[clsName] !== undefined) {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
-          queueExecutor.execute(nextCallback => {
-            jvm.getSystemClassLoader().initializeClass(jvm.firstThread, clsName, cls => {
+          javapoly.queueExecutor.execute(nextCallback => {
+            javapoly.jvm.getSystemClassLoader().initializeClass(javapoly.jvm.firstThread, clsName, cls => {
               const javaClassWrapper = new JavaClassWrapper(cls, clsName);
               JavaClassWrapper.cache[clsName] = javaClassWrapper;
               resolve(javaClassWrapper);
@@ -47,8 +43,8 @@ export class JavaClassWrapper {
           var method = this.jvmClass.methods[i];
           // TODO make some more precise signature matching logic
           if (method.name === methodName && method.num_args === argumentsList.length) {
-            queueExecutor.execute(nextCallback => {
-              jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
+            javapoly.queueExecutor.execute(nextCallback => {
+              javapoly.jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
                 var returnValue = mapToJsObject(rv);
                 resolve(returnValue);
                 nextCallback();
@@ -122,7 +118,7 @@ function createEntity(name, parent) {
   return proxy;
 }
 
-export function createRootEntity(javapoly) {
-  jvm = javapoly.jvm;
+export function createRootEntity(javapolyObject) {
+  javapoly = javapolyObject;
   return createEntity(null, null);
 }
