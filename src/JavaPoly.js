@@ -42,7 +42,6 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * 2. or a public url, eg. http://www.javapoly.com/doppio/
    */
   doppioLibUrl: 'doppio/'
-  //doppioLibUrl: 'http://www.javapoly.com/doppio/'
 }
 
 /**

@@ -10,6 +10,15 @@ module.exports = function(grunt) {
              ["babelify", { "presets": ["es2015"] }]
           ]
         }
+      },
+      buildForTest:{
+      	src: ['src/**/main.test.js'],
+        dest: 'build/javapoly.js',
+        options: {
+          transform: [
+             ["babelify", { "presets": ["es2015"] }]
+          ]
+        }
       }
     },
     watch: {
@@ -34,8 +43,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-symlink');
 
-  grunt.registerTask('build:test', ['browserify:build', 'symlink:distToTests']);
+  grunt.registerTask('build:test', ['browserify:buildForTest', 'symlink:distToTests']);
   grunt.registerTask('build', ['browserify:build']);  
+  grunt.registerTask('build:browser', ['browserify:build']);
 
   grunt.registerTask('default', ['build']);
 }
