@@ -15,7 +15,7 @@ module.exports = function(grunt) {
     watch: {
       scripts: {
         files: 'src/**/*.js',
-        tasks: ['build', 'copy:distToTests'],
+        tasks: ['build', 'symlink:distToTests'],
         options: {
           interrupt: true,
         },

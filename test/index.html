@@ -34,58 +34,58 @@
 
         describe('Proxy access', function() {
           describe('java.lang.Integer', function() {
-            it('toHexString', function() {
+            it('toHexString', function(done) {
               J.java.lang.Integer.toHexString(42).then(function(result) {
                 expect(result).to.eql('2a');
-                console.log('+');
+                done();
               });
             });
 
-            it('reverse', function() {
+            it('reverse', function(done) {
               J.java.lang.Integer.reverse(42).then(function(result) {
                 expect(result).to.eql(1409286144);
-                console.log('+');
+                done();
               });
             });
 
-            it('toString', function() {
+            it('toString', function(done) {
               J.java.lang.Integer.toString(42, 16).then(function(result) {
                 expect(result).to.eql('2a');
-                console.log('+');
+                done();
               });
             });
 
-            it('compare', function() {
+            it('compare', function(done) {
               J.java.lang.Integer.compare(42, 41).then(function(result) {
                 expect(result).to.eql(1);
-                console.log('+');
+                done();
               });
             });
           });
 
           describe('java.lang.Double', function() {
-            it('toHexString', function() {
+            it('toHexString', function(done) {
               J.java.lang.Double.toHexString(42).then(function(result) {
                 expect(result).to.eql('0x1.5p5');
-                console.log('+');
+                done();
               });
             });
           });
 
           describe('classes/Main.class', function() {
-            it('static test()', function() {
+            it('static test()', function(done) {
               J.Main.test().then(function(result) {
                 expect(result).to.eql('test message');
-                console.log('+');
+                done();
               });
             })
           });
 
           describe('jars/javapoly-utils.jar', function() {
-            it('jar static test()', function() {
+            it('jar static test()', function(done) {
               J.com.javapoly.utils.Test.test().then(function(result) {
                 expect(result).to.eql('test message in jar');
-                console.log('+');
+                done();
               });
             })
           });
@@ -94,12 +94,17 @@
 
         describe('String identifiers access', function() {
           describe('java.lang.Integer', function() {
-            it('calls methods', function() {
+            it('calls methods', function(done) {
               Java.type('java.lang.Integer').then(function(Integer) {
                 Integer.toHexString(42).then(function(result) {
                   expect(result).to.eql('2a');
-                  console.log('+');
+                  done();
                 });
+              });
+            });
+
+            it('calls methods', function(done) {
+              Java.type('java.lang.Integer').then(function(Integer) {
                 Integer.toString(42, 16).then(function(result) {
                   expect(result).to.eql('2a');
                   console.log('+');

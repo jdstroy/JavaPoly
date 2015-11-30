@@ -34,12 +34,17 @@ export function getClassWrapperByName(clsName) {
         resolve(getClassWrapperByName.cache[clsName]);
       } else {
         callInQueue(nextCallback => {
-          jvm.getSystemClassLoader().initializeClass(jvm.firstThread, clsName, cls => {
-            const javaClassWrapper = new JavaClassWrapper(cls, clsName);
-            getClassWrapperByName.cache[clsName] = javaClassWrapper;
-            resolve(javaClassWrapper);
-            nextCallback();
-          });
+          let systemClassLoader = jvm.getSystemClassLoader();
+          console.log(clsName);
+          console.log(systemClassLoader);
+          if (systemClassLoader) {
+            systemClassLoader.initializeClass(jvm.firstThread, clsName, cls => {
+              const javaClassWrapper = new JavaClassWrapper(cls, clsName);
+              getClassWrapperByName.cache[clsName] = javaClassWrapper;
+              resolve(javaClassWrapper);
+              nextCallback();
+            });
+          }
         })
       }
     }

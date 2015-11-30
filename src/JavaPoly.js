@@ -117,7 +117,6 @@ class JavaPoly {
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
 
-
     this.fsext.rmkdirSync(this.options.storageDir);
 
     if (options.initOnStart === true) {
@@ -184,21 +183,26 @@ class JavaPoly {
       delete this.loadingHub;
       this.loadingHub = [];
 
-      this.jvm = new doppio.JVM({
+      this.jvm = new Doppio.VM.JVM({
         bootstrapClasspath: ['/sys/vendor/java_home/classes'],
         classpath: this.classpath,
         javaHomePath: '/sys/vendor/java_home',
         extractionPath: '/tmp',
         nativeClasspath: ['/sys/src/natives'],
-        assertionsEnabled: false
+        assertionsEnabled: false,
+        tmpDir: '/tmp'
       }, (err, jvm) => {
-          this.initGlobalObjects();
+        if (err) {
+          console.error(err);
+        }
 
-          // Compilation of Java sorces
-          let compilationHub = this.sources.map( (src) => src.compile() );
+        this.initGlobalObjects();
 
-          // Dispatch event when all compilations are finished 
-          Promise.all(compilationHub).then(() => this.dispatchReadyEvent());          
+        // Compilation of Java sorces
+        let compilationHub = this.sources.map( (src) => src.compile() );
+
+        // Dispatch event when all compilations are finished 
+        Promise.all(compilationHub).then(() => this.dispatchReadyEvent());          
       });
     });
   }
