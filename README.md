@@ -15,9 +15,12 @@ $ npm install
 For building JavaPoly run command:
 ```sh
 $ grunt build
+or
+$ grunt build:browser
 ```
 
 This creates `build/javapoly.js` file.
+The javapoly.js will auto-load the js library needed(browserjs.js, doppio lib and so on) from external site(eg, www.javapoly.com)
 
 ### Development JavaPoly
 
@@ -40,6 +43,10 @@ But you can rebuild JavaPoly for testing without watching by command:
 ```sh
 $ grunt build:test
 ```
+
+**note, the final javapoly.js file which build:test task generate is a little different from the file which build:browser task generate.
+the javapoly.js which build:test task generate will load the doppio and browserjs library in local folders.
+and the javapoly.js which build:browser(or build) task generate will load the doppio and browserjs library from external web site.** 
 
 To test JavaPoly you should run HTTP server for folder `test` and open `index.html` in browser.
 
