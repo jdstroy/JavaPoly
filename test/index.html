@@ -20,94 +20,119 @@
   <script type="text/javascript">
     mocha.setup('bdd');
 
-    describe('JVMReady', function() {
-      it('load jvm', function() {
-        expect(J).to.exist;
-        expect(Java).to.exist;
-      });
+    describe('JavaPoly', function() {
+      this.timeout(1000000); // Let jvm to start and do not interrupt promises
+
+      var isProxySupported = (typeof Proxy !== 'undefined');
 
       describe('Proxy access', function() {
-        describe('java.lang.Integer', function() {
-          it('toHexString', function() {
-            J.java.lang.Integer.toHexString(42).then(function(result) {
-              expect(result).to.eql('2a');
-              console.log('+');
+
+        if (!isProxySupported) {
+
+          it('checks that J is undefined if Proxy is not supported', function() {
+            expect(typeof J === 'undefined').to.be.ok();
+          });
+
+        } else {
+
+          it('checks that J is defined', function() {
+            expect(J).to.exist;
+          });
+
+          describe('java.lang.Integer', function() {
+
+            it('toHexString', function() {
+              return J.java.lang.Integer.toHexString(42).then(function(result) {
+                expect(result).to.eql('2a');
+              });
+            });
+
+            it('reverse', function() {
+              return J.java.lang.Integer.reverse(42).then(function(result) {
+                expect(result).to.eql(1409286144);
+              });
+            });
+
+            it('compare', function() {
+              return J.java.lang.Integer.compare(42, 41).then(function(result) {
+                expect(result).to.eql(1);
+              });
+            });
+
+            it('parseInt', function() {
+              return J.java.lang.Integer.parseInt('42').then(function(result) {
+                expect(result).to.eql(42);
+              });
+            });
+
+          });
+
+          describe('java.lang.Double', function() {
+            it('toHexString', function() {
+              return J.java.lang.Double.toHexString(42).then(function(result) {
+                expect(result).to.eql('0x1.5p5');
+              });
             });
           });
 
-          it('reverse', function() {
-            J.java.lang.Integer.reverse(42).then(function(result) {
-              expect(result).to.eql(1409286144);
-              console.log('+');
-            });
+          describe('classes/Main.class', function() {
+            it('static test()', function() {
+              return J.Main.test().then(function(result) {
+                expect(result).to.eql('test message');
+              });
+            })
           });
 
-          it('compare', function() {
-            J.java.lang.Integer.compare(42, 41).then(function(result) {
-              expect(result).to.eql(1);
-              console.log('+');
-            });
+          describe('jars/javapoly-utils.jar', function() {
+            it('jar static test()', function() {
+              return J.com.javapoly.utils.Test.test().then(function(result) {
+                expect(result).to.eql('test message in jar');
+              });
+            })
           });
 
-          it('compare', function() {
-            J.java.lang.Integer.parseInt('42').then(function(result) {
-              expect(result).to.eql(42);
-              console.log('+');
-            });
-          });
-        });
-
-        describe('java.lang.Double', function() {
-          it('toHexString', function() {
-            J.java.lang.Double.toHexString(42).then(function(result) {
-              expect(result).to.eql('0x1.5p5');
-              console.log('+');
-            });
-          });
-        });
-
-        describe('classes/Main.class', function() {
-          it('static test()', function() {
-            J.Main.test().then(function(result) {
-              expect(result).to.eql('test message');
-              console.log('+');
-            });
-          })
-        });
-
-        describe('jars/javapoly-utils.jar', function() {
-          it('jar static test()', function() {
-            J.com.javapoly.utils.Test.test().then(function(result) {
-              expect(result).to.eql('test message in jar');
-              console.log('+');
-            });
-          })
-        });
-
+        }
       });
 
       describe('String identifiers access', function() {
-        describe('java.lang.Integer', function() {
-          it('calls methods', function() {
-            Java.type('java.lang.Integer').then(function(Integer) {
-              Integer.toHexString(42).then(function(result) {
-                expect(result).to.eql('2a');
-                console.log('+');
+
+        it('checks that Java is defined', function() {
+          expect(Java).to.exist;
+          expect(Java.type).to.exist;
+        });
+
+        describe('Java.type', function() {
+
+          it('should load class', function() {
+            return Java.type('java.lang.Integer').then(function(Integer) {
+              expect(Integer).to.exist;
+            });
+          });
+
+          describe('java.lang.Integer', function() {
+            it('toHexString', function() {
+              Java.type('java.lang.Integer').then(function(Integer) {
+                return Integer.toHexString(42).then(function(result) {
+                  expect(result).to.eql('2a');
+                });
               });
-              Integer.toString(42, 16).then(function(result) {
-                expect(result).to.eql('2a');
-                console.log('+');
+            });
+            it('toString', function() {
+              Java.type('java.lang.Integer').then(function(Integer) {
+                return Integer.toString(42, 16).then(function(result) {
+                  expect(result).to.eql('2a');
+                });
               });
             });
           });
+
         });
       });
     });
 
-    // FIXME: now it is required to put '+' to make sure we have executed all tests
-    // fix it with proper Promises tests
-
-    mocha.checkLeaks();
+    // TODO: akadeev: checkLeaks() does not work for such complex promises tests
+    // There might be a way to fix it
+    //mocha.checkLeaks();
     mocha.run();
   </script>
 </body>
