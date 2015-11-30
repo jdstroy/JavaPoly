@@ -1,4 +1,10 @@
+import JavaUtilities from './JavaUtilities';
+
 class JavaClassWrapper {
+
+  static runMethodWithJavaUtilities(methodObject, argumentsList) {
+    return JavaUtilities.runMethod(methodObject._parent._identifier, methodObject._name, argumentsList);
+  }
 
   static runProxyMethod(methodObject, argumentsList) {
     return new Promise(
@@ -53,7 +59,7 @@ class JavaClassWrapper {
           // TODO make some more precise signature matching logic
           if (method.name === methodName && method.num_args === argumentsList.length) {
             javapoly.queueExecutor.execute(nextCallback => {
-              javapoly.jvm.firstThread.runMethod(method, argumentsList, (e, rv) => {
+              javapoly.jvm.firstThread.runMethod(method, prepareParams(argumentsList), (e, rv) => {
                 var returnValue = mapToJsObject(rv);
                 resolve(returnValue);
                 nextCallback();
@@ -64,6 +70,32 @@ class JavaClassWrapper {
         }
       }
     );
+  }
+}
+
+function prepareParams(params) {
+  const result = [];
+  for (var i = 0; i < params.length; i++) {
+    result[i] = prepareParameterForJvm(params[i]);
+  }
+  return result;
+}
+
+function prepareParameterForJvm(parameter) {
+  if (typeof parameter === 'number') {
+    return parameter;
+  } else if (typeof parameter === 'string') {
+    let result = javapoly.jvm.internString(parameter);
+    return result;
+  } else {
+    // TODO: Prepare arrays
+    // const arrayClass = javapoly.jvm.bsCl.getInitializedClass(javapoly.jvm.firstThread, '[Ljava/lang/Object;')
+    // const arrayConstructor = arrayClass.getConstructor(javapoly.jvm.firstThread);
+    // const array = arrayConstructor(javapoly.jvm.firstThread, parameter.length);
+    // for (let i = 0; i < parameter.length; i++) {
+    //   array.array[i] = prepareParameterForJvm(parameter[i]);
+    // }
+    return parameter;
   }
 }
 
@@ -80,6 +112,10 @@ function mapToJsObject(rv) {
     return rv.fields['Ljava/lang/String;value'].array.map(
       c => { return String.fromCharCode(c); }
     ).join('');
+  } else {
+    if (rv.cls.className === 'Ljava/lang/Integer;') {
+      return rv;//.fields['Ljava/lang/Integer;value'];
+    }
   }
   // Leave as it is, let user parse his object himself
   return rv;

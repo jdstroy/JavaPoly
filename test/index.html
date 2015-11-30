@@ -8,6 +8,7 @@
 
   <script type="application/java-vm" src="classes/Main.class"></script>
   <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
+  <script type="application/java-vm" src="classes/Utilities.class"></script>
   <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
 </head>
 <body>
@@ -41,16 +42,16 @@
             });
           });
 
-          it('toString', function() {
-            J.java.lang.Integer.toString(42, 16).then(function(result) {
-              expect(result).to.eql('2a');
+          it('compare', function() {
+            J.java.lang.Integer.compare(42, 41).then(function(result) {
+              expect(result).to.eql(1);
               console.log('+');
             });
           });
 
           it('compare', function() {
-            J.java.lang.Integer.compare(42, 41).then(function(result) {
-              expect(result).to.eql(1);
+            J.java.lang.Integer.parseInt('42').then(function(result) {
+              expect(result).to.eql(42);
               console.log('+');
             });
           });
