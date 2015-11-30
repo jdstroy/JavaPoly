@@ -158,7 +158,7 @@ class JavaPoly {
   }
 
   /**
-   * Initialization of BrowserFS 
+   * Initialization of BrowserFS
    */
   initBrowserFS(){
     let mfs = new BrowserFS.FileSystem.MountableFileSystem();
@@ -172,7 +172,7 @@ class JavaPoly {
     this.fsext = require('./tools/fsext')(this.fs, this.path);
     this.fsext.rmkdirSync(this.options.storageDir);
   }
-  
+
   /**
    * load js library file.
    * @param fileSrc
@@ -184,7 +184,7 @@ class JavaPoly {
   	return new Promise((resolve, reject) => {
     	let jsElm = global.document.createElement("script");
     	jsElm.type = "text/javascript";
-    	
+
     	if(jsElm.readyState){
     		jsElm.onreadystatechange = function(){
     			if (jsElm.readyState=="loaded" || jsElm.readyState=="complete"){
@@ -198,7 +198,7 @@ class JavaPoly {
     			// FIXME reject when timeout
     		}
     	}
-    	
+
     	jsElm.src = fileSrc;
     	global.document.getElementsByTagName("head")[0].appendChild(jsElm);
   	});
@@ -214,7 +214,11 @@ class JavaPoly {
   }
 
   initGlobalApiObjects() {
-    global.window.J = ProxyWrapper.createRootEntity();
+    if (typeof Proxy === 'undefined') {
+      console.warn('Your browser does not support Proxy, so J.java.lang.Integer.compare(42, 41) api is not available!');
+    } else {
+      global.window.J = ProxyWrapper.createRootEntity();
+    }
     global.window.Java = {
       type: JavaClassWrapper.getClassWrapperByName
     };
