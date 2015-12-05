@@ -166,6 +166,7 @@ class JavaPoly {
     mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
+    mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "natives/"));
 
     this.fs = BrowserFS.BFSRequire('fs');
     this.path = BrowserFS.BFSRequire('path');
@@ -244,7 +245,7 @@ class JavaPoly {
         classpath: this.classpath,
         javaHomePath: '/sys/vendor/java_home',
         extractionPath: '/tmp',
-        nativeClasspath: ['/sys/src/natives'],
+        nativeClasspath: ['/sys/src/natives', '/polynatives'],
         assertionsEnabled: false
       }, (err, jvm) => {
           // Compilation of Java sorces

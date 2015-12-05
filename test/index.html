@@ -94,6 +94,37 @@
         }
       });
 
+      describe('Utilities', function() {
+
+        describe('eval', function() {
+          it('integer arithmetic', function() {
+            return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
+              Utilities.eval("40 + 2").then(function(result) {
+                expect(result).to.eql(42);
+              });
+            });
+          });
+
+          it('string split', function() {
+            return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
+              Utilities.eval("'a,b,c'.split(',')").then(function(result) {
+                expect(result).to.eql(["a", "b", "c"]);
+              });
+            });
+          });
+
+          it('function definition', function() {
+            return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
+              Utilities.eval("(function(x){return x*x})").then(function(result) {
+                expect(result(7)).to.eql(49);
+              });
+            });
+          });
+
+        });
+
+      });
+
       describe('String identifiers access', function() {
 
         it('checks that Java is defined', function() {
