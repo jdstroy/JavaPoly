@@ -31,4 +31,7 @@ public class Utilities {
     }
     return null;
   }
+
+  /* Evaluates a Javascript expression and returns the result as a POJO */
+  public static native Object eval(String expr);
 }
