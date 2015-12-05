@@ -108,6 +108,9 @@ function mapToJsObject(rv) {
     // It is basic types, no need to convert it additionally
     return rv;
   }
+  if (Array.isArray(rv)) {
+    return rv;
+  }
   if (rv.cls.className === 'Ljava/lang/String;') {
     return rv.fields['Ljava/lang/String;value'].array.map(
       c => { return String.fromCharCode(c); }
