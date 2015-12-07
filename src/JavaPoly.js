@@ -108,8 +108,9 @@ class JavaPoly {
      */
     this.classpath = [this.options.storageDir];
 
-    this.queueExecutor = new QueueExecutor().waitFor('JVMReady');
-    this.initJavaPoly();
+    let jvmReadyPromise = this.initJavaPoly();
+
+    this.queueExecutor = new QueueExecutor(jvmReadyPromise);
 
     // Init objects for user to make possible start to work with JavaPoly instantly
     this.initGlobalApiObjects();
@@ -118,43 +119,52 @@ class JavaPoly {
   // Will be called from queueExecutor lazily
   initJavaPoly() {
     if (this.options.initOnStart === true) {
-      global.document.addEventListener('DOMContentLoaded', e => {
-       // Ensure we have loaded the browserfs.js file before handling Java/class file
-       this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
-      	 this.initBrowserFS();
-      	 // Load doppio.js file
-      	 this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));
-
-      	 // Load java mime files
-      	 _.each(global.document.scripts, script => {
-          let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
-          // Create only when scriptTypes is only 1
-          if (scriptTypes.length === 1) {
-            let scriptType = scriptTypes[0].type;
-            if (scriptTypes[0].srcRequired && !script.src)
-              throw `An attribute 'src' should be declared for MIME-type '${script.type}'`;
-
-            switch(scriptType) {
-              case 'class':
-                this.scripts.push(new JavaClassFile(this, script));
-                break;
-              case 'java':
-                let javaSource = new JavaSourceFile(this, script);
-                this.scripts.push(javaSource);
-                this.sources.push(javaSource);
-                break;
-              case 'jar':
-                this.scripts.push(new JavaArchiveFile(this, script));
-                break;
-            }
-          }
-        });
-
-        // After all call initJVM
-        this.initJVM();
-    	 });
-      }, false);
+      return new Promise((resolve) => { this.beginLoading(resolve)});
+    } else {
+      return Promise.reject("not initialised");
     }
+  }
+
+  beginLoading(resolveJVMReady) {
+    global.document.addEventListener('DOMContentLoaded', e => {
+      // Ensure we have loaded the browserfs.js file before handling Java/class file
+      this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
+        this.initBrowserFS();
+        // Load doppio.js file
+        this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));
+
+        this.loadScripts();
+
+        this.initJVM().then(resolveJVMReady);
+      });
+    }, false);
+  }
+
+  loadScripts() {
+    // Load java mime files
+    _.each(global.document.scripts, script => {
+      let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
+      // Create only when scriptTypes is only 1
+      if (scriptTypes.length === 1) {
+        let scriptType = scriptTypes[0].type;
+        if (scriptTypes[0].srcRequired && !script.src)
+          throw `An attribute 'src' should be declared for MIME-type '${script.type}'`;
+
+        switch(scriptType) {
+          case 'class':
+            this.scripts.push(new JavaClassFile(this, script));
+            break;
+          case 'java':
+            let javaSource = new JavaSourceFile(this, script);
+            this.scripts.push(javaSource);
+            this.sources.push(javaSource);
+            break;
+          case 'jar':
+            this.scripts.push(new JavaArchiveFile(this, script));
+            break;
+        }
+      }
+    });
   }
 
   /**
@@ -226,33 +236,31 @@ class JavaPoly {
   }
 
   /**
-   * Initialize JVM for this JavaPoly:
+   * Return a promise that JVM will be initialised for this JavaPoly:
    * 1. Ensure that all loading promises are finished
    * 2. Create object for JVM
-   * 3. Dispatch event that JVM is ready
    */
   initJVM() {
-    // Ensure that all promises are finished
-    // and after this dispatch event JVMReady
-    Promise.all(this.loadingHub).then(()=> {
-      // Delete loadingHub (if somewhere else it is used so
-      // it's gonna be runtime error of that usage)
-      delete this.loadingHub;
-      this.loadingHub = [];
+    return new Promise((resolve) => {
 
-      this.jvm = new doppio.JVM({
-        bootstrapClasspath: ['/sys/vendor/java_home/classes'],
-        classpath: this.classpath,
-        javaHomePath: '/sys/vendor/java_home',
-        extractionPath: '/tmp',
-        nativeClasspath: ['/sys/src/natives', '/polynatives'],
-        assertionsEnabled: false
-      }, (err, jvm) => {
-          // Compilation of Java sorces
-          let compilationHub = this.sources.map( (src) => src.compile() );
+      Promise.all(this.loadingHub).then(()=> {
+        // Delete loadingHub (if somewhere else it is used so it's gonna be runtime error of that usage)
+        delete this.loadingHub;
+        this.loadingHub = [];
 
-          // Dispatch event when all compilations are finished
-          Promise.all(compilationHub).then(() => this.dispatchReadyEvent());
+        this.jvm = new doppio.JVM({
+          bootstrapClasspath: ['/sys/vendor/java_home/classes'],
+          classpath: this.classpath,
+          javaHomePath: '/sys/vendor/java_home',
+          extractionPath: '/tmp',
+          nativeClasspath: ['/sys/src/natives', '/polynatives'],
+          assertionsEnabled: false
+        }, (err, jvm) => {
+            // Compilation of Java sorces
+            let compilationHub = this.sources.map( (src) => src.compile() );
+
+            Promise.all(compilationHub).then(resolve);
+        });
       });
     });
   }

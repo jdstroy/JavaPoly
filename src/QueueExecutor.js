@@ -1,9 +1,10 @@
 class QueueExecutor {
 
-  constructor() {
+  constructor(jvmReadyPromise) {
     this.callbackQueue = [];
     this.isExecuting = false;
     this.isInitialized = false;
+    this.waitFor(jvmReadyPromise);
   }
 
   execute(callback) {
@@ -27,13 +28,12 @@ class QueueExecutor {
     }
   }
 
-  waitFor(eventName) {
+  waitFor(jvmReadyPromise) {
     let self = this;
-    document.addEventListener(eventName, function(e) {
+    jvmReadyPromise.then(() =>  {
       self.isInitialized = true;
       self.continueExecution();
     });
-    return this;
   }
 }
 
