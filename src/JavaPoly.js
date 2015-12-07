@@ -120,7 +120,7 @@ class JavaPoly {
     if (this.options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', e => {
        // Ensure we have loaded the browserfs.js file before handling Java/class file
-       Promise.all([this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js')]).then(()=> {
+       this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
       	 this.initBrowserFS();
       	 // Load doppio.js file
       	 this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));
