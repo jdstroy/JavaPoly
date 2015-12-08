@@ -2,8 +2,7 @@ class QueueExecutor {
 
   constructor(jvmReadyPromise) {
     this.callbackQueue = [];
-    this.isExecuting = false;
-    this.isInitialized = false;
+    this.isBlocked = true;
     this.waitFor(jvmReadyPromise);
   }
 
@@ -13,16 +12,12 @@ class QueueExecutor {
   }
 
   continueExecution() {
-    if (! this.isInitialized) {
-      // Wait until initialized
-      return;
-    }
-    if (!this.isExecuting && this.callbackQueue.length > 0) {
-      this.isExecuting = true;
+    if ((!this.isBlocked) && (this.callbackQueue.length > 0)) {
+      this.isBlocked = true;
       const callback = this.callbackQueue[0];
       this.callbackQueue.shift();
       callback(() => {
-        this.isExecuting = false;
+        this.isBlocked = false;
         this.continueExecution();
       });
     }
@@ -31,7 +26,7 @@ class QueueExecutor {
   waitFor(jvmReadyPromise) {
     let self = this;
     jvmReadyPromise.then(() =>  {
-      self.isInitialized = true;
+      self.isBlocked = false;
       self.continueExecution();
     });
   }
