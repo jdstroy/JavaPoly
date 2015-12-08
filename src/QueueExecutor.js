@@ -1,9 +1,9 @@
 class QueueExecutor {
 
-  constructor() {
+  constructor(jvmReadyPromise) {
     this.callbackQueue = [];
-    this.isExecuting = false;
-    this.isInitialized = false;
+    this.isBlocked = true;
+    this.waitFor(jvmReadyPromise);
   }
 
   execute(callback) {
@@ -12,28 +12,23 @@ class QueueExecutor {
   }
 
   continueExecution() {
-    if (! this.isInitialized) {
-      // Wait until initialized
-      return;
-    }
-    if (!this.isExecuting && this.callbackQueue.length > 0) {
-      this.isExecuting = true;
+    if ((!this.isBlocked) && (this.callbackQueue.length > 0)) {
+      this.isBlocked = true;
       const callback = this.callbackQueue[0];
       this.callbackQueue.shift();
       callback(() => {
-        this.isExecuting = false;
+        this.isBlocked = false;
         this.continueExecution();
       });
     }
   }
 
-  waitFor(eventName) {
+  waitFor(jvmReadyPromise) {
     let self = this;
-    document.addEventListener(eventName, function(e) {
-      self.isInitialized = true;
+    jvmReadyPromise.then(() =>  {
+      self.isBlocked = false;
       self.continueExecution();
     });
-    return this;
   }
 }
 
