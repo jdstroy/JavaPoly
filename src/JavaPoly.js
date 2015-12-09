@@ -2,7 +2,10 @@ import * as _ from 'underscore';
 import JavaClassFile from './JavaClassFile';
 import JavaArchiveFile from './JavaArchiveFile';
 import JavaSourceFile from './JavaSourceFile';
-import { createRootEntity, getClassWrapperByName } from './JavaEntity';
+import JavaClassWrapper from './JavaClassWrapper';
+import QueueExecutor from './QueueExecutor';
+import ProxyWrapper from './ProxyWrapper';
+import JavaPolyExecutor from './JavaPolyExecutor';
 
 const JAVA_MIME = [
   { // For compiled Java-class
@@ -32,7 +35,14 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * Directory name that stores all class-files, jars and/or java-files
    * @type {String}
    */
-  storageDir: '/tmp/data'
+  storageDir: '/tmp/data',
+  /**
+   * URL where we download the doppio library.
+   * @type {String}
+   * 1.'doppio/', download from user owner domain(${your.domain}/doppio), eg. localhost for locally test
+   * 2. or a public url, eg. http://www.javapoly.com/doppio/
+   */
+  doppioLibUrl: 'doppio/'
 }
 
 /**
@@ -99,31 +109,32 @@ class JavaPoly {
      */
     this.classpath = [this.options.storageDir];
 
+    this.queueExecutor = new QueueExecutor().waitFor('JVMReady');
+    this.initJavaPoly();
+
+    // Init objects for user to make possible start to work with JavaPoly instantly
+    this.initGlobalApiObjects();
+
     /**
-     * [java description]
-     * @type {[type]}
+     * Java executor which can natively run Java methods
+     * @type {JavaPolyExecutor}
      */
-    this.java = null;
+    this.executor = null;
+  }
 
-    // Initialization of BrowserFS
-    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
-
-    this.fs = BrowserFS.BFSRequire('fs');
-    this.path = BrowserFS.BFSRequire('path');
-    this.fsext = require('./tools/fsext')(this.fs, this.path);
-
-    BrowserFS.initialize(mfs);
-    mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
-    mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
-    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'doppio/'));
-
-    this.fsext.rmkdirSync(this.options.storageDir);
-
-    if (options.initOnStart === true) {
+  // Will be called from queueExecutor lazily
+  initJavaPoly() {
+    if (this.options.initOnStart === true) {
       global.document.addEventListener('DOMContentLoaded', e => {
-        _.each(global.document.scripts, script => {
-          let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
+       // Ensure we have loaded the browserfs.js file before handling Java/class file
+       Promise.all([this.loadExternalJs(this.options.doppioLibUrl+'browserfs/browserfs.js')]).then(()=> {
+      	 this.initBrowserFS();
+      	 // Load doppio.js file
+      	 this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));
 
+      	 // Load java mime files
+      	 _.each(global.document.scripts, script => {
+          let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
           // Create only when scriptTypes is only 1
           if (scriptTypes.length === 1) {
             let scriptType = scriptTypes[0].type;
@@ -148,9 +159,62 @@ class JavaPoly {
 
         // After all call initJVM
         this.initJVM();
+    	 });
       }, false);
     }
   }
+
+  /**
+   * Initialization of BrowserFS
+   */
+  initBrowserFS(){
+    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
+    BrowserFS.initialize(mfs);
+    // code for Doppio initialization
+    mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
+    mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
+    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
+
+    // JavaPoly files
+    mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'build/'));
+    mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', 'natives/'));
+
+    this.fs = BrowserFS.BFSRequire('fs');
+    this.path = BrowserFS.BFSRequire('path');
+    this.fsext = require('./tools/fsext')(this.fs, this.path);
+    this.fsext.rmkdirSync(this.options.storageDir);
+  }
+
+  /**
+   * load js library file.
+   * @param fileSrc
+   * 		the uri src of the file
+   * @return Promise
+   * 		we could use Promise to wait for js loaded finished.
+   */
+  loadExternalJs(fileSrc){
+  	return new Promise((resolve, reject) => {
+    	let jsElm = global.document.createElement("script");
+    	jsElm.type = "text/javascript";
+
+    	if(jsElm.readyState){
+    		jsElm.onreadystatechange = function(){
+    			if (jsElm.readyState=="loaded" || jsElm.readyState=="complete"){
+    				jsElm.onreadysteatechange=null;
+    				resolve();
+    			}
+    		}
+    	}else{
+    		jsElm.onload=function(){
+    			resolve();
+    			// FIXME reject when timeout
+    		}
+    	}
+
+    	jsElm.src = fileSrc;
+    	global.document.getElementsByTagName("head")[0].appendChild(jsElm);
+  	});
+  };
 
   /**
    * Dispatching JVMReady event to window
@@ -161,10 +225,14 @@ class JavaPoly {
     );
   }
 
-  initGlobalObjects() {
-    global.window.J = createRootEntity(this);
+  initGlobalApiObjects() {
+    if (typeof Proxy === 'undefined') {
+      console.warn('Your browser does not support Proxy, so J.java.lang.Integer.compare(42, 41) api is not available!');
+    } else {
+      global.window.J = ProxyWrapper.createRootEntity();
+    }
     global.window.Java = {
-      type: getClassWrapperByName
+      type: JavaClassWrapper.getClassWrapperByName
     };
   }
 
@@ -175,35 +243,45 @@ class JavaPoly {
    * 3. Dispatch event that JVM is ready
    */
   initJVM() {
-    // Ensure that all promises are finished 
+    // Ensure that all promises are finished
     // and after this dispatch event JVMReady
     Promise.all(this.loadingHub).then(()=> {
-      // Delete loadingHub (if somewhere else it is used so 
+      // Delete loadingHub (if somewhere else it is used so
       // it's gonna be runtime error of that usage)
       delete this.loadingHub;
       this.loadingHub = [];
 
       this.jvm = new Doppio.VM.JVM({
-        bootstrapClasspath: ['/sys/vendor/java_home/classes'],
+        bootstrapClasspath: ['/sys/vendor/java_home/classes', '/javapoly/classes'],
         classpath: this.classpath,
         javaHomePath: '/sys/vendor/java_home',
         extractionPath: '/tmp',
-        nativeClasspath: ['/sys/src/natives'],
-        assertionsEnabled: false,
-        tmpDir: '/tmp'
+        nativeClasspath: ['/sys/natives', '/polynatives', '/javapoly/natives'],
+        assertionsEnabled: false
       }, (err, jvm) => {
-        if (err) {
-          console.error(err);
-        }
+          if (err) {
+            console.error(err);
+          }
 
-        this.initGlobalObjects();
+          this.executor = new JavaPolyExecutor(this, () => {
+            this.executor.runStaticMethod('Ljava/lang/Integer;', 'valueOf(Ljava/lang/String;I)Ljava/lang/Integer;', '1111', 2).then((res) => {
+              console.log(res);
+            });
+          });
 
-        // Compilation of Java sorces
-        let compilationHub = this.sources.map( (src) => src.compile() );
+          // var cls = this.jvm.bsCl.getClass('Ljava/lang/Integer;');
+          // var m = cls.getMethod('valueOf(Ljava/lang/String;I)Ljava/lang/Integer;');
+          // console.log(m);
 
-        // Dispatch event when all compilations are finished 
-        Promise.all(compilationHub).then(() => this.dispatchReadyEvent());          
+
+          // Compilation of Java sorces
+          // let compilationHub = this.sources.map( (src) => src.compile() );
+
+          // Dispatch event when all compilations are finished
+          // Promise.all(compilationHub).then(() => this.dispatchReadyEvent());
       });
+
+      this.jvm.javapoly = this;
     });
   }
 }

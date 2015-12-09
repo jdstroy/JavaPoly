@@ -25,6 +25,11 @@
     "grunt-contrib-copy": "^0.8.2",
     "grunt-contrib-symlink": "^0.3.0",
     "grunt-contrib-watch": "^0.6.1",
+    "grunt-http-server": "^1.13.0",
+    "grunt-notify": "^0.4.3",
+    "grunt-run-java": "^0.1.1",
+    "grunt-ts": "^5.2.0",
+    "grunt-tsd": "^0.1.0",
     "http-server": "^0.8.5",
     "underscore": "^1.8.3"
   }
