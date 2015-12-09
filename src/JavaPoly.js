@@ -41,7 +41,15 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * 1.'doppio/', download from user owner domain(${your.domain}/doppio), eg. localhost for locally test
    * 2. or a public url, eg. http://www.javapoly.com/doppio/
    */
-  doppioLibUrl: 'doppio/'
+  doppioLibUrl: 'doppio/',
+
+  /**
+   * URL to the base of the javapoly library
+   * @type {String}
+   * 1.'/', download from user owner domain(${your.domain}/), eg. localhost for locally test
+   * 2. or a public url, eg. http://www.javapoly.com/
+   */
+  javapolyBaseUrl: '/'
 }
 
 /**
@@ -116,7 +124,7 @@ class JavaPoly {
     this.initGlobalApiObjects();
   }
 
-  // Will be called from queueExecutor lazily
+  // returns a promise that jvm will be ready to execute
   initJavaPoly() {
     if (this.options.initOnStart === true) {
       return new Promise((resolve) => { this.beginLoading(resolve)});
@@ -177,6 +185,9 @@ class JavaPoly {
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
     mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "natives/"));
+    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javapolyBaseUrl + "sysBuild/"));
+    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javapolyBaseUrl + "sysNatives/"));
+
 
     this.fs = BrowserFS.BFSRequire('fs');
     this.path = BrowserFS.BFSRequire('path');
@@ -215,15 +226,6 @@ class JavaPoly {
   	});
   };
 
-  /**
-   * Dispatching JVMReady event to window
-   */
-  dispatchReadyEvent() {
-    global.document.dispatchEvent(
-      new CustomEvent('JVMReady', {detail: this})
-    );
-  }
-
   initGlobalApiObjects() {
     if (typeof Proxy === 'undefined') {
       console.warn('Your browser does not support Proxy, so J.java.lang.Integer.compare(42, 41) api is not available!');
@@ -235,12 +237,20 @@ class JavaPoly {
     };
   }
 
+  initDispatcher() {
+    window.javaPolyIds = {};
+    window.javaPolyIdCount = 0;
+
+  }
+
   /**
    * Return a promise that JVM will be initialised for this JavaPoly:
    * 1. Ensure that all loading promises are finished
    * 2. Create object for JVM
    */
   initJVM() {
+    this.initDispatcher();
+
     return new Promise((resolve) => {
 
       Promise.all(this.loadingHub).then(()=> {
@@ -248,18 +258,31 @@ class JavaPoly {
         delete this.loadingHub;
         this.loadingHub = [];
 
-        this.jvm = new doppio.JVM({
-          bootstrapClasspath: ['/sys/vendor/java_home/classes'],
+        this.jvm = new Doppio.VM.JVM({
+          bootstrapClasspath: ['/sys/vendor/java_home/classes', "/javapolySys"],
           classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
-          nativeClasspath: ['/sys/src/natives', '/polynatives'],
-          assertionsEnabled: false
+          nativeClasspath: ['/sys/natives', '/polynatives', "/javapolySysNatives"],
+          assertionsEnabled: true
         }, (err, jvm) => {
-            // Compilation of Java sorces
-            let compilationHub = this.sources.map( (src) => src.compile() );
+          if (err) {
+            console.log("err loading JVM:", err);
+          } else {
+            var self = this
+            window.javaPolyInitialisedCallback = function() {
+              // Compilation of Java sorces
+              const compilationHub = self.sources.map( (src) => src.compile() );
+              Promise.all(compilationHub).then(resolve);
+            }
 
-            Promise.all(compilationHub).then(resolve);
+            jvm.runClass('javapoly.Main', [], function(exitCode) {
+              // Control flow shouldn't reach here under normal circumstances,
+              // because Main thread keeps polling for messages.
+              console.log("JVM Exit code: ", exitCode);
+            });
+
+          }
         });
       });
     });
