@@ -18,7 +18,10 @@ registerNatives({
     'dispatchMessage(Ljava/lang/Object;)V': function(thread, msgId) {
        var callback = window.javaPolyIds[msgId];
        delete window.javaPolyIds[msgId];
-       callback(thread);
+       thread.setStatus(6); // ASYNC_WAITING
+       callback(thread, function() {
+         thread.asyncReturn();
+       });
      },
 
     'installListener()V': function(thread) {
@@ -49,7 +52,7 @@ registerNatives({
        } else {
          thread.setStatus(6); // ASYNC_WAITING
          window.javaPolyCallback = function() {
-           window.javaPolyCallback = null;
+           delete window.javaPolyCallback;
            var event = window.javaPolyEvents.pop();
            thread.asyncReturn( wrapObject(thread, event.data.javapoly.messageId) );
          }

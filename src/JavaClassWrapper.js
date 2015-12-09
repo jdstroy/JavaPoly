@@ -26,12 +26,15 @@ class JavaClassWrapper {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
           javapoly.queueExecutor.execute(nextCallback => {
-            JavaClassWrapper.dispatchOnJVM(function(thread) {
+            JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
               javapoly.jvm.getSystemClassLoader().initializeClass(thread, clsName, cls => {
                 const javaClassWrapper = new JavaClassWrapper(cls, clsName);
                 JavaClassWrapper.cache[clsName] = javaClassWrapper;
+
                 resolve(javaClassWrapper);
                 nextCallback();
+
+                continuation();
               });
             });
           })
@@ -70,11 +73,12 @@ class JavaClassWrapper {
           if (method.name === methodName && method.num_args === argumentsList.length) {
             javapoly.queueExecutor.execute(nextCallback => {
 
-              JavaClassWrapper.dispatchOnJVM(function(thread) {
+              JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
                 thread.runMethod(method, prepareParams(argumentsList), (e, rv) => {
                   var returnValue = mapToJsObject(rv);
                   resolve(returnValue);
                   nextCallback();
+                  continuation();
                 });
               });
 
