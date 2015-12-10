@@ -96,3 +96,6 @@ test/build
 
 # Vim
 *.swp
+
+# ant build directory
+/sysBuild

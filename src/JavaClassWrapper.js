@@ -26,11 +26,16 @@ class JavaClassWrapper {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
           javapoly.queueExecutor.execute(nextCallback => {
-            javapoly.jvm.getSystemClassLoader().initializeClass(javapoly.jvm.firstThread, clsName, cls => {
-              const javaClassWrapper = new JavaClassWrapper(cls, clsName);
-              JavaClassWrapper.cache[clsName] = javaClassWrapper;
-              resolve(javaClassWrapper);
-              nextCallback();
+            JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
+              javapoly.jvm.getSystemClassLoader().initializeClass(thread, clsName, cls => {
+                const javaClassWrapper = new JavaClassWrapper(cls, clsName);
+                JavaClassWrapper.cache[clsName] = javaClassWrapper;
+
+                resolve(javaClassWrapper);
+                nextCallback();
+
+                continuation();
+              });
             });
           })
         }
@@ -49,21 +54,34 @@ class JavaClassWrapper {
         };
       } (name, this);
     }
+
+  }
+
+  static dispatchOnJVM(msg) {
+    var id = javaPolyIdCount++;
+    window.javaPolyIds[id] = msg;
+    window.postMessage({ javapoly:{ messageId:""+id } }, "*")
   }
 
   runClassMethod(methodName, argumentsList) {
     return new Promise(
       (resolve, reject) => {
+
         for (var i = 0; i < this.jvmClass.methods.length; i++) {
           var method = this.jvmClass.methods[i];
           // TODO make some more precise signature matching logic
           if (method.name === methodName && method.num_args === argumentsList.length) {
             javapoly.queueExecutor.execute(nextCallback => {
-              javapoly.jvm.firstThread.runMethod(method, prepareParams(argumentsList), (e, rv) => {
-                var returnValue = mapToJsObject(rv);
-                resolve(returnValue);
-                nextCallback();
+
+              JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
+                thread.runMethod(method, prepareParams(argumentsList), (e, rv) => {
+                  var returnValue = mapToJsObject(rv);
+                  resolve(returnValue);
+                  nextCallback();
+                  continuation();
+                });
               });
+
             })
             break;
           }
