@@ -2,11 +2,6 @@
 
 ## Building
 
-The java files are built using `ant` with this command:
-```
-ant
-```
-
 There is a Grunt script for building JavaPoly. So for building you have to install `grunt-cli`. Just type command:
 ```sh
 $ npm install -g grunt-cli

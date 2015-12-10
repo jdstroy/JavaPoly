@@ -35,17 +35,39 @@ module.exports = function(grunt) {
         src: './build',
         dest: './test/build'
       }
+    },
+    run_java: {
+      options: {
+        stdout: false,
+        stderr: true,
+        stdin: false,
+        failOnError: true
+      },
+      compile: {
+        command: "javac",
+        javaOptions: { //javac Options
+          "d": "sysBuild/"
+        },
+        sourceFiles: ["sys/**/*.java"]
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-symlink');
+  grunt.loadNpmTasks('grunt-run-java');
 
-  grunt.registerTask('build:test', ['browserify:buildForTest', 'symlink:distToTests']);
-  grunt.registerTask('build', ['browserify:build']);  
-  grunt.registerTask('build:browser', ['browserify:build']);
+  grunt.registerTask("sys_build", function() {
+    grunt.file.copy("sys/libListings.json", "sysBuild/libListings.json");
+    grunt.file.mkdir("sysBuild");
+  });
+
+  grunt.registerTask('build:java', ['sys_build', 'run_java:compile']);
+
+  grunt.registerTask('build:test', ['build:java', 'browserify:buildForTest', 'symlink:distToTests']);
+  grunt.registerTask('build', ['build:java', 'browserify:build']);
+  grunt.registerTask('build:browser', ['build:java', 'browserify:build']);
 
   grunt.registerTask('default', ['build']);
 }
