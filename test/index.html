@@ -162,6 +162,27 @@
 
         });
       });
+
+      describe('Math.random', function() {
+        it('static test()', function() {
+          return Java.type('java.lang.Math').then(function(Math) {
+            return Math.random().then(function(result) {
+              expect(result).toExist();
+            });
+          });
+        })
+      });
+
+      describe('classes/Main.class', function() {
+        it('static test()', function() {
+          return Java.type('Main').then(function(Main) {
+            return Main.test().then(function(result) {
+              expect(result).toEqual('test message');
+            });
+          });
+        })
+      });
+
     });
 
     // TODO: akadeev: checkLeaks() does not work for such complex promises tests
