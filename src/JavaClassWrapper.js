@@ -16,6 +16,14 @@ class JavaClassWrapper {
     );
   }
 
+  static array2bytestr(byteArray) {
+    var rv = '';
+    for (var i = 0; i < byteArray.length; i++) {
+      rv += String.fromCharCode(byteArray[i]);
+    }
+    return rv;
+  }
+
   static getClassWrapperByName(clsName) {
     clsName = toByteCodeClassName(clsName);
     return new Promise(
@@ -67,14 +75,17 @@ class JavaClassWrapper {
     return new Promise(
       (resolve, reject) => {
 
+        var self = this;
         for (var i = 0; i < this.jvmClass.methods.length; i++) {
           var method = this.jvmClass.methods[i];
           // TODO make some more precise signature matching logic
-          if (method.name === methodName && method.num_args === argumentsList.length) {
+          if (method.name === methodName && method.parameterTypes.length === argumentsList.length) {
             javapoly.queueExecutor.execute(nextCallback => {
 
               JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
-                thread.runMethod(method, prepareParams(argumentsList), (e, rv) => {
+                var cons = self.jvmClass.getConstructor(thread);
+                var obj = new cons(thread);
+                obj.constructor[method.fullSignature](thread, prepareParams(argumentsList), (e, rv) => {
                   var returnValue = mapToJsObject(rv);
                   resolve(returnValue);
                   nextCallback();
@@ -129,12 +140,11 @@ function mapToJsObject(rv) {
   if (Array.isArray(rv)) {
     return rv;
   }
-  if (rv.cls.className === 'Ljava/lang/String;') {
-    return rv.fields['Ljava/lang/String;value'].array.map(
-      c => { return String.fromCharCode(c); }
-    ).join('');
+  var cls = rv.getClass();
+  if (cls.className === 'Ljava/lang/String;') {
+    return JavaClassWrapper.array2bytestr(rv['java/lang/String/value'].array);
   } else {
-    if (rv.cls.className === 'Ljava/lang/Integer;') {
+    if (cls.className === 'Ljava/lang/Integer;') {
       return rv;//.fields['Ljava/lang/Integer;value'];
     }
   }
