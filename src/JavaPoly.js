@@ -41,15 +41,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * 1.'doppio/', download from user owner domain(${your.domain}/doppio), eg. localhost for locally test
    * 2. or a public url, eg. http://www.javapoly.com/doppio/
    */
-  doppioLibUrl: 'doppio/',
-
-  /**
-   * URL to the base of the javapoly library
-   * @type {String}
-   * 1.'/', download from user owner domain(${your.domain}/), eg. localhost for locally test
-   * 2. or a public url, eg. http://www.javapoly.com/
-   */
-  javapolyBaseUrl: '/'
+  doppioLibUrl: 'doppio/'
 }
 
 /**
@@ -185,8 +177,8 @@ class JavaPoly {
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
     mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "natives/"));
-    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javapolyBaseUrl + "sysBuild/"));
-    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javapolyBaseUrl + "sysNatives/"));
+    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', "build/sys/"));
+    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', "build/sysNatives/"));
 
 
     this.fs = BrowserFS.BFSRequire('fs');

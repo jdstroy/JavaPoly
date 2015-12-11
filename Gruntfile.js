@@ -46,7 +46,7 @@ module.exports = function(grunt) {
       compile: {
         command: "javac",
         javaOptions: { //javac Options
-          "d": "sysBuild/"
+          "d": "build/sys/"
         },
         sourceFiles: ["sys/**/*.java"]
       }
@@ -59,8 +59,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-run-java');
 
   grunt.registerTask("sys_build", function() {
-    grunt.file.copy("sys/libListings.json", "sysBuild/libListings.json");
-    grunt.file.mkdir("sysBuild");
+    grunt.file.mkdir("build/sys");
+    grunt.file.copy("sys/libListings.json", "build/sys/libListings.json");
+
+    // Copy sysNatives recursively
+    grunt.file.mkdir("build/sysNatives");
+    grunt.file.recurse("sysNatives/", function(absPath) {
+      grunt.file.copy(absPath, "build/"+absPath);
+    });
   });
 
   grunt.registerTask('build:java', ['sys_build', 'run_java:compile']);
