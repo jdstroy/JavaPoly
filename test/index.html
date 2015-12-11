@@ -145,14 +145,14 @@
 
           describe('java.lang.Integer', function() {
             it('toHexString', function() {
-              Java.type('java.lang.Integer').then(function(Integer) {
+              return Java.type('java.lang.Integer').then(function(Integer) {
                 return Integer.toHexString(42).then(function(result) {
                   expect(result).toEqual('2a');
                 });
               });
             });
             it('toString', function() {
-              Java.type('java.lang.Integer').then(function(Integer) {
+              return Java.type('java.lang.Integer').then(function(Integer) {
                 return Integer.toString(42, 16).then(function(result) {
                   expect(result).toEqual('2a');
                 });
