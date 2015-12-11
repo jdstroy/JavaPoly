@@ -36,7 +36,7 @@
         } else {
 
           it('checks that J is defined', function() {
-            expect(J).toExist;
+            expect(J).toExist();
           });
 
           describe('java.lang.Integer', function() {
@@ -131,15 +131,15 @@
       describe('String identifiers access', function() {
 
         it('checks that Java is defined', function() {
-          expect(Java).toExist;
-          expect(Java.type).toExist;
+          expect(Java).toExist();
+          expect(Java.type).toExist();
         });
 
         describe('Java.type', function() {
 
           it('should load class', function() {
             return Java.type('java.lang.Integer').then(function(Integer) {
-              expect(Integer).toExist;
+              expect(Integer).toExist();
             });
           });
 
