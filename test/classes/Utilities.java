@@ -33,5 +33,8 @@ public class Utilities {
   }
 
   /* Evaluates a Javascript expression and returns the result as a POJO */
-  public static native Object eval(String expr);
+  public static Object eval(String expr) {
+    return evalNative(expr)[0];
+  }
+  public static native Object[] evalNative(String expr);
 }
