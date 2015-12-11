@@ -27,6 +27,9 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-run-java": "^0.1.1",
     "http-server": "^0.8.5",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+
+    "mocha": "^2.3.4",
+    "expect": "^1.13.1"
   }
 }

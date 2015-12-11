@@ -14,7 +14,7 @@
 <body>
   <div id="mocha"></div>
 
-  <script src="mocha/expect.js"></script>
+  <script src="expect/umd/expect.min.js"></script>
   <script src="mocha/mocha.js"></script>
 
   <script type="text/javascript">
@@ -30,38 +30,38 @@
         if (!isProxySupported) {
 
           it('checks that J is undefined if Proxy is not supported', function() {
-            expect(typeof J === 'undefined').to.be.ok();
+            expect(typeof J === 'undefined').toBe(true);
           });
 
         } else {
 
           it('checks that J is defined', function() {
-            expect(J).to.exist;
+            expect(J).toExist;
           });
 
           describe('java.lang.Integer', function() {
 
             it('toHexString', function() {
               return J.java.lang.Integer.toHexString(42).then(function(result) {
-                expect(result).to.eql('2a');
+                expect(result).toEqual('2a');
               });
             });
 
             it('reverse', function() {
               return J.java.lang.Integer.reverse(42).then(function(result) {
-                expect(result).to.eql(1409286144);
+                expect(result).toEqual(1409286144);
               });
             });
 
             it('compare', function() {
               return J.java.lang.Integer.compare(42, 41).then(function(result) {
-                expect(result).to.eql(1);
+                expect(result).toEqual(1);
               });
             });
 
             it('parseInt', function() {
               return J.java.lang.Integer.parseInt('42').then(function(result) {
-                expect(result).to.eql(42);
+                expect(result).toEqual(42);
               });
             });
 
@@ -70,7 +70,7 @@
           describe('java.lang.Double', function() {
             it('toHexString', function() {
               return J.java.lang.Double.toHexString(42).then(function(result) {
-                expect(result).to.eql('0x1.5p5');
+                expect(result).toEqual('0x1.5p5');
               });
             });
           });
@@ -78,7 +78,7 @@
           describe('classes/Main.class', function() {
             it('static test()', function() {
               return J.Main.test().then(function(result) {
-                expect(result).to.eql('test message');
+                expect(result).toEqual('test message');
               });
             })
           });
@@ -86,7 +86,7 @@
           describe('jars/javapoly-utils.jar', function() {
             it('jar static test()', function() {
               return J.com.javapoly.utils.Test.test().then(function(result) {
-                expect(result).to.eql('test message in jar');
+                expect(result).toEqual('test message in jar');
               });
             })
           });
@@ -102,7 +102,7 @@
           it('integer arithmetic', function() {
             return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
               Utilities.eval("40 + 2").then(function(result) {
-                expect(result).to.eql(42);
+                expect(result).toEqual(42);
               });
             });
           });
@@ -110,7 +110,7 @@
           it('string split', function() {
             return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
               Utilities.eval("'a,b,c'.split(',')").then(function(result) {
-                expect(result).to.eql(["a", "b", "c"]);
+                expect(result).toEqual(["a", "b", "c"]);
               });
             });
           });
@@ -118,7 +118,7 @@
           it('function definition', function() {
             return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
               Utilities.eval("(function(x){return x*x})").then(function(result) {
-                expect(result(7)).to.eql(49);
+                expect(result(7)).toEqual(49);
               });
             });
           });
@@ -131,30 +131,30 @@
       describe('String identifiers access', function() {
 
         it('checks that Java is defined', function() {
-          expect(Java).to.exist;
-          expect(Java.type).to.exist;
+          expect(Java).toExist;
+          expect(Java.type).toExist;
         });
 
         describe('Java.type', function() {
 
           it('should load class', function() {
             return Java.type('java.lang.Integer').then(function(Integer) {
-              expect(Integer).to.exist;
+              expect(Integer).toExist;
             });
           });
 
           describe('java.lang.Integer', function() {
             it('toHexString', function() {
-              Java.type('java.lang.Integer').then(function(Integer) {
+              return Java.type('java.lang.Integer').then(function(Integer) {
                 return Integer.toHexString(42).then(function(result) {
-                  expect(result).to.eql('2a');
+                  expect(result).toEqual('2a');
                 });
               });
             });
             it('toString', function() {
-              Java.type('java.lang.Integer').then(function(Integer) {
+              return Java.type('java.lang.Integer').then(function(Integer) {
                 return Integer.toString(42, 16).then(function(result) {
-                  expect(result).to.eql('2a');
+                  expect(result).toEqual('2a');
                 });
               });
             });
