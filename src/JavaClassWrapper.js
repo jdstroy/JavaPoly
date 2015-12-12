@@ -84,13 +84,19 @@ class JavaClassWrapper {
 
               JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
                 var cons = self.jvmClass.getConstructor(thread);
-                var obj = new cons(thread);
-                obj.constructor[method.fullSignature](thread, prepareParams(argumentsList), (e, rv) => {
+                var handleReturn = (e, rv) => {
                   var returnValue = mapToJsObject(rv);
                   resolve(returnValue);
                   nextCallback();
                   continuation();
-                });
+                };
+
+                // TODO: check if the need for an if condition changes per https://github.com/plasma-umass/doppio/issues/395
+                if (method.parameterTypes.length == 0) {
+                  cons[method.fullSignature](thread, handleReturn);
+                } else {
+                  cons[method.fullSignature](thread, prepareParams(argumentsList), handleReturn);
+                }
               });
 
             })
