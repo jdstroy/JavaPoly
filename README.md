@@ -33,13 +33,16 @@ This command runs watching process that updates build-file when you change any j
 
 ### Testing JavaPoly
 
-There is a folder `test` which should have to contain simple build of Doppio and JavaPoly.
+Tests need to be run in atleast the following two browsers: Firefox and Chromium. (different
+browser capabilities affect the number and kind of tests that are run).
 
-Make a build of Doppio and put it into folder `test/doppio`.
+There is a folder `test` which should contain a simple build of Doppio and JavaPoly.
 
-Have in view that **watch**ing-process updates JavaPoly build in `test` folder.
+Make a build of Doppio and copy / link it into the `test/doppio` folder.
 
-But you can rebuild JavaPoly for testing without watching by command:
+Note that **watch**ing-process updates JavaPoly build in `test` folder.
+
+You can also rebuild JavaPoly for testing without watching by command:
 ```sh
 $ grunt build:test
 ```
@@ -57,12 +60,13 @@ $ npm install -g http-server
 
 And then locate to folder `test` and run there command:
 ```sh
+$ cd test
 $ http-server
 ```
 
-After this open browser and locate into the page http://localhost:8080/index.html. You'll a page index.html that contains Mocha tests environment.
+After this, open browser and navigate to http://localhost:8080/index.html. The page contains tests written in Mocha environment.
 
-Also you can test JavaPoly via Mocha in nodejs. Install it by typing:
+You can also test JavaPoly via Mocha in nodejs. Install it by typing:
 ```sh
 $ npm install -g mocha
 ```
