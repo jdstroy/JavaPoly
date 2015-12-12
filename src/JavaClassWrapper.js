@@ -146,12 +146,14 @@ function mapToJsObject(rv) {
   if (Array.isArray(rv)) {
     return rv;
   }
-  var cls = rv.getClass();
-  if (cls.className === 'Ljava/lang/String;') {
-    return JavaClassWrapper.array2bytestr(rv['java/lang/String/value'].array);
-  } else {
-    if (cls.className === 'Ljava/lang/Integer;') {
-      return rv;//.fields['Ljava/lang/Integer;value'];
+  if (rv["getClass"]) {
+    var cls = rv.getClass();
+    if (cls.className === 'Ljava/lang/String;') {
+      return JavaClassWrapper.array2bytestr(rv['java/lang/String/value'].array);
+    } else {
+      if (cls.className === 'Ljava/lang/Integer;') {
+        return rv;//.fields['Ljava/lang/Integer;value'];
+      }
     }
   }
   // Leave as it is, let user parse his object himself
