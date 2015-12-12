@@ -19,6 +19,11 @@
 
   <script type="text/javascript">
     mocha.setup('bdd');
+    expect.extend({
+      toBeGreaterThanOrEqual(limit) {
+        expect.assert(this.actual >= limit, 'expected %s to be greater than or equal to ' + limit, this.actual);
+      }
+    });
 
     describe('JavaPoly', function() {
       this.timeout(1000000); // Let jvm to start and do not interrupt promises
@@ -161,26 +166,50 @@
           });
 
         });
-      });
 
-      describe('Math.random', function() {
-        it('static test()', function() {
-          return Java.type('java.lang.Math').then(function(Math) {
-            return Math.random().then(function(result) {
-              expect(result).toExist();
+        describe('Math', function() {
+          it('addExact() should add', function() {
+            return Java.type('java.lang.Math').then(function(Math) {
+              return Math.addExact(3, 7).then(function(result) {
+                expect(result).toEqual(10);
+              });
             });
           });
-        })
-      });
 
-      describe('classes/Main.class', function() {
-        it('static test()', function() {
-          return Java.type('Main').then(function(Main) {
-            return Main.test().then(function(result) {
-              expect(result).toEqual('test message');
+          it('random() should return a value', function() {
+            return Java.type('java.lang.Math').then(function(Math) {
+              return Math.random().then(function(result) {
+                expect(result)
+                  .toExist()
+                  .toBeLessThan(1.0)
+                  .toBeGreaterThanOrEqual(0);
+              });
+            });
+          })
+        });
+
+        describe('System', function() {
+          it('currentTimeMillis() should return a timestamp', function() {
+            return Java.type('java.lang.System').then(function(System) {
+              return System.currentTimeMillis().then(function(result) {
+                expect(result)
+                  .toExist()
+                  .toBeGreaterThanOrEqual(0);
+              });
             });
           });
-        })
+        });
+
+        describe('classes/Main.class', function() {
+          it('static test()', function() {
+            return Java.type('Main').then(function(Main) {
+              return Main.test().then(function(result) {
+                expect(result).toEqual('test message');
+              });
+            });
+          })
+        });
+
       });
 
     });
