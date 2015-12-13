@@ -42,6 +42,12 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * 2. or a public url, eg. http://www.javapoly.com/doppio/
    */
   doppioLibUrl: 'doppio/'
+
+  /**
+   * Optional: javaPolyBaseUrl
+   * When defined, this is used as the base URL for loading JavaPoly data such as system classes and native functions.
+   * If empty, JavaPoly will try to automatically figure it out during initialisation.
+   */
 }
 
 /**
@@ -108,6 +114,10 @@ class JavaPoly {
      */
     this.classpath = [this.options.storageDir];
 
+    if (!this.options.javaPolyBaseUrl) {
+      this.options.javaPolyBaseUrl = this.getScriptBase();
+    }
+
     let jvmReadyPromise = this.initJavaPoly();
 
     this.queueExecutor = new QueueExecutor(jvmReadyPromise);
@@ -167,6 +177,27 @@ class JavaPoly {
     });
   }
 
+  /* This should be called outside of Promise, or any such async call */
+  getScriptBase() {
+    var scriptSrc = this.getScriptSrc();
+    return scriptSrc.slice(0, scriptSrc.lastIndexOf("/") + 1);
+  }
+
+  getScriptSrc() {
+    if (document.currentScript) {
+      return document.currentScript.src;
+    } else {
+      var scripts = document.getElementsByTagName('script'),
+          script = scripts[scripts.length - 1];
+
+      if (script.getAttribute.length !== undefined) {
+        return script.src
+      }
+
+      return script.getAttribute('src', -1)
+    }
+  }
+
   /**
    * Initialization of BrowserFS
    */
@@ -177,8 +208,8 @@ class JavaPoly {
     mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
     mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "natives/"));
-    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', "build/sys/"));
-    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', "build/sysNatives/"));
+    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sys/"));
+    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sysNatives/"));
 
 
     this.fs = BrowserFS.BFSRequire('fs');
