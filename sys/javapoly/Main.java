@@ -37,7 +37,7 @@ public class Main {
   }
 
   public static Object invokeClassMethod(String className, String methodName, Object[] params) throws Exception {
-    Class<?> clazz = Class.forName(className);
+    Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
     Method[] methods = clazz.getMethods();
     Method suitableMethod = matchMethod(methods, methodName, params);
     Object returnValue = suitableMethod.invoke(null, params);
