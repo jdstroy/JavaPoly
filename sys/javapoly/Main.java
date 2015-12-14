@@ -12,21 +12,18 @@ public class Main {
     try {
       boolean done = false;
       while (!done) {
-        final Object[] message = getMessage();
-        final Object[] data = getData(message[0]);
-        // If it is a method invokation
-        if (data != null) {
-          Object returnValue = null;
-          try {
-            returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
-          } catch (Exception e) {
-            println("Exception: " + e);
-          } finally {
-            returnResult(message[0], returnValue);
-          }
-        } else {
-          // Run any other callback
-          dispatchMessage(message[0]);
+        final Object[] messageId = getMessageId();
+        final String messageType = getMessageType(messageId);
+        // TODO: Create enum
+        switch (messageType) {
+        case "METHOD_INVOKATION":
+          processMethodInvokation(messageId);
+          break;
+        case "CLASS_LOADING":
+          dispatchMessage(messageId);
+          break;
+        default:
+          println("Unknown message type: " + messageType);
         }
       }
     } catch (Exception e) {
@@ -34,6 +31,18 @@ public class Main {
     }
 
     println("Java Main ended");
+  }
+
+  public static void processMethodInvokation(Object messageId) {
+    final Object[] data = getData(messageId);
+    Object returnValue = null;
+    try {
+      returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
+    } catch (Exception e) {
+      println("Exception: " + e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
   }
 
   public static Object invokeClassMethod(String className, String methodName, Object[] params) throws Exception {
@@ -60,10 +69,11 @@ public class Main {
   public static native Object[] evalNative(String expr);
 
   private static native void installListener();
-  private static native Object[] getMessage();
-  private static native Object[] getData(Object message);
-  private static native void dispatchMessage(Object message);
-  private static native void returnResult(Object message, Object returnValue);
+  private static native Object[] getMessageId();
+  private static native Object[] getData(Object messageId);
+  private static native String getMessageType(Object messageId);
+  private static native void dispatchMessage(Object messageId);
+  private static native void returnResult(Object messageId, Object returnValue);
 
   public static native void println(String s);
 }

@@ -29,7 +29,7 @@ class JavaClassWrapper {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
           javapoly.queueExecutor.execute(nextCallback => {
-            JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
+            JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', function(thread, continuation) {
               javapoly.jvm.getSystemClassLoader().initializeClass(thread, toByteCodeClassName(clsName), cls => {
                 const javaClassWrapper = new JavaClassWrapper(cls, clsName);
                 JavaClassWrapper.cache[clsName] = javaClassWrapper;
@@ -59,9 +59,10 @@ class JavaClassWrapper {
     }
   }
 
-  static dispatchOnJVM(msg, data) {
+  static dispatchOnJVM(messageType, callback, data) {
     var id = window.javaPolyIdCount++;
-    window.javaPolyIds[id] = msg;
+    window.javaPolyMessageTypes[id] = messageType;
+    window.javaPolyCallbacks[id] = callback;
     window.javaPolyData[id] = data;
     window.postMessage({ javapoly:{ messageId:""+id } }, "*")
   }
@@ -71,7 +72,7 @@ class JavaClassWrapper {
       (resolve, reject) => {
         const data = [this.clsName, methodName, argumentsList];
         const callback = (returnValue) => { resolve(returnValue); };
-        JavaClassWrapper.dispatchOnJVM(callback, data);
+        JavaClassWrapper.dispatchOnJVM('METHOD_INVOKATION', callback, data);
       }
     );
   }
@@ -92,7 +93,7 @@ class JavaClassWrapper {
           if (method.name === methodName && method.parameterTypes.length === argumentsList.length) {
             javapoly.queueExecutor.execute(nextCallback => {
 
-              JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
+              JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', function(thread, continuation) {
                 var cons = self.jvmClass.getConstructor(thread);
                 var handleReturn = (e, rv) => {
                   var returnValue = mapToJsObject(rv);

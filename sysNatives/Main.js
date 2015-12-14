@@ -52,13 +52,13 @@ function unwrapObject(thread, obj) {
 registerNatives({
   'javapoly/Main': {
 
-    'println(Ljava/lang/String;)V': function(thread, msg) {
-       console.log("JVM>", msg.toString());
+    'println(Ljava/lang/String;)V': function(thread, text) {
+       console.log("JVM>", text.toString());
      },
 
     'dispatchMessage(Ljava/lang/Object;)V': function(thread, msgId) {
-      var callback = window.javaPolyIds[msgId];
-      delete window.javaPolyIds[msgId];
+      var callback = window.javaPolyCallbacks[msgId];
+      delete window.javaPolyCallbacks[msgId];
       thread.setStatus(6); // ASYNC_WAITING
       callback(thread, function() {
         thread.asyncReturn();
@@ -66,8 +66,8 @@ registerNatives({
     },
 
     'returnResult(Ljava/lang/Object;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
-       var callback = window.javaPolyIds[msgId];
-       delete window.javaPolyIds[msgId];
+       var callback = window.javaPolyCallbacks[msgId];
+       delete window.javaPolyCallbacks[msgId];
        callback(unwrapObject(thread, returnValue));
      },
 
@@ -92,7 +92,7 @@ registerNatives({
       }
     },
 
-    'getMessage()[Ljava/lang/Object;': function(thread) {
+    'getMessageId()[Ljava/lang/Object;': function(thread) {
        if (window.javaPolyEvents.length > 0) {
          var event = window.javaPolyEvents.pop();
          return wrapObject(thread, event.data.javapoly.messageId);
@@ -101,9 +101,18 @@ registerNatives({
          window.javaPolyCallback = function() {
            delete window.javaPolyCallback;
            var event = window.javaPolyEvents.pop();
-           thread.asyncReturn( wrapObject(thread, [event.data.javapoly.messageId]) );
+           thread.asyncReturn( wrapObject(thread, event.data.javapoly.messageId) );
          }
        }
+    },
+
+    'getMessageType(Ljava/lang/Object;)Ljava/lang/String;': function(thread, msgId) {
+      if (typeof window.javaPolyMessageTypes[msgId] !== 'undefined') {
+        var unwrappedData = window.javaPolyMessageTypes[msgId];
+        return wrapObject(thread, unwrappedData);
+      } else {
+        return null;
+      }
     },
 
     'getData(Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, msgId) {

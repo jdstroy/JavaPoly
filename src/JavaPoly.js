@@ -261,7 +261,8 @@ class JavaPoly {
   }
 
   initDispatcher() {
-    window.javaPolyIds = {};
+    window.javaPolyMessageTypes = {};
+    window.javaPolyCallbacks = {};
     window.javaPolyData = {};
     window.javaPolyIdCount = 0;
   }
