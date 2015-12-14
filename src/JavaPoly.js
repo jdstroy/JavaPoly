@@ -262,8 +262,8 @@ class JavaPoly {
 
   initDispatcher() {
     window.javaPolyIds = {};
+    window.javaPolyData = {};
     window.javaPolyIdCount = 0;
-
   }
 
   /**

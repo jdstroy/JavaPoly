@@ -2,15 +2,11 @@ import JavaUtilities from './JavaUtilities';
 
 class JavaClassWrapper {
 
-  static runMethodWithJavaUtilities(methodObject, argumentsList) {
-    return JavaUtilities.runMethod(methodObject._parent._identifier, methodObject._name, argumentsList);
-  }
-
   static runProxyMethod(methodObject, argumentsList) {
     return new Promise(
       (resolve, reject) => {
         JavaClassWrapper.getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
-          classWrapper.runClassMethod(methodObject._name, argumentsList).then(returnValue => resolve(returnValue));
+          classWrapper.runMethodWithJavaDispatching(methodObject._name, argumentsList).then(returnValue => resolve(returnValue));
         });
       }
     );
@@ -25,7 +21,6 @@ class JavaClassWrapper {
   }
 
   static getClassWrapperByName(clsName) {
-    clsName = toByteCodeClassName(clsName);
     return new Promise(
       (resolve, reject) => {
         if (JavaClassWrapper.cache === undefined)
@@ -35,7 +30,7 @@ class JavaClassWrapper {
         } else {
           javapoly.queueExecutor.execute(nextCallback => {
             JavaClassWrapper.dispatchOnJVM(function(thread, continuation) {
-              javapoly.jvm.getSystemClassLoader().initializeClass(thread, clsName, cls => {
+              javapoly.jvm.getSystemClassLoader().initializeClass(thread, toByteCodeClassName(clsName), cls => {
                 const javaClassWrapper = new JavaClassWrapper(cls, clsName);
                 JavaClassWrapper.cache[clsName] = javaClassWrapper;
 
@@ -58,19 +53,34 @@ class JavaClassWrapper {
       var name = jvmClass.methods[i].name;
       this[name] = function(name, wrapper) {
         return function() {
-          return wrapper.runClassMethod(name, Array.prototype.slice.call(arguments))
+          return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
         };
       } (name, this);
     }
-
   }
 
-  static dispatchOnJVM(msg) {
-    var id = javaPolyIdCount++;
+  static dispatchOnJVM(msg, data) {
+    var id = window.javaPolyIdCount++;
     window.javaPolyIds[id] = msg;
+    window.javaPolyData[id] = data;
     window.postMessage({ javapoly:{ messageId:""+id } }, "*")
   }
 
+  runMethodWithJavaDispatching(methodName, argumentsList) {
+    return new Promise(
+      (resolve, reject) => {
+        const data = [this.clsName, methodName, argumentsList];
+        const callback = (returnValue) => { resolve(returnValue); };
+        JavaClassWrapper.dispatchOnJVM(callback, data);
+      }
+    );
+  }
+
+
+  // Method invocation moved to Java land
+  // In below case messaging between Java and JS seems meaningless as it continues to invoke methods in js with new doppio api
+  // So it is like an alternative way that still uses explicit Java function calls
+  // And that is not recommended by doppio (as we figured out)
   runClassMethod(methodName, argumentsList) {
     return new Promise(
       (resolve, reject) => {

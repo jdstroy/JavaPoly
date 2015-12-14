@@ -8,7 +8,6 @@
 
   <script type="application/java-vm" src="classes/Main.class"></script>
   <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
-  <script type="application/java-vm" src="classes/Utilities.class"></script>
   <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
 </head>
 <body>
@@ -156,10 +155,10 @@
                 });
               });
             });
-            it('toString', function() {
+            it('parseInt', function() {
               return Java.type('java.lang.Integer').then(function(Integer) {
-                return Integer.toString(42, 16).then(function(result) {
-                  expect(result).toEqual('2a');
+                return Integer.parseInt('42').then(function(result) {
+                  expect(result).toEqual(42);
                 });
               });
             });
