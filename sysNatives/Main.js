@@ -43,6 +43,12 @@ function unwrapObject(thread, obj) {
     var cls = obj.getClass();
     if (cls.className === 'Ljava/lang/String;') {
       return obj.toString();
+    } else if (cls.className.charAt(0) === '[') {
+      var nativeArray = [];
+      for (var i = 0; i < obj.array.length; i++) {
+        nativeArray.push(unwrapObject(thread, obj.array[i]));
+      }
+      return nativeArray;
     } else {
       return obj.unbox();
     }

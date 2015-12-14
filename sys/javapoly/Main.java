@@ -20,10 +20,11 @@ public class Main {
           processMethodInvokation(messageId);
           break;
         case "CLASS_LOADING":
-          dispatchMessage(messageId);
+          processClassLoading(messageId);
           break;
         default:
-          println("Unknown message type: " + messageType);
+          println("Unknown message type, callback will be executed");
+          dispatchMessage(messageId);
         }
       }
     } catch (Exception e) {
@@ -38,6 +39,23 @@ public class Main {
     Object returnValue = null;
     try {
       returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
+    } catch (Exception e) {
+      println("Exception: " + e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
+  }
+
+  public static void processClassLoading(Object messageId) {
+    final Object[] data = getData(messageId);
+    String[] returnValue = null;
+    try {
+      Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass((String) data[0]);
+      Method[] methods = clazz.getMethods();
+      returnValue = new String[methods.length];
+      for (int i = 0; i < methods.length; i++) {
+        returnValue[i] = methods[i].getName();
+      }
     } catch (Exception e) {
       println("Exception: " + e);
     } finally {

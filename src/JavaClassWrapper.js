@@ -29,28 +29,50 @@ class JavaClassWrapper {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
           javapoly.queueExecutor.execute(nextCallback => {
-            JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', function(thread, continuation) {
-              javapoly.jvm.getSystemClassLoader().initializeClass(thread, toByteCodeClassName(clsName), cls => {
-                const javaClassWrapper = new JavaClassWrapper(cls, clsName);
-                JavaClassWrapper.cache[clsName] = javaClassWrapper;
-
-                resolve(javaClassWrapper);
-                nextCallback();
-
-                continuation();
-              });
+            const data = [clsName];
+            JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', data, (methods) => {
+              const javaClassWrapper = new JavaClassWrapper(methods, clsName);
+              JavaClassWrapper.cache[clsName] = javaClassWrapper;
+              resolve(javaClassWrapper);
+              nextCallback();
             });
-          })
+          });
         }
       }
     );
   }
 
-  constructor(jvmClass, clsName) {
-    this.jvmClass = jvmClass;
+  // static getClassWrapperByName(clsName) {
+  //   return new Promise(
+  //     (resolve, reject) => {
+  //       if (JavaClassWrapper.cache === undefined)
+  //         JavaClassWrapper.cache = {};
+  //       if (JavaClassWrapper.cache[clsName] !== undefined) {
+  //         resolve(JavaClassWrapper.cache[clsName]);
+  //       } else {
+  //         javapoly.queueExecutor.execute(nextCallback => {
+  //           JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', function(thread, continuation) {
+  //             javapoly.jvm.getSystemClassLoader().initializeClass(thread, toByteCodeClassName(clsName), cls => {
+  //               const javaClassWrapper = new JavaClassWrapper(cls, clsName);
+  //               JavaClassWrapper.cache[clsName] = javaClassWrapper;
+  //
+  //               resolve(javaClassWrapper);
+  //               nextCallback();
+  //
+  //               continuation();
+  //             });
+  //           });
+  //         })
+  //       }
+  //     }
+  //   );
+  // }
+
+  constructor(methods, clsName) {
+    this.methods = methods;
     this.clsName = clsName;
-    for (var i = 0; i < jvmClass.methods.length; i++) {
-      var name = jvmClass.methods[i].name;
+    for (var i = 0; i < methods.length; i++) {
+      var name = methods[i];
       this[name] = function(name, wrapper) {
         return function() {
           return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
@@ -59,11 +81,11 @@ class JavaClassWrapper {
     }
   }
 
-  static dispatchOnJVM(messageType, callback, data) {
+  static dispatchOnJVM(messageType, data, callback) {
     var id = window.javaPolyIdCount++;
     window.javaPolyMessageTypes[id] = messageType;
-    window.javaPolyCallbacks[id] = callback;
     window.javaPolyData[id] = data;
+    window.javaPolyCallbacks[id] = callback;
     window.postMessage({ javapoly:{ messageId:""+id } }, "*")
   }
 
@@ -71,8 +93,9 @@ class JavaClassWrapper {
     return new Promise(
       (resolve, reject) => {
         const data = [this.clsName, methodName, argumentsList];
-        const callback = (returnValue) => { resolve(returnValue); };
-        JavaClassWrapper.dispatchOnJVM('METHOD_INVOKATION', callback, data);
+        JavaClassWrapper.dispatchOnJVM('METHOD_INVOKATION', data, (returnValue) => {
+          resolve(returnValue);
+        });
       }
     );
   }
@@ -82,41 +105,41 @@ class JavaClassWrapper {
   // In below case messaging between Java and JS seems meaningless as it continues to invoke methods in js with new doppio api
   // So it is like an alternative way that still uses explicit Java function calls
   // And that is not recommended by doppio (as we figured out)
-  runClassMethod(methodName, argumentsList) {
-    return new Promise(
-      (resolve, reject) => {
-
-        var self = this;
-        for (var i = 0; i < this.jvmClass.methods.length; i++) {
-          var method = this.jvmClass.methods[i];
-          // TODO make some more precise signature matching logic
-          if (method.name === methodName && method.parameterTypes.length === argumentsList.length) {
-            javapoly.queueExecutor.execute(nextCallback => {
-
-              JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', function(thread, continuation) {
-                var cons = self.jvmClass.getConstructor(thread);
-                var handleReturn = (e, rv) => {
-                  var returnValue = mapToJsObject(rv);
-                  resolve(returnValue);
-                  nextCallback();
-                  continuation();
-                };
-
-                // TODO: check if the need for an if condition changes per https://github.com/plasma-umass/doppio/issues/395
-                if (method.parameterTypes.length == 0) {
-                  cons[method.fullSignature](thread, handleReturn);
-                } else {
-                  cons[method.fullSignature](thread, prepareParams(argumentsList), handleReturn);
-                }
-              });
-
-            })
-            break;
-          }
-        }
-      }
-    );
-  }
+  // runClassMethod(methodName, argumentsList) {
+  //   return new Promise(
+  //     (resolve, reject) => {
+  //
+  //       var self = this;
+  //       for (var i = 0; i < this.jvmClass.methods.length; i++) {
+  //         var method = this.jvmClass.methods[i];
+  //         // TODO make some more precise signature matching logic
+  //         if (method.name === methodName && method.parameterTypes.length === argumentsList.length) {
+  //           javapoly.queueExecutor.execute(nextCallback => {
+  //
+  //             JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', function(thread, continuation) {
+  //               var cons = self.jvmClass.getConstructor(thread);
+  //               var handleReturn = (e, rv) => {
+  //                 var returnValue = mapToJsObject(rv);
+  //                 resolve(returnValue);
+  //                 nextCallback();
+  //                 continuation();
+  //               };
+  //
+  //               // TODO: check if the need for an if condition changes per https://github.com/plasma-umass/doppio/issues/395
+  //               if (method.parameterTypes.length == 0) {
+  //                 cons[method.fullSignature](thread, handleReturn);
+  //               } else {
+  //                 cons[method.fullSignature](thread, prepareParams(argumentsList), handleReturn);
+  //               }
+  //             });
+  //
+  //           })
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   );
+  // }
 }
 
 function prepareParams(params) {
