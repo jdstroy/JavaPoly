@@ -241,6 +241,22 @@
             });
           });
 
+          it('function that returns a true value', function() {
+            return Java.type('Main').then(function(Main) {
+              return Main.checkLength("xyz", 3).then(function(result) {
+                expect(result).toEqual(true);
+              });
+            });
+          });
+
+          it('function that returns a false value', function() {
+            return Java.type('Main').then(function(Main) {
+              return Main.checkLength("xyz", 8).then(function(result) {
+                expect(result).toEqual(false);
+              });
+            });
+          });
+
           it('file read', function() {
             var contents = "---- This is a test ---";
             var fileWritten = writeFile(javapoly.fs, "/tmp/test.txt", contents);

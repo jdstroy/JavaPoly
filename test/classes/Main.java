@@ -27,4 +27,9 @@ public class Main {
     }
   }
 
+  /* A function that checks the length of a string. The idea is to return some boolean, to test the wrapping of
+   * primitive boolean values */
+  public static boolean checkLength(final String str, final int n) {
+    return str.length() == n;
+  }
 }
