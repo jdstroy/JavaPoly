@@ -28,7 +28,7 @@ public class Main {
         }
       }
     } catch (Exception e) {
-      println("Exception: " + e);
+      dumpException(e);
     }
 
     println("Java Main ended");
@@ -40,7 +40,7 @@ public class Main {
     try {
       returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
     } catch (Exception e) {
-      println("Exception: " + e);
+      dumpException(e);
     } finally {
       returnResult(messageId, returnValue);
     }
@@ -57,7 +57,7 @@ public class Main {
         returnValue[i] = methods[i].getName();
       }
     } catch (Exception e) {
-      println("Exception: " + e);
+      dumpException(e);
     } finally {
       returnResult(messageId, returnValue);
     }
@@ -80,12 +80,6 @@ public class Main {
     return null;
   }
 
-  /* Evaluates a Javascript expression and returns the result as a POJO */
-  public static Object eval(String expr) {
-    return evalNative(expr)[0];
-  }
-  public static native Object[] evalNative(String expr);
-
   private static native void installListener();
   private static native Object[] getMessageId();
   private static native Object[] getData(Object messageId);
@@ -94,4 +88,12 @@ public class Main {
   private static native void returnResult(Object messageId, Object returnValue);
 
   public static native void println(String s);
+
+  public static void dumpException(final Exception e) {
+    println("Exception: " + e);
+    for (StackTraceElement elem : e.getStackTrace()) {
+      println(elem.toString());
+    }
+  }
+
 }
