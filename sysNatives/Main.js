@@ -62,7 +62,7 @@ registerNatives({
        console.log("JVM>", text.toString());
      },
 
-    'dispatchMessage(Ljava/lang/Object;)V': function(thread, msgId) {
+    'dispatchMessage(Ljava/lang/String;)V': function(thread, msgId) {
       var callback = window.javaPolyCallbacks[msgId];
       delete window.javaPolyCallbacks[msgId];
       thread.setStatus(6); // ASYNC_WAITING
@@ -71,7 +71,7 @@ registerNatives({
       });
     },
 
-    'returnResult(Ljava/lang/Object;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
+    'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
        var callback = window.javaPolyCallbacks[msgId];
        delete window.javaPolyCallbacks[msgId];
        callback(unwrapObject(thread, returnValue));
@@ -112,7 +112,7 @@ registerNatives({
        }
     },
 
-    'getMessageType(Ljava/lang/Object;)Ljava/lang/String;': function(thread, msgId) {
+    'getMessageType(Ljava/lang/String;)Ljava/lang/String;': function(thread, msgId) {
       if (typeof window.javaPolyMessageTypes[msgId] !== 'undefined') {
         var unwrappedData = window.javaPolyMessageTypes[msgId];
         return wrapObject(thread, unwrappedData);
@@ -121,7 +121,7 @@ registerNatives({
       }
     },
 
-    'getData(Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, msgId) {
+    'getData(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, msgId) {
       if (typeof window.javaPolyData[msgId] !== 'undefined') {
         var unwrappedData = window.javaPolyData[msgId];
         return wrapObject(thread, unwrappedData);

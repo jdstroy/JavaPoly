@@ -34,7 +34,7 @@ public class Main {
     println("Java Main ended");
   }
 
-  public static void processMethodInvokation(Object messageId) {
+  public static void processMethodInvokation(String messageId) {
     final Object[] data = getData(messageId);
     Object returnValue = null;
     try {
@@ -46,7 +46,7 @@ public class Main {
     }
   }
 
-  public static void processClassLoading(Object messageId) {
+  public static void processClassLoading(String messageId) {
     final Object[] data = getData(messageId);
     String[] returnValue = null;
     try {
@@ -82,10 +82,10 @@ public class Main {
 
   private static native void installListener();
   private static native String getMessageId();
-  private static native Object[] getData(Object messageId);
-  private static native String getMessageType(Object messageId);
-  private static native void dispatchMessage(Object messageId);
-  private static native void returnResult(Object messageId, Object returnValue);
+  private static native Object[] getData(String messageId);
+  private static native String getMessageType(String messageId);
+  private static native void dispatchMessage(String messageId);
+  private static native void returnResult(String messageId, Object returnValue);
 
   public static native void println(String s);
 
