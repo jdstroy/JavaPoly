@@ -24,6 +24,30 @@
       }
     });
 
+    function writeFile(fs, fileName, content) {
+      return new Promise(function(resolve, reject) {
+        fs.writeFile(fileName, content, function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+
+    function readFile(fs, fileName) {
+      return new Promise(function(resolve, reject) {
+        fs.readFile(fileName, function(err, contents) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(contents.toString());
+          }
+        });
+      });
+    }
+
     describe('JavaPoly', function() {
       this.timeout(1000000); // Let jvm to start and do not interrupt promises
 
@@ -213,6 +237,18 @@
             return Java.type('Main').then(function(Main) {
               return Main.test().then(function(result) {
                 expect(result).toEqual('test message');
+              });
+            });
+          });
+
+          it('file read', function() {
+            var contents = "---- This is a test ---";
+            var fileWritten = writeFile(javapoly.fs, "/tmp/test.txt", contents);
+            return fileWritten.then(function() {
+              return Java.type('Main').then(function(Main) {
+                return Main.readFile("/tmp/test.txt").then(function(result) {
+                  expect(result).toEqual(contents);
+                });
               });
             });
           })
