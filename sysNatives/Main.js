@@ -98,7 +98,7 @@ registerNatives({
       }
     },
 
-    'getMessageId()[Ljava/lang/Object;': function(thread) {
+    'getMessageId()Ljava/lang/String;': function(thread) {
        if (window.javaPolyEvents.length > 0) {
          var event = window.javaPolyEvents.pop();
          return wrapObject(thread, event.data.javapoly.messageId);

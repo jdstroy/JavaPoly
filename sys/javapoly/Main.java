@@ -12,7 +12,7 @@ public class Main {
     try {
       boolean done = false;
       while (!done) {
-        final Object[] messageId = getMessageId();
+        final String messageId = getMessageId();
         final String messageType = getMessageType(messageId);
         // TODO: Create enum
         switch (messageType) {
@@ -81,7 +81,7 @@ public class Main {
   }
 
   private static native void installListener();
-  private static native Object[] getMessageId();
+  private static native String getMessageId();
   private static native Object[] getData(Object messageId);
   private static native String getMessageType(Object messageId);
   private static native void dispatchMessage(Object messageId);
