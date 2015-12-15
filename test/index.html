@@ -155,6 +155,15 @@
                 });
               });
             });
+
+            it('toString', function() {
+              return Java.type('java.lang.Integer').then(function(Integer) {
+                return Integer.toString(42, 16).then(function(result) {
+                  expect(result).toEqual('2a');
+                });
+              });
+            });
+
             it('parseInt', function() {
               return Java.type('java.lang.Integer').then(function(Integer) {
                 return Integer.parseInt('42').then(function(result) {
