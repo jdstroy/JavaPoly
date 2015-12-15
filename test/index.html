@@ -7,6 +7,7 @@
   <script type="text/javascript" src="build/javapoly.js"></script>
 
   <script type="application/java-vm" src="classes/Main.class"></script>
+  <script type="application/java-vm" src="classes/EvalTest.class"></script>
   <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
   <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
 </head>
@@ -120,6 +121,17 @@
           });
 
         }
+      });
+
+      describe('Eval', function() {
+
+        it('should pass all tests from EvalTest.java', function() {
+          return Java.type('EvalTest').then(function(EvalTest) {
+            EvalTest.test().then(function(result) {
+              expect(result).toEqual(true);
+            });
+          });
+        });
       });
 
       /* Disabling for now. We can re-enable after using the newer version of eval.
