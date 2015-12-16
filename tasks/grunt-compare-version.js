@@ -30,21 +30,17 @@ module.exports = function(grunt) {
         if (fromExists) {
           isFileExists(path.join(DATA_TO, 'package.json'))
             .then(function(toExists) {
-              var fromVersion = JSON.parse(fs.readFileSync(path.join(DATA_FROM, 'package.json'), 'utf8')).version;
-              var toVersion = '0.0.0';
-              if (toExists) {
-                toVersion = JSON.parse(fs.readFileSync(path.join(DATA_TO, 'package.json'), 'utf8')).version;
-              }
-              if (semver.gt(fromVersion, toVersion)) {
+              var fromVersion = grunt.file.readJSON(path.join(DATA_FROM, 'package.json')).version;
+              var toVersion = toExists ? grunt.file.readJSON(path.join(DATA_TO, 'package.json')).version : '0.0.0';
+
+              if (semver.neq(fromVersion, toVersion)) {
                 grunt.task.run(tasks);
-              } else {
-                grunt.log.writeln('You have the latest module.')
               }
 
               done();
             });
         } else {
-          grunt.log.error('You don`t FROM file.')
+          grunt.log.error('You don`t have FROM file.')
           done();
         }        
       });    

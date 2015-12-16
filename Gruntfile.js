@@ -22,9 +22,9 @@ module.exports = function(grunt) {
       }
     },
     watch: {
-      scripts: {
+      dev_js: {
         files: 'src/**/*.js',
-        tasks: ['build', 'copy:distToTests'],
+        tasks: ['browserify:development', 'symlink:build_to_test'],
         options: {
           interrupt: true,
         },
@@ -60,15 +60,21 @@ module.exports = function(grunt) {
       }
     },
     copy: {
+      sys: {
+        files: [
+          {expand: true, cwd: './sys/', src: ['libListings.json'], dest: './build/sys/'},
+          {expand: true, cwd: './sysNatives/', src: ['**'], dest: './build/sysNatives/'}
+        ]
+      },
       doppio_release: {
         files: [
-          {expand: true, cwd: './node_modules/doppiojvm/dist/release/', src: ['*'], dest: './test/doppio'},
+          {expand: true, cwd: './node_modules/doppiojvm/dist/release/', src: ['**'], dest: './test/doppio'},
           {expand: true, cwd: './node_modules/doppiojvm/', src: ['package.json'], dest: './test/doppio'}
         ]
       },
       browserfs: {
         files: [
-          {expand: true, cwd: './node_modules/browserfs/dist/', src: ['*'], dest: './test/browserfs'},
+          {expand: true, cwd: './node_modules/browserfs/dist/', src: ['**'], dest: './test/browserfs'},
           {expand: true, cwd: './node_modules/browserfs/', src: ['package.json'], dest: './test/browserfs'}
         ]        
       }
@@ -84,7 +90,23 @@ module.exports = function(grunt) {
         to: './test/browserfs',
         tasks: ['clean:browserfs', 'copy:browserfs']
       }
-    }
+    },
+    'http-server': {
+      dev: {
+        showDir : true,
+        autoIndex: true,
+        runInBackground: true,
+        port: 8080,
+        root: 'test/.'
+      },
+      test: {
+        showDir : true,
+        autoIndex: true,
+        runInBackground: false,
+        port: 8080,    
+        root: 'test/.'
+      }
+    },
   });
 
   grunt.loadNpmTasks('grunt-browserify');
@@ -93,25 +115,15 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-symlink');
   grunt.loadNpmTasks('grunt-run-java');
+  grunt.loadNpmTasks('grunt-http-server');
 
   grunt.loadTasks('tasks');
 
-  grunt.registerTask('sys_build', function() {
-    grunt.file.mkdir('build/sys');
-    grunt.file.copy('sys/libListings.json', 'build/sys/libListings.json');
-
-    // Copy sysNatives recursively
-    grunt.file.mkdir('build/sysNatives');
-    grunt.file.recurse('sysNatives/', function(absPath) {
-      grunt.file.copy(absPath, 'build/'+absPath);
-    });
-  });
-
-  grunt.registerTask('build:java', ['sys_build', 'run_java:compile']);
-
-  grunt.registerTask('build:test', ['build:java', 'browserify:development', 'symlink:build_to_test']);
+  grunt.registerTask('build:java', ['copy:sys', 'run_java:compile']);
+  grunt.registerTask('build:test', ['build:java', 'compare_version', 'browserify:development', 'symlink:build_to_test']);
   grunt.registerTask('build', ['build:java', 'browserify:production']);
   grunt.registerTask('build:browser', ['build:java', 'browserify:production']);
 
   grunt.registerTask('default', ['build']);
+  grunt.registerTask('dev', ['build:test', 'http-server:dev', 'watch:dev_js']);
 }

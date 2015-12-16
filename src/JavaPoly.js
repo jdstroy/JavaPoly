@@ -37,11 +37,17 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
   storageDir: '/tmp/data',
   /**
    * URL where we download the doppio library.
-   * @type {String}
    * 1.'doppio/', download from user owner domain(${your.domain}/doppio), eg. localhost for locally test
    * 2. or a public url, eg. http://www.javapoly.com/doppio/
+   * @type {String}
    */
-  doppioLibUrl: 'doppio/'
+  doppioLibUrl: 'doppio/',
+
+  /**
+   * URL where we download the BrowserFS library
+   * @type {String}
+   */
+  browserfsLibUrl: 'browserfs/'
 
   /**
    * Optional: javaPolyBaseUrl
@@ -129,19 +135,19 @@ class JavaPoly {
   // returns a promise that jvm will be ready to execute
   initJavaPoly() {
     if (this.options.initOnStart === true) {
-      return new Promise((resolve) => { this.beginLoading(resolve)});
+      return new Promise((resolve) => { this.beginLoading(resolve) });
     } else {
-      return Promise.reject("not initialised");
+      return Promise.reject('not initialised');
     }
   }
 
   beginLoading(resolveJVMReady) {
     global.document.addEventListener('DOMContentLoaded', e => {
       // Ensure we have loaded the browserfs.js file before handling Java/class file
-      this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
+      this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
         this.initBrowserFS();
         // Load doppio.js file
-        this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));
+        this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'));
 
         this.loadScripts();
 
@@ -157,8 +163,9 @@ class JavaPoly {
       // Create only when scriptTypes is only 1
       if (scriptTypes.length === 1) {
         let scriptType = scriptTypes[0].type;
-        if (scriptTypes[0].srcRequired && !script.src)
+        if (scriptTypes[0].srcRequired && !script.src) {
           throw `An attribute 'src' should be declared for MIME-type '${script.type}'`;
+        }
 
         switch(scriptType) {
           case 'class':
