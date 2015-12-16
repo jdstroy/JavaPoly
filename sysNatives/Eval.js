@@ -18,7 +18,6 @@ registerNatives({
   'javapoly/Eval': {
 
     'evalRaw(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, toEval) {
-      console.log("Eval raw", toEval.toString());
       var expr = toEval.toString();
       var res = eval(expr);
       return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', [util.initString(thread.getBsCl(), typeof res), res]);
