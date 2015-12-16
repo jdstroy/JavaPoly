@@ -127,7 +127,7 @@
 
         it('should pass all tests from EvalTest.java', function() {
           return Java.type('EvalTest').then(function(EvalTest) {
-            EvalTest.test().then(function(result) {
+            return EvalTest.test().then(function(result) {
               expect(result).toEqual(true);
             });
           });
