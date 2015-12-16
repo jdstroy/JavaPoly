@@ -19,6 +19,7 @@
   "devDependencies": {
     "babel-preset-es2015": "^6.0.15",
     "babelify": "^7.2.0",
+    "browserfs": "^0.5.8",
     "doppiojvm": "^0.3.1",
     "expect": "^1.13.1",
     "grunt": "^0.4.5",

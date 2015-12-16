@@ -3,6 +3,7 @@
 *.sublime-project
 *.sublime-workspace
 test/doppio
+test/browserfs
 build/javapoly.js
 test/build/javapoly.js
 
