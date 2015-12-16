@@ -78,10 +78,10 @@ registerNatives({
      },
 
     'installListener()V': function(thread) {
-    	if (!window.javaPolyEvents)
-    		window.javaPolyEvents = [];
-    	if (!window.isJavaPolyWorker) {
-    		window.addEventListener("message", function(event) {
+      if (!window.javaPolyEvents)
+        window.javaPolyEvents = [];
+      if (!window.isJavaPolyWorker) {
+        window.addEventListener("message", function(event) {
         if (event.origin == window.location.origin) {
           if (typeof (event.data.javapoly) == "object") {
             event.preventDefault();

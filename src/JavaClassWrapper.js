@@ -94,9 +94,9 @@ class JavaClassWrapper {
   }
 
   static dispatchOnJVMWorker(id, messageType, data) {
-  	// NOTES, here we need to pass args and return value via Worker postMessage.
-  	// The worker and browser don't share data, we need to pass data via message body
-  	javapoly.worker.postMessage({javapoly:{messageId:id, messageType:messageType, data:data}});
+    // NOTES, here we need to pass args and return value via Worker postMessage.
+    // The worker and browser don't share data, we need to pass data via message body
+    javapoly.worker.postMessage({javapoly:{messageId:id, messageType:messageType, data:data}});
   }
 
   runMethodWithJavaDispatching(methodName, argumentsList) {
