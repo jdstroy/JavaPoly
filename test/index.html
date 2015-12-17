@@ -184,6 +184,12 @@
           });
 
           describe('java.lang.Integer', function() {
+            it('instance method should not exist in class wrapper: byteValue', function() {
+              return Java.type('java.lang.Integer').then(function(Integer) {
+                expect(Integer.byteValue).toNotExist();
+              });
+            });
+
             it('toHexString', function() {
               return Java.type('java.lang.Integer').then(function(Integer) {
                 return Integer.toHexString(42).then(function(result) {
@@ -245,6 +251,16 @@
         });
 
         describe('classes/Main.class', function() {
+          it('instance and private methods should not exist in class wrapper', function() {
+            return Java.type('Main').then(function(Main) {
+              expect(Main.publicInstanceMethod).toNotExist();
+              expect(Main.privateMethod).toNotExist();
+              expect(Main.protectedMethod).toNotExist();
+              expect(Main.privateInstanceMethod).toNotExist();
+              expect(Main.protectedInstanceMethod).toNotExist();
+            });
+          });
+
           it('static test()', function() {
             return Java.type('Main').then(function(Main) {
               return Main.test().then(function(result) {

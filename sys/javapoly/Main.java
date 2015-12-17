@@ -48,18 +48,21 @@ public class Main {
 
   public static void processClassLoading(String messageId) {
     final Object[] data = getData(messageId);
-    String[] returnValue = null;
+    final java.util.Set<String> methodNames = new java.util.TreeSet<>();
     try {
-      Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass((String) data[0]);
-      Method[] methods = clazz.getMethods();
-      returnValue = new String[methods.length];
+      final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass((String) data[0]);
+      final Method[] methods = clazz.getMethods();
       for (int i = 0; i < methods.length; i++) {
-        returnValue[i] = methods[i].getName();
+        final Method method = methods[i];
+        final int modifiers = method.getModifiers();
+        if (Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers)) {
+          methodNames.add(method.getName());
+        }
       }
     } catch (Exception e) {
       dumpException(e);
     } finally {
-      returnResult(messageId, returnValue);
+      returnResult(messageId, methodNames.toArray());
     }
   }
 

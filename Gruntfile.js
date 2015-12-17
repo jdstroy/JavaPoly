@@ -72,7 +72,7 @@ module.exports = function(grunt) {
       },
       doppio_release: {
         files: [
-          {expand: true, cwd: './node_modules/doppiojvm/dist/release/', src: ['**'], dest: './test/doppio'},
+          {expand: true, cwd: './node_modules/doppiojvm/dist/fast-dev/', src: ['**'], dest: './test/doppio'},
           {expand: true, cwd: './node_modules/doppiojvm/', src: ['package.json'], dest: './test/doppio'}
         ]
       },
