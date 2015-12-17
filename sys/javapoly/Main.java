@@ -1,6 +1,7 @@
 package javapoly;
 
 import java.lang.reflect.*;
+import javax.tools.*;
 
 public class Main {
 
@@ -21,6 +22,9 @@ public class Main {
           break;
         case "CLASS_LOADING":
           processClassLoading(messageId);
+          break;
+        case "FILE_COMPILE":
+          processClassCompilation(messageId);
           break;
         default:
           println("Unknown message type, callback will be executed");
@@ -73,6 +77,19 @@ public class Main {
     Object returnValue = suitableMethod.invoke(null, params);
     return returnValue;
   }
+
+  public static void processClassCompilation(String messageId) {
+    final Object[] data = getData(messageId);
+    String[] stringData = java.util.Arrays.copyOf(data, data.length, String[].class);
+
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    int result = compiler.run(null, null, null, stringData);
+    if (result == 0) {
+      returnResult(messageId, "Normal compilation.");
+    } else {
+      returnResult(messageId, "Compilation failed.");
+    }
+  } 
 
   private static Method matchMethod(Method[] methods, String methodName, Object[] params) {
     for (Method method : methods) {

@@ -3,8 +3,10 @@ import JavaFile from './JavaFile';
 //const path = global.BrowserFS.BFSRequire('path');
 
 class JavaSourceFile extends JavaFile  {
-  constructor(javaPoly, script) {
-    super(javaPoly, script);
+  constructor(javapoly, script) {
+    super(javapoly, script);
+
+    this.javapoly = javapoly;
 
     /**
      * Source code of Java file
@@ -15,20 +17,19 @@ class JavaSourceFile extends JavaFile  {
     let classInfo = JavaSourceFile.detectClassAndPackageNames(this.source);
 
     this.classname = classInfo.class;
-
     this.packagename = classInfo.package;
 
     let path = global.BrowserFS.BFSRequire('path');
 
     this.filename = path.join(
-      javaPoly.options.storageDir, 
+      javapoly.options.storageDir, 
       this.packagename ? this.packagename.replace(/\./g, '/') : '.',
       this.classname + '.java'
     );
 
-    this.javaPoly.fsext.rmkdirSync(path.dirname(this.filename));
+    this.javapoly.fsext.rmkdirSync(path.dirname(this.filename));
 
-    this.javaPoly.fs.writeFile(this.filename, this.source, err => {
+    this.javapoly.fs.writeFile(this.filename, this.source, err => {
       if (err) {
         console.error(err);
       }
@@ -58,21 +59,14 @@ class JavaSourceFile extends JavaFile  {
    * @return {Promise} to detect when it finishes
    */
   compile() {
-    console.log('Source file for:', this.classname, this.packagename);
     return new Promise((resolve, reject) => {
-      global.window.Java.type('javax.tools.ToolProvider').then( ToolProvider => {
-        ToolProvider.getSystemJavaCompiler().then(JavaCompiler => {
-          // console.log(this.javaPoly.jvm);
-          // console.log(JavaCompiler);
-          // JavaCompiler.run(null, null, null, this.filename).then(result => {
-            // if (result === 0) {
-              resolve();
-            // } else {
-              // reject();
-            // }
-          // });          
-        });
-      });
+      this.javapoly.javapoly.dispatcher.postMessage(
+        "FILE_COMPILE", 
+        ['-d', this.javapoly.options.storageDir, this.filename], 
+        (res) => {
+          resolve();
+        }
+      );
     });
   }
 }
