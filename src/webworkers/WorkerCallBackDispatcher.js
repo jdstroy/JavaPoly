@@ -33,8 +33,6 @@ class WorkerCallBackDispatcher {
   }
   
   /**
-   * Override the post Message function.
-   * 
    * For Web Worker, we also need to pass command args to other side. 
    * because Browser main thread and Web worker are in different Context.
    * (for non-workers mode, we can easily share args, callback function in Global object).

@@ -28,25 +28,25 @@ const http_retrieve_buffer = function(url) {
  * <script type="application/java-vm" src="Main.class"></script>
  */
 class JavaClassFile extends JavaFile {
-  constructor(javaPoly, script) {
+  constructor(javaPolyLoader, script) {
   	let Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
   	let path   = global.BrowserFS.BFSRequire('path');
 
-    super(javaPoly, script);
+    super(javaPolyLoader, script);
 
     let scriptSrc = script.src;
 
-    this.javaPoly.loadingHub.push(
+    this.javaPolyLoader.loadingHub.push(
       http_retrieve_buffer(scriptSrc).then(data => {
         let classFileData = new Buffer(data);
         let classFileInfo = classfile.analyze(classFileData);
         let className   = path.basename(classFileInfo.this_class);
         let packageName = path.dirname(classFileInfo.this_class);
 
-        this.javaPoly.fsext.rmkdirSync(path.join(this.javaPoly.options.storageDir, packageName));
+        this.javaPolyLoader.fsext.rmkdirSync(path.join(this.javaPolyLoader.options.storageDir, packageName));
 
         return new Promise((resolve, reject) => {
-          this.javaPoly.fs.writeFile(path.join(this.javaPoly.options.storageDir, classFileInfo.this_class + '.class'),
+          this.javaPolyLoader.fs.writeFile(path.join(this.javaPolyLoader.options.storageDir, classFileInfo.this_class + '.class'),
             classFileData, (err) => {
               if (err) {
                 console.error(err.message);

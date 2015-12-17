@@ -63,54 +63,12 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
 class JavaPoly {
   constructor(_options) {
     let options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
-    /**
-     * Stores referense to the BrowserFS fs-library
-     * @type {BrowserFS}
-     */
-    this.fs = null;
-
-    /**
-     * Stores referense to the BrowserFS path-library
-     * @type {[type]}
-     */
-    this.path = null;
-
-    /**
-     * Stores referense to the special extension for fs (for example it contains recursive mkdir)
-     * @type {[type]}
-     */
-    this.fsext = null;
-
-    /**
-     * Array of all registered Java classes, jars, or sources
-     * @type {Array}
-     */
-    this.scripts = [];
-
-    /**
-     * Array of all registered Java sources.
-     * @type {Array}
-     */
-    this.sources = [];
-
-    /**
-     * Array that contains all promises that should be resolved before JVM running.
-     * This array should be used for loading script
-     * @type {Array<Promise>}
-     */
-    this.loadingHub = [];
 
     /**
      * Object with options of JavaPoly
      * @type {Object}
      */
     this.options = options;
-
-    /**
-     * Array that contains classpath, include the root path of class files , jar file path.
-     * @type {Array}
-     */
-    this.classpath = [this.options.storageDir];
 
     /**
      * The dispatcher for handle jvm command message
@@ -163,8 +121,8 @@ class JavaPoly {
     // Otherwise Start in Browser Main Thread,
     // Ensure we have loaded the browserfs.js file before handling Java/class file
     this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-      new JavaPolyLoader(this, javaMimeScripts, 
-          () => {this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'));},
+      let javaPolyLoader = new JavaPolyLoader(this, javaMimeScripts, 
+          () => this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'),
           resolveJVMReady);
       });
   }
@@ -185,7 +143,6 @@ class JavaPoly {
       } else {
         console.log('JVM init failed in webWorkers');
         // try to load in main thread directly when JVM init failed in WebWorkers ?
-        // this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
         this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady);
       }
     });

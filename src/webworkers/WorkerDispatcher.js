@@ -16,6 +16,7 @@ class WorkerDispatcher extends CommonDispatcher{
 
   /**
    * Override the listener.
+   * 
    * We get message data from message body rather then the shared global object.
    */
   installListener(){

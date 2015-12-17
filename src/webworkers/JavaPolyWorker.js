@@ -5,42 +5,6 @@ import WorkerDispatcher from './WorkerDispatcher.js'
 
 class JavaPolyWorker {
   constructor(options) {
-    /**
-     * Stores referense to the BrowserFS fs-library
-     * @type {BrowserFS}
-     */
-    this.fs = null;
-
-    /**
-     * Stores referense to the BrowserFS path-library
-     * @type {[type]}
-     */
-    this.path = null;
-
-    /**
-     * Stores referense to the special extension for fs (for example it contains recursive mkdir)
-     * @type {[type]}
-     */
-    this.fsext = null;
-
-    /**
-     * Array of all registered Java classes, jars, or sources
-     * @type {Array}
-     */
-    this.scripts = [];
-
-    /**
-     * Array of all registered Java sources.
-     * @type {Array}
-     */
-    this.sources = [];
-
-    /**
-     * Array that contains all promises that should be resolved before JVM running.
-     * This array should be used for loading script
-     * @type {Array<Promise>}
-     */
-    this.loadingHub = [];
 
     /**
      * Object with options of JavaPoly
@@ -48,18 +12,15 @@ class JavaPolyWorker {
      */
     this.options = options;
 
-    /**
-     * Array that contains classpath, include the root path of class files , jar file path.
-     * @type {Array}
-     */
-    this.classpath = [this.options.storageDir];
-
     // NOTES, hack global window variable used in doppio, javapoly.
     global.window = global.self;
 
     // load browserfs.min.js and doppio.js
     importScripts(this.options.browserfsLibUrl + 'browserfs.min.js');
     importScripts(this.options.doppioLibUrl + 'doppio.js');
+
+    //create a global javapoly object in webworkers.
+    self.javapoly = this;
   }
 
   /**
@@ -73,6 +34,8 @@ class JavaPolyWorker {
   }
 
 }
+
+
 
 self.addEventListener('message', function(e) {
   if (!e.data || !e.data.javapoly)//invalid command, ignore 

@@ -43,10 +43,61 @@ const JAVA_MIME = [
  */
 class JavaPolyLoader {
   constructor(javapoly, scripts, callbackBeforeStartJVM, resolveJVMReady) {
-    this.javapoly=javapoly;
+    
+    this.javapoly = javapoly;
+    
+    /**
+     * Stores referense to the BrowserFS fs-library
+     * @type {BrowserFS}
+     */
+    this.fs = null;
+
+    /**
+     * Stores referense to the BrowserFS path-library
+     * @type {[type]}
+     */
+    this.path = null;
+
+    /**
+     * Stores referense to the special extension for fs (for example it contains recursive mkdir)
+     * @type {[type]}
+     */
+    this.fsext = null;
+
+    /**
+     * Array of all registered Java classes, jars, or sources
+     * @type {Array}
+     */
+    this.scripts = [];
+
+    /**
+     * Array of all registered Java sources.
+     * @type {Array}
+     */
+    this.sources = [];
+
+    /**
+     * Array that contains all promises that should be resolved before JVM running.
+     * This array should be used for loading script
+     * @type {Array<Promise>}
+     */
+    this.loadingHub = [];
+
+    /**
+     * Object with options of JavaPoly
+     * @type {Object}
+     */
+    this.options = this.javapoly.options;
+
+    /**
+     * Array that contains classpath, include the root path of class files , jar file path.
+     * @type {Array}
+     */
+    this.classpath = [this.options.storageDir];
+    
     this.initBrowserFS();
-    if (callbackBeforeStartJVM){
-      callbackBeforeStartJVM();
+    if (callbackBeforeStartJVM) {
+      this.loadingHub.push(callbackBeforeStartJVM());
     }
     this.loadScripts(scripts);
     this.initJVM().then(resolveJVMReady);
@@ -67,15 +118,15 @@ class JavaPolyLoader {
 
         switch(scriptType) {
           case 'class':
-            this.javapoly.scripts.push(new JavaClassFile(this.javapoly, script));
+            this.scripts.push(new JavaClassFile(this, script));
             break;
           case 'java':
-            let javaSource = new JavaSourceFile(this.javapoly, script);
-            this.javapoly.scripts.push(javaSource);
-            this.javapoly.sources.push(javaSource);
+            let javaSource = new JavaSourceFile(this, script);
+            this.scripts.push(javaSource);
+            this.sources.push(javaSource);
             break;
           case 'jar':
-            this.javapoly.scripts.push(new JavaArchiveFile(this.javapoly, script));
+            this.scripts.push(new JavaArchiveFile(this, script));
             break;
         }
       }
@@ -94,15 +145,18 @@ class JavaPolyLoader {
     if (!window.isJavaPolyWorker)
       mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     
-    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.javapoly.options.doppioLibUrl));
+    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
     mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "/natives/"));
-    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.javapoly.options.javaPolyBaseUrl + "/sys/"));
-    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.javapoly.options.javaPolyBaseUrl + "/sysNatives/"));
+    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sys/"));
+    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sysNatives/"));
     
-    this.javapoly.fs = BrowserFS.BFSRequire('fs');
-    this.javapoly.path = BrowserFS.BFSRequire('path');
-    this.javapoly.fsext = require('./tools/fsext')(this.javapoly.fs, this.javapoly.path);
-    this.javapoly.fsext.rmkdirSync(this.javapoly.options.storageDir);
+    this.fs = BrowserFS.BFSRequire('fs');
+    this.path = BrowserFS.BFSRequire('path');
+    this.fsext = require('./tools/fsext')(this.fs, this.path);
+    this.fsext.rmkdirSync(this.options.storageDir);
+    
+    //NOTES, we may also want to use fs in other place of javapoly
+    this.javapoly.fs = this.fs;
   }
   
   /**
@@ -112,14 +166,14 @@ class JavaPolyLoader {
    */
   initJVM() {
     return new Promise( (resolve, reject) => {
-      Promise.all(this.javapoly.loadingHub).then(()=> {
+      Promise.all(this.loadingHub).then(()=> {
         // Delete loadingHub (if somewhere else it is used so it's gonna be runtime error of that usage)
-        delete this.javapoly.loadingHub;
+        delete this.loadingHub;
         this.loadingHub = [];
 
         this.javapoly.jvm = new Doppio.VM.JVM({
           bootstrapClasspath: ['/sys/vendor/java_home/classes', "/javapolySys"],
-          classpath: this.javapoly.classpath,
+          classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
           nativeClasspath: ['/sys/natives', '/polynatives', "/javapolySysNatives"],
@@ -130,10 +184,10 @@ class JavaPolyLoader {
             reject();
           } else {
             // var self = this
-            self.javapoly = this.javapoly;
+            self.javapolyLoader = this;
             window.javaPolyInitialisedCallback = () => {
               // Compilation of Java sorces
-              const compilationHub = this.javapoly.sources.map( (src) => src.compile() );
+              const compilationHub = self.javapolyLoader.sources.map( (src) => src.compile() );
               Promise.all(compilationHub).then(resolve);
             }
 
