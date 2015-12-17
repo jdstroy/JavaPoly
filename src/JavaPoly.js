@@ -24,6 +24,12 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
   doppioLibUrl: '/doppio/',
 
   /**
+   * URL where we download the BrowserFS library
+   * @type {String}
+   */
+  browserfsLibUrl: 'browserfs/',
+
+  /**
    * Optional: javaPolyBaseUrl
    * When defined, this is used as the base URL for loading JavaPoly data such as system classes and native functions.
    * If empty, JavaPoly will try to automatically figure it out during initialisation.
@@ -125,9 +131,9 @@ class JavaPoly {
   // returns a promise that jvm will be ready to execute
   initJavaPoly() {
     if (this.options.initOnStart === true) {
-      return new Promise((resolve) => { this.beginLoading(resolve)});
+      return new Promise((resolve) => { this.beginLoading(resolve) });
     } else {
-      return Promise.reject("not initialised");
+      return Promise.reject('not initialised');
     }
   }
 
@@ -145,9 +151,9 @@ class JavaPoly {
       }
       // Otherwise Start in Browser Main Thread,
       // Ensure we have loaded the browserfs.js file before handling Java/class file
-      this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
+      this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
         new JavaPolyLoader(this, javaMimeScripts, 
-            () => {this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));},
+            () => {this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'));},
             resolveJVMReady);
         });
       }, false);

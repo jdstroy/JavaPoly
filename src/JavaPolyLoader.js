@@ -61,8 +61,9 @@ class JavaPolyLoader {
       if (scriptTypes.length === 1) {
         let scriptType = scriptTypes[0].type;
 
-        if (scriptTypes[0].srcRequired && !script.src)
+        if (scriptTypes[0].srcRequired && !script.src) {
           throw `An attribute 'src' should be declared for MIME-type '${script.type}'`;
+        }
 
         switch(scriptType) {
           case 'class':

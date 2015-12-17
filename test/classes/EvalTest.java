@@ -25,9 +25,7 @@ public class EvalTest {
     final boolean test4Pass = firstString.asString().equals("a");
 
     final JSPrimitive secondString = (JSPrimitive) firstPartFunc.invoke("a,b,c,d", ",", 1);
-    final boolean test5Pass = firstString.asString().equals("b");
-    javapoly.Main.println("Test 5 completed");
-    javapoly.Main.println("Result: " + (test1Pass && test2Pass && test3Pass && test4Pass && test5Pass));
+    final boolean test5Pass = secondString.asString().equals("b");
 
     return test1Pass && test2Pass && test3Pass && test4Pass && test5Pass;
   }

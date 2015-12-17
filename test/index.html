@@ -127,7 +127,7 @@
 
         it('should pass all tests from EvalTest.java', function() {
           return Java.type('EvalTest').then(function(EvalTest) {
-            EvalTest.test().then(function(result) {
+            return EvalTest.test().then(function(result) {
               expect(result).toEqual(true);
             });
           });
@@ -281,7 +281,7 @@
             });
           });
 
-          /* Unlike the `/sys` FS, test with a separate XHR FS whose contents are assuredly yet to be loaded */
+          // Unlike the `/sys` FS, test with a separate XHR FS whose contents are assuredly yet to be loaded
           it('file read from XHR', function() {
             var contents = "Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience."
             javapoly.fs.getRootFS().mount('/testXHR', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'xhrFS/'));

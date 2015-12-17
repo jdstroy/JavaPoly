@@ -34,14 +34,17 @@ public class Eval {
   }
 
   public abstract static class JSValue {
-    private final Object rawValue;
+    final Object rawValue;
     JSValue(final Object rawValue) {
       this.rawValue = rawValue;
     }
 
+    /* Although this works, doppio dev build has an assertion that prevents a java function from returning pure JS objects */
+    /*
     public Object getRawValue() {
       return rawValue;
     }
+    */
   };
 
   public static class JSPrimitive extends JSValue {
@@ -50,19 +53,19 @@ public class Eval {
     }
 
     public double asDouble() {
-      return Eval.asDouble(getRawValue());
+      return Eval.asDouble(rawValue);
     }
 
     public int asInteger() {
-      return Eval.asInteger(getRawValue());
+      return Eval.asInteger(rawValue);
     }
 
     public long asLong() {
-      return Eval.asLong(getRawValue());
+      return Eval.asLong(rawValue);
     }
 
     public String asString() {
-      return Eval.asString(getRawValue());
+      return Eval.asString(rawValue);
     }
   }
 
@@ -72,8 +75,12 @@ public class Eval {
     }
 
     public JSValue invoke(Object... args) {
-      final Object[] unwrappedArgs = java.util.Arrays.stream(args).map(e -> (e instanceof JSValue) ? ((JSValue) e).getRawValue() : e).toArray();
-      return wrapResult(Eval.invoke(getRawValue(), unwrappedArgs));
+      final Object[] unwrappedArgs = new Object[args.length];
+      for (int i = 0; i < args.length; i++) {
+        final Object e = args[i];
+        unwrappedArgs[i] = (e instanceof JSValue) ? ((JSValue) e).rawValue : e;
+      }
+      return wrapResult(Eval.invoke(rawValue, unwrappedArgs));
     }
   }
 

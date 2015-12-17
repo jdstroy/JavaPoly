@@ -12,7 +12,7 @@ public class Main {
     try {
       boolean done = false;
       while (!done) {
-        final Object[] messageId = getMessageId();
+        final String messageId = getMessageId();
         final String messageType = getMessageType(messageId);
         // TODO: Create enum
         switch (messageType) {
@@ -34,7 +34,7 @@ public class Main {
     println("Java Main ended");
   }
 
-  public static void processMethodInvokation(Object messageId) {
+  public static void processMethodInvokation(String messageId) {
     final Object[] data = getData(messageId);
     Object returnValue = null;
     try {
@@ -46,7 +46,7 @@ public class Main {
     }
   }
 
-  public static void processClassLoading(Object messageId) {
+  public static void processClassLoading(String messageId) {
     final Object[] data = getData(messageId);
     String[] returnValue = null;
     try {
@@ -81,18 +81,21 @@ public class Main {
   }
 
   private static native void installListener();
-  private static native Object[] getMessageId();
-  private static native Object[] getData(Object messageId);
-  private static native String getMessageType(Object messageId);
-  private static native void dispatchMessage(Object messageId);
-  private static native void returnResult(Object messageId, Object returnValue);
+  private static native String getMessageId();
+  private static native Object[] getData(String messageId);
+  private static native String getMessageType(String messageId);
+  private static native void dispatchMessage(String messageId);
+  private static native void returnResult(String messageId, Object returnValue);
 
   public static native void println(String s);
 
-  public static void dumpException(final Exception e) {
-    println("Exception: " + e);
-    for (StackTraceElement elem : e.getStackTrace()) {
-      println(elem.toString());
+  public static void dumpException(final Throwable e) {
+    final java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+    try (final java.io.PrintWriter pr = new java.io.PrintWriter(baos)) {
+      e.printStackTrace(pr);
+      pr.flush();
+    } finally {
+      println(baos.toString());
     }
   }
 
