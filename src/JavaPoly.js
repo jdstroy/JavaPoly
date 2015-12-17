@@ -211,13 +211,6 @@ class JavaPoly {
     };
   }
 
-  initDispatcher() {
-    window.javaPolyMessageTypes = {};
-    window.javaPolyCallbacks = {};
-    window.javaPolyData = {};
-    window.javaPolyIdCount = 0;
-  }
-
 }
 
 export default JavaPoly;
