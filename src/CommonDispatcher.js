@@ -57,13 +57,17 @@ class CommonDispatcher {
   }
   
   getMessageType(msgId){
-    // FIXME may want to delete the data after fetch
-    return window.javaPolyMessageTypes[msgId];
+    // may want to delete the data after fetch
+    let messageType = window.javaPolyMessageTypes[msgId];
+    delete window.javaPolyMessageTypes[msgId];
+    return messageType;
   }
   
   getMessageData(msgId){
-    // FIXME may want to delete the data after fetch
-    return window.javaPolyData[msgId];
+    // may want to delete the data after fetch
+    let messageData =  window.javaPolyData[msgId];
+    delete window.javaPolyData[msgId];
+    return messageData;
   }
   
   getMessageCallback(msgId){
