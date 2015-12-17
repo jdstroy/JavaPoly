@@ -1,6 +1,6 @@
 class JavaFile {
-  constructor(javaPoly, script) {
-    this.javaPoly = javaPoly;
+  constructor(javaPolyLoader, script) {
+    this.javaPolyLoader = javaPolyLoader;
     this.script = script;
   }
 }

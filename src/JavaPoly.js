@@ -1,28 +1,10 @@
 import * as _ from 'underscore';
-import JavaClassFile from './JavaClassFile';
-import JavaArchiveFile from './JavaArchiveFile';
-import JavaSourceFile from './JavaSourceFile';
 import JavaClassWrapper from './JavaClassWrapper';
 import QueueExecutor from './QueueExecutor';
 import ProxyWrapper from './ProxyWrapper';
-
-const JAVA_MIME = [
-  { // For compiled Java-class
-    type: 'class',
-    mime: ['application/java-vm'],
-    srcRequired: true
-  },
-  { // For Java source files
-    type: 'java',
-    mime: ['text/x-java-source'],
-    srcRequired: false
-  },
-  { // For JAR-files
-    type: 'jar',
-    mime: ['application/java-archive'],
-    srcRequired: true
-  }
-];
+import JavaPolyLoader from './JavaPolyLoader.js'
+import CommonDispatcher from './CommonDispatcher.js'
+import WorkerCallBackDispatcher from './webworkers/WorkerCallBackDispatcher.js'
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**
@@ -37,24 +19,34 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
   storageDir: '/tmp/data',
   /**
    * URL where we download the doppio library.
+   * @type {String}
    * 1.'doppio/', download from user owner domain(${your.domain}/doppio), eg. localhost for locally test
    * 2. or a public url, eg. http://www.javapoly.com/doppio/
-   * @type {String}
    */
-  doppioLibUrl: 'doppio/',
+  doppioLibUrl: '/doppio/',
 
   /**
    * URL where we download the BrowserFS library
    * @type {String}
    */
-  browserfsLibUrl: 'browserfs/'
+  browserfsLibUrl: '/browserfs/',
 
   /**
    * Optional: javaPolyBaseUrl
    * When defined, this is used as the base URL for loading JavaPoly data such as system classes and native functions.
    * If empty, JavaPoly will try to automatically figure it out during initialisation.
    */
+  	
+  /**
+   * Javapoly worker path. null or a path, eg. build/javapoly_worker.js
+   * 
+   * @type {String} 
+   * when defined not null, we will try to use the webworkers path to run the core javapoly and jvm. 
+   * if web worker is not supported by browser, we will just load javapoly and jvm in browser main Thread.
+   */
+   worker : null // 'build/javapoly_worker.js' 
 }
+
 
 /**
  * Main JavaPoly class that do all underliying job for initialization
@@ -71,42 +63,6 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
 class JavaPoly {
   constructor(_options) {
     let options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
-    /**
-     * Stores referense to the BrowserFS fs-library
-     * @type {BrowserFS}
-     */
-    this.fs = null;
-
-    /**
-     * Stores referense to the BrowserFS path-library
-     * @type {[type]}
-     */
-    this.path = null;
-
-    /**
-     * Stores referense to the special extension for fs (for example it contains recursive mkdir)
-     * @type {[type]}
-     */
-    this.fsext = null;
-
-    /**
-     * Array of all registered Java classes, jars, or sources
-     * @type {Array}
-     */
-    this.scripts = [];
-
-    /**
-     * Array of all registered Java sources.
-     * @type {Array}
-     */
-    this.sources = [];
-
-    /**
-     * Array that contains all promises that should be resolved before JVM running.
-     * This array should be used for loading script
-     * @type {Array<Promise>}
-     */
-    this.loadingHub = [];
 
     /**
      * Object with options of JavaPoly
@@ -115,11 +71,11 @@ class JavaPoly {
     this.options = options;
 
     /**
-     * Array that contains classpath, include the root path of class files , jar file path.
-     * @type {Array}
+     * The dispatcher for handle jvm command message
+     * @Type {Object}
      */
-    this.classpath = [this.options.storageDir];
-
+    this.dispatcher = null;
+    
     if (!this.options.javaPolyBaseUrl) {
       this.options.javaPolyBaseUrl = this.getScriptBase();
     }
@@ -143,43 +99,51 @@ class JavaPoly {
 
   beginLoading(resolveJVMReady) {
     global.document.addEventListener('DOMContentLoaded', e => {
-      // Ensure we have loaded the browserfs.js file before handling Java/class file
-      this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-        this.initBrowserFS();
-        // Load doppio.js file
-        this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'));
-
-        this.loadScripts();
-
-        this.initJVM().then(resolveJVMReady);
+      let javaMimeScripts = [];
+      _.each(global.document.scripts, script => {
+        javaMimeScripts.push({type:script.type, src:script.src});
       });
+
+      // start JVM and JavaPoly Core in Web Worker
+      // only if worker option enable and browser support WebWorkers
+      if (this.options.worker && global.Worker){
+        this.loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveJVMReady);
+      }else{
+        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady);
+      }
     }, false);
   }
+    
 
-  loadScripts() {
-    // Load java mime files
-    _.each(global.document.scripts, script => {
-      let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
-      // Create only when scriptTypes is only 1
-      if (scriptTypes.length === 1) {
-        let scriptType = scriptTypes[0].type;
-        if (scriptTypes[0].srcRequired && !script.src) {
-          throw `An attribute 'src' should be declared for MIME-type '${script.type}'`;
-        }
+  loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady) {
+    this.dispatcher = new CommonDispatcher();
 
-        switch(scriptType) {
-          case 'class':
-            this.scripts.push(new JavaClassFile(this, script));
-            break;
-          case 'java':
-            let javaSource = new JavaSourceFile(this, script);
-            this.scripts.push(javaSource);
-            this.sources.push(javaSource);
-            break;
-          case 'jar':
-            this.scripts.push(new JavaArchiveFile(this, script));
-            break;
-        }
+    // Otherwise Start in Browser Main Thread,
+    // Ensure we have loaded the browserfs.js file before handling Java/class file
+    this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
+      let javaPolyLoader = new JavaPolyLoader(this, javaMimeScripts, 
+          () => this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'),
+          resolveJVMReady);
+      });
+  }
+
+  loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveJVMReady) {
+    this.dispatcher = new WorkerCallBackDispatcher(new global.Worker(this.options.worker));
+    this.dispatcher.installListener();
+
+    // send JVM init request to webworker to init the jvm in javapoly workers.
+    // we may need to send some options, java-mime file path to web workers. 
+    // and we also want to know if JVM inin success in webworkers,
+    // so here we send a JVM_INIT messsage from Browser to workers to start jvm in webworkers.
+    // rather then init web worker when worker init by itself.
+    this.dispatcher.postMessage('JVM_INIT', {options:this.options, scripts:javaMimeScripts}, (success) =>{
+      if (success == true){ // JVM init success..
+        console.log('JVM init success in webWorkers');
+        resolveJVMReady();
+      } else {
+        console.log('JVM init failed in webWorkers');
+        // try to load in main thread directly when JVM init failed in WebWorkers ?
+        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady);
       }
     });
   }
@@ -203,26 +167,6 @@ class JavaPoly {
 
       return script.getAttribute('src', -1)
     }
-  }
-
-  /**
-   * Initialization of BrowserFS
-   */
-  initBrowserFS(){
-    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
-    BrowserFS.initialize(mfs);
-    mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
-    mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
-    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
-    mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "natives/"));
-    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sys/"));
-    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sysNatives/"));
-
-
-    this.fs = BrowserFS.BFSRequire('fs');
-    this.path = BrowserFS.BFSRequire('path');
-    this.fsext = require('./tools/fsext')(this.fs, this.path);
-    this.fsext.rmkdirSync(this.options.storageDir);
   }
 
   /**
@@ -274,50 +218,6 @@ class JavaPoly {
     window.javaPolyIdCount = 0;
   }
 
-  /**
-   * Return a promise that JVM will be initialised for this JavaPoly:
-   * 1. Ensure that all loading promises are finished
-   * 2. Create object for JVM
-   */
-  initJVM() {
-    this.initDispatcher();
-
-    return new Promise((resolve) => {
-
-      Promise.all(this.loadingHub).then(()=> {
-        // Delete loadingHub (if somewhere else it is used so it's gonna be runtime error of that usage)
-        delete this.loadingHub;
-        this.loadingHub = [];
-
-        this.jvm = new Doppio.VM.JVM({
-          bootstrapClasspath: ['/sys/vendor/java_home/classes', "/javapolySys"],
-          classpath: this.classpath,
-          javaHomePath: '/sys/vendor/java_home',
-          extractionPath: '/tmp',
-          nativeClasspath: ['/sys/natives', '/polynatives', "/javapolySysNatives"],
-          assertionsEnabled: true
-        }, (err, jvm) => {
-          if (err) {
-            console.log("err loading JVM:", err);
-          } else {
-            var self = this
-            window.javaPolyInitialisedCallback = function() {
-              // Compilation of Java sorces
-              const compilationHub = self.sources.map( (src) => src.compile() );
-              Promise.all(compilationHub).then(resolve);
-            }
-
-            jvm.runClass('javapoly.Main', [], function(exitCode) {
-              // Control flow shouldn't reach here under normal circumstances,
-              // because Main thread keeps polling for messages.
-              console.log("JVM Exit code: ", exitCode);
-            });
-
-          }
-        });
-      });
-    });
-  }
 }
 
 export default JavaPoly;

@@ -72,3 +72,16 @@ $ npm install -g mocha
 ```
 
 And type `mocha` in projects directory.
+
+### Using JavaPoly Core(include JVM) in WebWorker
+
+we could use webworkers if possible(the browser support) , to avoid blocking the main thread.
+
+simply add a worker options in javapoly. 
+The options value is the url of the javapoly_worker.js.(default value is null for not using webworkers)
+
+eg.
+
+```js
+new JavaPoly(worker : 'build/javapoly_worker.js');
+``` 

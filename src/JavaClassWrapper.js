@@ -81,11 +81,7 @@ class JavaClassWrapper {
   }
 
   static dispatchOnJVM(messageType, data, callback) {
-    var id = window.javaPolyIdCount++;
-    window.javaPolyMessageTypes[id] = messageType;
-    window.javaPolyData[id] = data;
-    window.javaPolyCallbacks[id] = callback;
-    window.postMessage({ javapoly:{ messageId:""+id } }, "*")
+    javapoly.dispatcher.postMessage(messageType, data,callback);
   }
 
   runMethodWithJavaDispatching(methodName, argumentsList) {

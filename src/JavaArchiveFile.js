@@ -23,28 +23,28 @@ const http_retrieve_buffer = function(url) {
 }
 
 class JavaArchiveFile extends JavaFile  {
-  constructor(javaPoly, script) {
+  constructor(javaPolyLoader, script) {
   	let Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
   	let path   = global.BrowserFS.BFSRequire('path');
 
-    super(javaPoly, script);
+    super(javaPolyLoader, script);
     let scriptSrc = script.src;
 
-    this.javaPoly.loadingHub.push(
+    this.javaPolyLoader.loadingHub.push(
       http_retrieve_buffer(scriptSrc).then(data => {
        let jarFileData = new Buffer(data);
        let jarName = path.basename(scriptSrc);
 
        return new Promise((resolve, reject) => {
-      	 let jarStorePath = path.join(this.javaPoly.options.storageDir, jarName);
+      	 let jarStorePath = path.join(this.javaPolyLoader.options.storageDir, jarName);
       	 // store the .jar file to $storageDir
-      	 this.javaPoly.fs.writeFile(jarStorePath, jarFileData, (err) => {
+      	 this.javaPolyLoader.fs.writeFile(jarStorePath, jarFileData, (err) => {
       		 if (err) {
       			 console.error(err.message);
       			 reject();
       			 } else {
       				 // add .jar file path to classpath
-      				 this.javaPoly.classpath.push(jarStorePath);
+      				 this.javaPolyLoader.classpath.push(jarStorePath);
       				 resolve();
       			 }
       		 });

@@ -3,8 +3,10 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     browserify: {
       production: {
-        src: ['src/**/main.js'],
-        dest: 'build/javapoly.js',
+        files:{
+          'build/javapoly.js':['src/**/main.js'],
+          'build/javapoly_worker.js':['src/**/webworkers/JavaPolyWorker.js']
+        },
         options: {
           transform: [
              ["babelify", { "presets": ["es2015"] }]
@@ -12,8 +14,10 @@ module.exports = function(grunt) {
         }
       },
       development:{
-      	src: ['src/**/main.test.js'],
-        dest: 'build/javapoly.js',
+        files:{
+          'build/javapoly.js':['src/**/main.test.js'],
+          'build/javapoly_worker.js':['src/**/webworkers/JavaPolyWorker.js']
+        },
         options: {
           transform: [
              ["babelify", { "presets": ["es2015"] }]
