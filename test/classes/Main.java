@@ -7,26 +7,6 @@ public class Main {
     System.out.println("hello world2");
   }
 
-  public static String readFile(String fileName) {
-
-    try(final java.io.FileReader fr = new java.io.FileReader(fileName)) {
-      boolean done = false;
-      final StringBuffer result = new StringBuffer();
-      while (!done) {
-        int c = fr.read();
-        done = c == -1;
-        if (!done) {
-          result.append((char) c);
-        }
-      }
-
-      return result.toString();
-    } catch (java.io.IOException e) {
-      System.out.println("Exception while reading from file");
-      return null;
-    }
-  }
-
   /* A function that checks the length of a string. The idea is to return some boolean, to test the wrapping of
    * primitive boolean values */
   public static boolean checkLength(final String str, final int n) {
