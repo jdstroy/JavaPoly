@@ -3,8 +3,10 @@ import JavaFile from './JavaFile';
 //const path = global.BrowserFS.BFSRequire('path');
 
 class JavaSourceFile extends JavaFile  {
-  constructor(javaPolyLoader, script) {
-    super(javaPolyLoader, script);
+  constructor(javapoly, script) {
+    super(javapoly, script);
+
+    this.javapoly = javapoly;
 
     /**
      * Source code of Java file
@@ -12,17 +14,44 @@ class JavaSourceFile extends JavaFile  {
      */
     this.source = script.text;
 
-    this.classname = 'TestCompile';
+    let classInfo = JavaSourceFile.detectClassAndPackageNames(this.source);
+
+    this.classname = classInfo.class;
+    this.packagename = classInfo.package;
 
     let path = global.BrowserFS.BFSRequire('path');
 
-    this.filename = path.join(javaPolyLoader.options.storageDir, this.classname + '.java');
+    this.filename = path.join(
+      javapoly.options.storageDir, 
+      this.packagename ? this.packagename.replace(/\./g, '/') : '.',
+      this.classname + '.java'
+    );
 
-    this.javaPolyLoader.fs.writeFile(this.filename, this.source, err => {
+    this.javapoly.fsext.rmkdirSync(path.dirname(this.filename));
+
+    this.javapoly.fs.writeFile(this.filename, this.source, err => {
       if (err) {
         console.error(err);
       }
     });
+  }
+
+  /**
+   * This functions parse Java source file and detects its name and package
+   * @param  {String} source Java source
+   * @return {Object}        Object with fields: package and class
+   */
+  static detectClassAndPackageNames(source) {
+    // this regexp removes all comments in source
+    source = source.replace(/(\/\*[^]*\*\/|\/\/[^\n]*\n)/gi, ' ');
+
+    let className = source.match(/class\s+([^\s\{]+)(\s|\{)/);
+    let packageName = source.match(/package\s+([^\s;]+)\s*;/)
+
+    return {
+      package: packageName ? packageName[1] : null,
+      class:   className   ? className[1]   : null
+    }
   }
 
   /**
@@ -31,19 +60,13 @@ class JavaSourceFile extends JavaFile  {
    */
   compile() {
     return new Promise((resolve, reject) => {
-      global.window.Java.type('javax.tools.ToolProvider').then( ToolProvider => {
-        ToolProvider.getSystemJavaCompiler().then(JavaCompiler => {
-          // console.log(this.javaPolyLoader.jvm);
-          // console.log(JavaCompiler);
-          // JavaCompiler.run(null, null, null, this.filename).then(result => {
-            // if (result === 0) {
-              resolve();
-            // } else {
-              // reject();
-            // }
-          // });          
-        });
-      });
+      this.javapoly.javapoly.dispatcher.postMessage(
+        "FILE_COMPILE", 
+        ['-d', this.javapoly.options.storageDir, this.filename], 
+        (res) => {
+          resolve();
+        }
+      );
     });
   }
 }

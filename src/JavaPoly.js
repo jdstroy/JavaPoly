@@ -101,7 +101,7 @@ class JavaPoly {
     global.document.addEventListener('DOMContentLoaded', e => {
       let javaMimeScripts = [];
       _.each(global.document.scripts, script => {
-        javaMimeScripts.push({type:script.type, src:script.src});
+        javaMimeScripts.push({type:script.type, src:script.src, text:script.text});
       });
 
       // start JVM and JavaPoly Core in Web Worker

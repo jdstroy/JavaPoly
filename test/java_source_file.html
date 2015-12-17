@@ -1,18 +1,25 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Mocha Tests (JavaSourceFile)</title>
+  <title>JavaPoly Tests: Java Source Files</title>
   <link href="mocha/mocha.css" rel="stylesheet" />
-
-  <script type="text/javascript" src="mocha/browserfs.min.js"></script>
-  <script type="text/javascript" src="doppio/doppio.js"></script>
 
   <script type="text/javascript" src="build/javapoly.js"></script>
 
   <script type="text/x-java-source">
-  public class TestCompile {
-      public static String test() {
-        return "TestCompile.test()";
+  package com.javapoly.test;
+  public class TestCompile1 {
+      public static String testIt() {
+        return "TestCompile1::testIt()";
+      }
+  }
+  </script>
+
+  <script type="text/x-java-source">
+  package com.javapoly.test;
+  public class TestCompile2 {
+      public static Integer testIt() {
+        return 8008;
       }
   }
   </script>
@@ -21,34 +28,44 @@
 <body>
   <div id="mocha"></div>
 
-  <script src="mocha/expect.js"></script>
+  <script src="expect/umd/expect.min.js"></script>
   <script src="mocha/mocha.js"></script>
 
   <script type="text/javascript">
+    mocha.setup('bdd');
+    expect.extend({
+      toBeGreaterThanOrEqual(limit) {
+        expect.assert(this.actual >= limit, 'expected %s to be greater than or equal to ' + limit, this.actual);
+      }
+    });
 
-    (new JavaPoly());
+    describe('JavaPoly', function() {
+      this.timeout(1000000); // Let jvm to start and do not interrupt promises
 
-    document.addEventListener('JVMReady', function(e) {
-      mocha.setup('bdd')
-
-      describe('JVMReady', function() {
-        it('load jvm', function() {
-          expect(J).to.exist;
-          expect(Java).to.exist;
+      describe('TestCompile1', function() {
+        it('static method returns String', function() {
+          return Java.type('com.javapoly.test.TestCompile1').then(function(TestCompile1) {
+            return TestCompile1.testIt().then(function(result) {
+              expect(result).toEqual('TestCompile1::testIt()');
+            });
+          });
         });
-
-        
-        
-
       });
 
-      // FIXME: now it is required to put '+' to make sure we have executed all tests
-      // fix it with proper Promises tests
+      describe('TestCompile2', function() {
+        it('static method returns Integer', function() {
+          return Java.type('com.javapoly.test.TestCompile2').then(function(TestCompile2) {
+            return TestCompile2.testIt().then(function(result) {
+              expect(result).toEqual(8008);
+            });
+          });
+        });
+      });
+      
 
-      mocha.checkLeaks();
-      mocha.run();
+    });
 
-    }, false);
+    mocha.run();
   </script>
 </body>
 </html>
