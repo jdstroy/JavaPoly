@@ -71,13 +71,12 @@ class JavaClassWrapper {
   constructor(methods, clsName) {
     this.methods = methods;
     this.clsName = clsName;
+    const wrapper = this;
     for (var i = 0; i < methods.length; i++) {
-      var name = methods[i];
-      this[name] = function(name, wrapper) {
-        return function() {
-          return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
-        };
-      } (name, this);
+      const name = methods[i];
+      this[name] = function() {
+        return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
+      };
     }
   }
 
