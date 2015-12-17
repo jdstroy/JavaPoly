@@ -82,21 +82,7 @@ class JavaClassWrapper {
   }
 
   static dispatchOnJVM(messageType, data, callback) {
-    var id = window.javaPolyIdCount++;
-    window.javaPolyMessageTypes[id] = messageType;
-    window.javaPolyData[id] = data;
-    window.javaPolyCallbacks[id] = callback;
-
-    if (javapoly.worker && global.Worker)
-    	JavaClassWrapper.dispatchOnJVMWorker(""+id, messageType, data, callback);
-    else
-    	window.postMessage({ javapoly:{ messageId:""+id } }, "*");
-  }
-
-  static dispatchOnJVMWorker(id, messageType, data) {
-    // NOTES, here we need to pass args and return value via Worker postMessage.
-    // The worker and browser don't share data, we need to pass data via message body
-    javapoly.worker.postMessage({javapoly:{messageId:id, messageType:messageType, data:data}});
+    javapoly.dispatcher.postMessage(messageType, data,callback);
   }
 
   runMethodWithJavaDispatching(methodName, argumentsList) {

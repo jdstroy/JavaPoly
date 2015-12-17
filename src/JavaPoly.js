@@ -3,6 +3,8 @@ import JavaClassWrapper from './JavaClassWrapper';
 import QueueExecutor from './QueueExecutor';
 import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
+import CommonDispatcher from './CommonDispatcher.js'
+import WorkerCallBackDispatcher from './webworkers/WorkerCallBackDispatcher.js'
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**
@@ -27,7 +29,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * URL where we download the BrowserFS library
    * @type {String}
    */
-  browserfsLibUrl: 'browserfs/',
+  browserfsLibUrl: '/browserfs/',
 
   /**
    * Optional: javaPolyBaseUrl
@@ -42,7 +44,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * when defined not null, we will try to use the webworkers path to run the core javapoly and jvm. 
    * if web worker is not supported by browser, we will just load javapoly and jvm in browser main Thread.
    */
-   worker : null // 'build/javapoly_worker.js'
+   worker : null // 'build/javapoly_worker.js' 
 }
 
 
@@ -111,10 +113,10 @@ class JavaPoly {
     this.classpath = [this.options.storageDir];
 
     /**
-     * Web Worker instance which run the javapoly core and JVM
-     * @Type {global.Worker}
+     * The dispatcher for handle jvm command message
+     * @Type {Object}
      */
-    this.worker = null;
+    this.dispatcher = null;
     
     if (!this.options.javaPolyBaseUrl) {
       this.options.javaPolyBaseUrl = this.getScriptBase();
@@ -143,50 +145,50 @@ class JavaPoly {
       _.each(global.document.scripts, script => {
         javaMimeScripts.push({type:script.type, src:script.src});
       });
-      this.initDispatcher();
+
       // start JVM and JavaPoly Core in Web Worker
       // only if worker option enable and browser support WebWorkers
       if (this.options.worker && global.Worker){
-        return this.startJavaPolyWebWorker(javaMimeScripts,resolveJVMReady);
-      }
-      // Otherwise Start in Browser Main Thread,
-      // Ensure we have loaded the browserfs.js file before handling Java/class file
-      this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-        new JavaPolyLoader(this, javaMimeScripts, 
-            () => {this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'));},
-            resolveJVMReady);
-        });
-      }, false);
-    }
-
-  startJavaPolyWebWorker(javaMimeScripts,resolveJVMReady) {
-    this.worker = new global.Worker(this.options.worker);
-    this.worker.addEventListener('message', e => {
-      let data = e.data.javapoly;
-      // JVM Init response
-      if (data.messgeType == 'JVM_INIT'){
-        if (data.success == true){ // JVM init success..
-          console.log('JVM init success in webWorkers');
-          resolveJVMReady();
-        } else {
-          console.log('JVM init failed in webWorkers');
-          // try to load in main thread directly when JVM init failed in WebWorkers ?
-          // this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
-          //
-          // new JavaPolyLoader(this, javaMimeScripts,
-          // () => {this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl+'doppio.js'));},
-          // resolveJVMReady);
-          // });
-        }
-      } else {
-        // JVM command(METHOD_INVOKATION/CLASS_LOADING/...) response
-        let cb = window.javaPolyCallbacks[data.messageId];
-        cb(data.returnValue);
+        this.loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveJVMReady);
+      }else{
+        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady);
       }
     }, false);
+  }
+    
+
+  loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady) {
+    this.dispatcher = new CommonDispatcher();
+
+    // Otherwise Start in Browser Main Thread,
+    // Ensure we have loaded the browserfs.js file before handling Java/class file
+    this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
+      new JavaPolyLoader(this, javaMimeScripts, 
+          () => {this.loadingHub.push(this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'));},
+          resolveJVMReady);
+      });
+  }
+
+  loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveJVMReady) {
+    this.dispatcher = new WorkerCallBackDispatcher(new global.Worker(this.options.worker));
+    this.dispatcher.installListener();
 
     // send JVM init request to webworker to init the jvm in javapoly workers.
-    this.worker.postMessage({javapoly:{ messgeType : 'JVM_INIT', data:{options:this.options, scripts:javaMimeScripts}}});
+    // we may need to send some options, java-mime file path to web workers. 
+    // and we also want to know if JVM inin success in webworkers,
+    // so here we send a JVM_INIT messsage from Browser to workers to start jvm in webworkers.
+    // rather then init web worker when worker init by itself.
+    this.dispatcher.postMessage('JVM_INIT', {options:this.options, scripts:javaMimeScripts}, (success) =>{
+      if (success == true){ // JVM init success..
+        console.log('JVM init success in webWorkers');
+        resolveJVMReady();
+      } else {
+        console.log('JVM init failed in webWorkers');
+        // try to load in main thread directly when JVM init failed in WebWorkers ?
+        // this.loadExternalJs(this.options.doppioLibUrl+'vendor/browserfs/dist/browserfs.min.js').then(()=> {
+        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady);
+      }
+    });
   }
 
   /* This should be called outside of Promise, or any such async call */
