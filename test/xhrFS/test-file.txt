@@ -1,1 +1,0 @@
-Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience.

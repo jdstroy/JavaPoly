@@ -297,17 +297,6 @@
             });
           });
 
-          // Unlike the `/sys` FS, test with a separate XHR FS whose contents are assuredly yet to be loaded
-          it('file read from XHR', function() {
-            var contents = "Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience."
-            javapoly.fs.getRootFS().mount('/testXHR', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', 'xhrFS/'));
-            return Java.type('Main').then(function(Main) {
-              return Main.readFile("/testXHR/test-file.txt").then(function(result) {
-                expect(result.trim()).toEqual(contents.trim());
-              });
-            });
-          });
-
         });
 
       });
