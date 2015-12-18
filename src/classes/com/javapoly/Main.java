@@ -110,13 +110,6 @@ public class Main {
 
   public static Object invokeClassConstructor(String className, Object[] params) throws Exception {
     final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-    /*
-    final Class<?>[] paramTypes = new Class<?>[params.length];
-    for (int i = 0; i < params.length; i++) {
-      paramTypes[i] = params.getClass();
-    }
-    final Constructor<?> suitableConstructor = clazz.getConstructor(paramTypes);
-    */
     final Constructor suitableConstructor = matchConstructor(clazz.getConstructors(), params);
     final Object returnValue = suitableConstructor.newInstance(params);
     return returnValue;
