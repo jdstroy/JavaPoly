@@ -3,7 +3,7 @@ import JavaFile from './JavaFile';
 //const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
 //const path   = global.BrowserFS.BFSRequire('path');
 
-const classfile = require('./tools/classfile.js');
+const classfile = require('./../tools/classfile.js');
 
 const http_retrieve_buffer = function(url) {
   return new Promise((resolve, reject) => {

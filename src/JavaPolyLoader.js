@@ -1,6 +1,6 @@
-import JavaClassFile from './JavaClassFile';
-import JavaArchiveFile from './JavaArchiveFile';
-import JavaSourceFile from './JavaSourceFile';
+import JavaClassFile from './mime/JavaClassFile';
+import JavaArchiveFile from './mime/JavaArchiveFile';
+import JavaSourceFile from './mime/JavaSourceFile';
 
 const JAVA_MIME = [
   { // For compiled Java-class
