@@ -110,6 +110,16 @@
 
       describe('Object wrappers', function() {
 
+        it('should be used for new objects', function() {
+          return Java.type('java.io.File').then(function(File) {
+            return new File("/sys/someunlikelyfilenamethatwontexist").then(function(file) {
+              return file.exists().then(function(itExists) {
+                expect(itExists).toBe(false);
+              });
+            });
+          });
+        });
+
         describe('should wrap properties object', function() {
           it('get property', function() {
             return Java.type('java.lang.System').then(function(System) {

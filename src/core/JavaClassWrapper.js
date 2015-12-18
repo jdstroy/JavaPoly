@@ -51,6 +51,26 @@ class JavaClassWrapper {
         return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
       };
     }
+
+    function objConstructorFunction() {
+      return wrapper.runConstructorWithJavaDispatching(Array.prototype.slice.call(arguments))
+    }
+
+    // Note: There is some JS magic here. This JS constructor function returns an object which is different than the one
+    // being constructed (this). The returned object is a function extended with this. The idea is that `new` operator
+    // can be called on the returned object to mimic Java's `new` operator.
+    return Object.assign(objConstructorFunction, this);
+  }
+
+  runConstructorWithJavaDispatching(argumentsList) {
+    return new Promise(
+      (resolve, reject) => {
+        const data = [this.clsName, argumentsList];
+        WrapperUtil.dispatchOnJVM('CLASS_CONSTRUCTOR_INVOCATION', data, (returnValue) => {
+          resolve(returnValue);
+        });
+      }
+    );
   }
 
   runMethodWithJavaDispatching(methodName, argumentsList) {

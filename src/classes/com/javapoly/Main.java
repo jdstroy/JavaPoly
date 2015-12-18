@@ -20,6 +20,9 @@ public class Main {
         case "CLASS_METHOD_INVOCATION":
           processClassMethodInvokation(messageId);
           break;
+        case "CLASS_CONSTRUCTOR_INVOCATION":
+          processClassConstructorInvokation(messageId);
+          break;
         case "OBJ_METHOD_INVOCATION":
           processObjMethodInvokation(messageId);
           break;
@@ -46,6 +49,18 @@ public class Main {
     Object returnValue = null;
     try {
       returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
+    } catch (Exception e) {
+      dumpException(e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
+  }
+
+  private static void processClassConstructorInvokation(String messageId) {
+    final Object[] data = getData(messageId);
+    Object returnValue = null;
+    try {
+      returnValue = invokeClassConstructor((String) data[0], (Object[]) data[1]);
     } catch (Exception e) {
       dumpException(e);
     } finally {
@@ -93,6 +108,20 @@ public class Main {
     return returnValue;
   }
 
+  public static Object invokeClassConstructor(String className, Object[] params) throws Exception {
+    final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+    /*
+    final Class<?>[] paramTypes = new Class<?>[params.length];
+    for (int i = 0; i < params.length; i++) {
+      paramTypes[i] = params.getClass();
+    }
+    final Constructor<?> suitableConstructor = clazz.getConstructor(paramTypes);
+    */
+    final Constructor suitableConstructor = matchConstructor(clazz.getConstructors(), params);
+    final Object returnValue = suitableConstructor.newInstance(params);
+    return returnValue;
+  }
+
   private static Object invokeObjectMethod(Object obj, String methodName, Object[] params) throws Exception {
     final Class<?> clazz = obj.getClass();
     final Method[] methods = clazz.getMethods();
@@ -114,10 +143,20 @@ public class Main {
     }
   } 
 
+  // TODO: method and constructor matching need to be more smart. Issue #40
   private static Method matchMethod(Method[] methods, String methodName, Object[] params) {
     for (Method method : methods) {
       if (methodName.equals(method.getName()) && method.getParameterCount() == params.length) {
         return method;
+      }
+    }
+    return null;
+  }
+
+  private static Constructor matchConstructor(final Constructor[] constructors, final Object[] params) {
+    for (Constructor constructor : constructors) {
+      if (constructor.getParameterCount() == params.length) {
+        return constructor;
       }
     }
     return null;
