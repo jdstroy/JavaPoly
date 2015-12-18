@@ -143,8 +143,8 @@ module.exports = function(grunt) {
 
   grunt.loadTasks('tasks');
 
-  grunt.registerTask('build:java', ['copy:natives', 'run_java:compile']);
-  grunt.registerTask('build:test', ['build:java', 'compare_version', 'browserify:development', 'symlink:build_to_test']);
+  grunt.registerTask('build:java', ['mkdir:build', 'copy:natives', 'run_java:compile']);
+  grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
   grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
   grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
 
