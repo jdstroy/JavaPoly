@@ -22,6 +22,15 @@
     expect.extend({
       toBeGreaterThanOrEqual(limit) {
         expect.assert(this.actual >= limit, 'expected %s to be greater than or equal to ' + limit, this.actual);
+        return this;
+      },
+      toStartWith(prefix) {
+        expect.assert(this.actual.startsWith(prefix), 'expected %s to start with ' + prefix, this.actual);
+        return this;
+      },
+      toEndWith(suffix) {
+        expect.assert(this.actual.endsWith(suffix), 'expected %s to end with ' + suffix, this.actual);
+        return this;
       }
     });
 
@@ -97,6 +106,49 @@
           });
 
         }
+      });
+
+      describe('Object wrappers', function() {
+
+        describe('should wrap properties object', function() {
+          it('get property', function() {
+            return Java.type('java.lang.System').then(function(System) {
+              return System.getProperties().then(function(properties) {
+
+                function checkProperty(key, expectedValue) {
+                  return properties.getProperty(key).then(function(value) {
+                    expect(value).toEqual(expectedValue);
+                  });
+                }
+
+                return Promise.all([
+                  checkProperty("os.arch", "js"),
+                  checkProperty("user.name", "DoppioUser"),
+                  checkProperty("java.io.tmpdir", "/tmp"),
+                  checkProperty("java.vm.vendor", "Doppio Inc."),
+                  checkProperty("java.vm.name", "Doppio 32-bit VM"),
+                  checkProperty("java.awt.headless", "true")
+                ]);
+              });
+            });
+          });
+        });
+
+        describe('file object wrapper', function() {
+          it('should return file name', function() {
+            return Java.type('java.io.File').then(function(File) {
+              return File.createTempFile("testPrefix", "testSuffix").then(function(file) {
+                file.getName().then(function(name) {
+                  expect(name)
+                    .toExist()
+                    .toStartWith("testPrefix")
+                    .toEndWith("testSuffix")
+                });
+              });
+            });
+          });
+        });
+
       });
 
       describe('Eval', function() {

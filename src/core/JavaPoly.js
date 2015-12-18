@@ -1,5 +1,6 @@
 import * as _ from 'underscore';
 import JavaClassWrapper from './JavaClassWrapper';
+import JavaObjectWrapper from './JavaObjectWrapper';
 import QueueExecutor from './QueueExecutor';
 import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
@@ -211,6 +212,9 @@ class JavaPoly {
     };
   }
 
+  wrapJavaObject(obj, methods) {
+    return new JavaObjectWrapper(obj, methods);
+  }
 }
 
 export default JavaPoly;

@@ -20,23 +20,27 @@ function wrapArray(thread, obj) {
   for (var i = 0; i < obj.length; i++) {
     wrappedArr.push(wrapObject(thread, obj[i]));
   }
-  return util.newArrayFromData(
-    thread,
-    thread.getBsCl(),
-    '[Ljava/lang/Object;',
-    wrappedArr
-  );
+  return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', wrappedArr);
 }
 
 function wrapNumber(thread, obj) {
-  return util.boxPrimitiveValue(
-    thread,
-    'D',
-    obj
-  )
+  return util.boxPrimitiveValue(thread, 'D', obj)
 }
 
-function unwrapObject(thread, obj) {
+function getPublicInstanceMethods(obj) {
+  // Mimicking a set, based on http://stackoverflow.com/a/18890005
+  var methodNamesSet = Object.create(null);
+  var methods = obj.constructor.cls.getMethods();
+  for (var i in methods) {
+    var method = methods[i];
+    methodNamesSet[method.name] = true;
+  }
+  return Object.keys(methodNamesSet);
+}
+
+/* Converts a Java object to a JS friendly object. Primitive numbers, primitive booleans, strings and arrays are
+ * converted to their JS counter-parts. Others are wrapped with JavaObjectWrapper */
+function javaObjToJS(thread, obj) {
   if (obj === null)
     return null;
   if (obj['getClass']) {
@@ -48,14 +52,15 @@ function unwrapObject(thread, obj) {
     } else if (cls.className.charAt(0) === '[') {
       var nativeArray = [];
       for (var i = 0; i < obj.array.length; i++) {
-        nativeArray.push(unwrapObject(thread, obj.array[i]));
+        nativeArray.push(javaObjToJS(thread, obj.array[i]));
       }
       return nativeArray;
     } else {
-      if (window.isJavaPolyWorker)
-        return obj;
-      else
+      if (obj.unbox) {
         return obj.unbox();
+      } else {
+        return javapoly.wrapJavaObject(obj, getPublicInstanceMethods(obj));
+      }
     }
   }
 }
@@ -76,7 +81,7 @@ registerNatives({
     },
 
     'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
-       javapoly.dispatcher.callbackMessage(msgId,unwrapObject(thread, returnValue));
+      javapoly.dispatcher.callbackMessage(msgId,javaObjToJS(thread, returnValue));
      },
 
     'installListener()V': function(thread) {

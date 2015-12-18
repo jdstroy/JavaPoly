@@ -1,3 +1,5 @@
+import WrapperUtil from "./WrapperUtil";
+
 class JavaClassWrapper {
 
   static runProxyMethod(methodObject, argumentsList) {
@@ -28,7 +30,7 @@ class JavaClassWrapper {
         } else {
           javapoly.queueExecutor.execute(nextCallback => {
             const data = [clsName];
-            JavaClassWrapper.dispatchOnJVM('CLASS_LOADING', data, (methods) => {
+            WrapperUtil.dispatchOnJVM('CLASS_LOADING', data, (methods) => {
               const javaClassWrapper = new JavaClassWrapper(methods, clsName);
               JavaClassWrapper.cache[clsName] = javaClassWrapper;
               resolve(javaClassWrapper);
@@ -41,7 +43,6 @@ class JavaClassWrapper {
   }
 
   constructor(methods, clsName) {
-    this.methods = methods;
     this.clsName = clsName;
     const wrapper = this;
     for (var i = 0; i < methods.length; i++) {
@@ -52,15 +53,11 @@ class JavaClassWrapper {
     }
   }
 
-  static dispatchOnJVM(messageType, data, callback) {
-    javapoly.dispatcher.postMessage(messageType, data,callback);
-  }
-
   runMethodWithJavaDispatching(methodName, argumentsList) {
     return new Promise(
       (resolve, reject) => {
         const data = [this.clsName, methodName, argumentsList];
-        JavaClassWrapper.dispatchOnJVM('METHOD_INVOKATION', data, (returnValue) => {
+        WrapperUtil.dispatchOnJVM('CLASS_METHOD_INVOCATION', data, (returnValue) => {
           resolve(returnValue);
         });
       }

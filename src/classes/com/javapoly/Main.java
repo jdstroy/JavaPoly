@@ -17,8 +17,11 @@ public class Main {
         final String messageType = getMessageType(messageId);
         // TODO: Create enum
         switch (messageType) {
-        case "METHOD_INVOKATION":
-          processMethodInvokation(messageId);
+        case "CLASS_METHOD_INVOCATION":
+          processClassMethodInvokation(messageId);
+          break;
+        case "OBJ_METHOD_INVOCATION":
+          processObjMethodInvokation(messageId);
           break;
         case "CLASS_LOADING":
           processClassLoading(messageId);
@@ -38,11 +41,23 @@ public class Main {
     println("Java Main ended");
   }
 
-  public static void processMethodInvokation(String messageId) {
+  private static void processClassMethodInvokation(String messageId) {
     final Object[] data = getData(messageId);
     Object returnValue = null;
     try {
       returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
+    } catch (Exception e) {
+      dumpException(e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
+  }
+
+  private static void processObjMethodInvokation(final String messageId) {
+    final Object[] data = getData(messageId);
+    Object returnValue = null;
+    try {
+      returnValue = invokeObjectMethod(data[0], (String) data[1], (Object[]) data[2]);
     } catch (Exception e) {
       dumpException(e);
     } finally {
@@ -75,6 +90,14 @@ public class Main {
     Method[] methods = clazz.getMethods();
     Method suitableMethod = matchMethod(methods, methodName, params);
     Object returnValue = suitableMethod.invoke(null, params);
+    return returnValue;
+  }
+
+  private static Object invokeObjectMethod(Object obj, String methodName, Object[] params) throws Exception {
+    final Class<?> clazz = obj.getClass();
+    final Method[] methods = clazz.getMethods();
+    final Method suitableMethod = matchMethod(methods, methodName, params);
+    Object returnValue = suitableMethod.invoke(obj, params);
     return returnValue;
   }
 
