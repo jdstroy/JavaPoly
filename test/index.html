@@ -152,21 +152,6 @@
           });
         });
 
-        describe('file object wrapper', function() {
-          it('should return file name', function() {
-            return Java.type('java.io.File').then(function(File) {
-              return File.createTempFile("testPrefix", "testSuffix").then(function(file) {
-                file.getName().then(function(name) {
-                  expect(name)
-                    .toExist()
-                    .toStartWith("testPrefix")
-                    .toEndWith("testSuffix")
-                });
-              });
-            });
-          });
-        });
-
       });
 
       describe('Eval', function() {
