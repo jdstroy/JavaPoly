@@ -7,7 +7,8 @@ function wrapObject(thread, obj) {
   } else if (objectType === 'number') {
     return wrapNumber(thread, obj);
   } else {
-    return obj;
+    var possibleJavaObj = javapoly.unwrapJavaObject(obj);
+    return possibleJavaObj == null ? obj : possibleJavaObj;
   }
 }
 

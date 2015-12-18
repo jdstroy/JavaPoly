@@ -109,6 +109,15 @@
       });
 
       describe('Object wrappers', function() {
+        it('should automatically unwrap when passed as parameter', function() {
+          return Java.new("java.io.File", "/abc").then(function(abcFile) {
+            return Java.new("java.io.File", "/xyz").then(function(xyzFile) {
+              return abcFile.compareTo(xyzFile).then(function(comparison) {
+                expect(comparison).toBeLessThan(0);
+              });
+            });
+          });
+        });
 
         it('should be used for new objects defined with convenience function', function() {
           return Java.new('java.io.File', "/sys/someunlikelyfilenamethatwontexist").then(function(file) {
