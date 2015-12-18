@@ -4,7 +4,7 @@ import QueueExecutor from './QueueExecutor';
 import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
 import CommonDispatcher from './CommonDispatcher.js'
-import WorkerCallBackDispatcher from './webworkers/WorkerCallBackDispatcher.js'
+import WorkerCallBackDispatcher from './../webworkers/WorkerCallBackDispatcher.js'
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**

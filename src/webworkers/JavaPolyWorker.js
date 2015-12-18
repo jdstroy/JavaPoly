@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import JavaPolyLoader from '../JavaPolyLoader';
+import JavaPolyLoader from '../core/JavaPolyLoader';
 import WorkerDispatcher from './WorkerDispatcher.js'
 
 

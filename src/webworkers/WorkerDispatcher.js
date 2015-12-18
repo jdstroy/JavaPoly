@@ -1,4 +1,4 @@
-import CommonDispatcher from '../CommonDispatcher.js'
+import CommonDispatcher from '../core/CommonDispatcher.js'
 
 /**
  * The WorkerDispatcher is executed in web workers side.

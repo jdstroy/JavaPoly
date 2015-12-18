@@ -1,6 +1,6 @@
-import JavaClassFile from './mime/JavaClassFile';
-import JavaArchiveFile from './mime/JavaArchiveFile';
-import JavaSourceFile from './mime/JavaSourceFile';
+import JavaClassFile from './../mime/JavaClassFile';
+import JavaArchiveFile from './../mime/JavaArchiveFile';
+import JavaSourceFile from './../mime/JavaSourceFile';
 
 const JAVA_MIME = [
   { // For compiled Java-class
@@ -152,7 +152,7 @@ class JavaPolyLoader {
     
     this.fs = BrowserFS.BFSRequire('fs');
     this.path = BrowserFS.BFSRequire('path');
-    this.fsext = require('./tools/fsext')(this.fs, this.path);
+    this.fsext = require('./../tools/fsext')(this.fs, this.path);
     this.fsext.rmkdirSync(this.options.storageDir);
     
     //NOTES, we may also want to use fs in other place of javapoly
