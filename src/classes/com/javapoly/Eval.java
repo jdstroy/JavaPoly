@@ -1,4 +1,4 @@
-package javapoly;
+package com.javapoly;
 
 public class Eval {
 

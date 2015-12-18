@@ -15,7 +15,7 @@ util.toPrimitiveTypeName = function(name) {
 };
 
 registerNatives({
-  'javapoly/Eval': {
+  'com/javapoly/Eval': {
 
     'evalRaw(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, toEval) {
       var expr = toEval.toString();

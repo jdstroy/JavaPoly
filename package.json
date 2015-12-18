@@ -30,6 +30,7 @@
     "grunt-contrib-symlink": "^0.3.0",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-http-server": "^1.13.0",
+    "grunt-mkdir": "^0.1.2",
     "grunt-run-java": "^0.1.1",
     "http-server": "^0.8.5",
     "mocha": "^2.3.4",

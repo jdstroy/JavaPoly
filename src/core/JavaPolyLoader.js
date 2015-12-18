@@ -147,8 +147,7 @@ class JavaPolyLoader {
     
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
     mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "/natives/"));
-    mfs.mount('/javapolySys', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sys/"));
-    mfs.mount('/javapolySysNatives', new BrowserFS.FileSystem.XmlHttpRequest('libListings.json', this.options.javaPolyBaseUrl + "/sysNatives/"));
+    mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.javaPolyBaseUrl));
     
     this.fs = BrowserFS.BFSRequire('fs');
     this.path = BrowserFS.BFSRequire('path');
@@ -172,11 +171,11 @@ class JavaPolyLoader {
         this.loadingHub = [];
 
         this.javapoly.jvm = new Doppio.VM.JVM({
-          bootstrapClasspath: ['/sys/vendor/java_home/classes', "/javapolySys"],
+          bootstrapClasspath: ['/sys/vendor/java_home/classes', "/javapoly/classes"],
           classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
-          nativeClasspath: ['/sys/natives', '/polynatives', "/javapolySysNatives"],
+          nativeClasspath: ['/sys/natives', '/polynatives', "/javapoly/natives"],
           assertionsEnabled: true
         }, (err, jvm) => {
           if (err) {
@@ -191,7 +190,7 @@ class JavaPolyLoader {
               Promise.all(compilationHub).then(resolve);
             }
 
-            jvm.runClass('javapoly.Main', [], function(exitCode) {
+            jvm.runClass('com.javapoly.Main', [], function(exitCode) {
               // Control flow shouldn't reach here under normal circumstances,
               // because Main thread keeps polling for messages.
               console.log("JVM Exit code: ", exitCode);

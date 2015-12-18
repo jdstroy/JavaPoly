@@ -61,7 +61,7 @@ function unwrapObject(thread, obj) {
 }
 
 registerNatives({
-  'javapoly/Main': {
+  'com/javapoly/Main': {
 
     'println(Ljava/lang/String;)V': function(thread, text) {
        console.log("JVM>", text.toString());

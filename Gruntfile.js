@@ -52,10 +52,10 @@ module.exports = function(grunt) {
       },
       compile: {
         command: "javac",
-        javaOptions: { //javac Options
-          "d": "build/sys/"
+        javaOptions: {
+          "d": "build/classes/"
         },
-        sourceFiles: ["sys/**/*.java"]
+        sourceFiles: ['src/classes/com/javapoly/*.java']
       }
     },
     clean: {
@@ -67,10 +67,9 @@ module.exports = function(grunt) {
       }
     },
     copy: {
-      sys: {
+      natives: {
         files: [
-          {expand: true, cwd: './sys/', src: ['libListings.json'], dest: './build/sys/'},
-          {expand: true, cwd: './sysNatives/', src: ['**'], dest: './build/sysNatives/'}
+          {expand: true, cwd: './src/natives/', src: ['*.js'], dest: './build/natives'}
         ]
       },
       doppio_release: {
@@ -114,6 +113,23 @@ module.exports = function(grunt) {
         root: 'test/.'
       }
     },
+    mkdir: {
+      build: {
+        options: {
+          mode: 0700,
+          create: ['build/classes/com/javapoly', 'build/natives']
+        },
+      },
+    },
+    listings: {
+      options: {
+        cwd: 'build/.',
+        output: 'build/listings.json'
+      },
+      javapoly: {
+
+      }
+    }
   });
 
   grunt.loadNpmTasks('grunt-browserify');
@@ -123,13 +139,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-symlink');
   grunt.loadNpmTasks('grunt-run-java');
   grunt.loadNpmTasks('grunt-http-server');
+  grunt.loadNpmTasks('grunt-mkdir');
 
   grunt.loadTasks('tasks');
 
-  grunt.registerTask('build:java', ['copy:sys', 'run_java:compile']);
+  grunt.registerTask('build:java', ['copy:natives', 'run_java:compile']);
   grunt.registerTask('build:test', ['build:java', 'compare_version', 'browserify:development', 'symlink:build_to_test']);
-  grunt.registerTask('build', ['build:java', 'browserify:production']);
-  grunt.registerTask('build:browser', ['build:java', 'browserify:production']);
+  grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
+  grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
 
   grunt.registerTask('default', ['build']);
   grunt.registerTask('dev', ['build:test', 'http-server:dev', 'watch:dev_js']);

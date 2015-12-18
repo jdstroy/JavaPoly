@@ -1,4 +1,4 @@
-package javapoly;
+package com.javapoly;
 
 import java.lang.reflect.*;
 import javax.tools.*;

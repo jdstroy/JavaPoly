@@ -1,5 +1,5 @@
-import javapoly.Eval;
-import static javapoly.Eval.*;
+import com.javapoly.Eval;
+import static com.javapoly.Eval.*;
 
 public class EvalTest {
   public static boolean test() {
