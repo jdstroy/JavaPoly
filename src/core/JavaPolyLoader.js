@@ -105,7 +105,6 @@ class JavaPolyLoader {
 
   loadScripts(scripts) {
     // Load java mime files
-    // _.each(scripts, script => {
     for(let script of scripts) {
       let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
       // Create only when scriptTypes is only 1
@@ -142,11 +141,11 @@ class JavaPolyLoader {
     mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
 
     // FIXME local storage can't be used in WebWorker, check if it affect anything.
-    if (!window.isJavaPolyWorker)
+    if (!window.isJavaPolyWorker) {
       mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
+    }
     
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
-    mfs.mount('/polynatives', new BrowserFS.FileSystem.XmlHttpRequest('polylistings.json', "/natives/"));
     mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.javaPolyBaseUrl));
     
     this.fs = BrowserFS.BFSRequire('fs');
@@ -154,7 +153,7 @@ class JavaPolyLoader {
     this.fsext = require('./../tools/fsext')(this.fs, this.path);
     this.fsext.rmkdirSync(this.options.storageDir);
     
-    //NOTES, we may also want to use fs in other place of javapoly
+    // NOTES, we may also want to use fs in other place of javapoly
     this.javapoly.fs = this.fs;
   }
   
@@ -175,7 +174,7 @@ class JavaPolyLoader {
           classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
-          nativeClasspath: ['/sys/natives', '/polynatives', "/javapoly/natives"],
+          nativeClasspath: ['/sys/natives', "/javapoly/natives"],
           assertionsEnabled: true
         }, (err, jvm) => {
           if (err) {

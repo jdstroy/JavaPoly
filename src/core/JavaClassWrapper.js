@@ -1,5 +1,3 @@
-import JavaUtilities from './JavaUtilities';
-
 class JavaClassWrapper {
 
   static runProxyMethod(methodObject, argumentsList) {
