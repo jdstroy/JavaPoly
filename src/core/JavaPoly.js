@@ -208,13 +208,17 @@ class JavaPoly {
       global.window.J = ProxyWrapper.createRootEntity();
     }
     global.window.Java = {
-      type: JavaClassWrapper.getClassWrapperByName
+      type: JavaClassWrapper.getClassWrapperByName,
+      "new": (name, ...args) => {
+        return Java.type(name).then((classWrapper) => new classWrapper(...args))
+      }
     };
   }
 
   wrapJavaObject(obj, methods) {
     return new JavaObjectWrapper(obj, methods);
   }
+
 }
 
 export default JavaPoly;

@@ -110,6 +110,14 @@
 
       describe('Object wrappers', function() {
 
+        it('should be used for new objects defined with convenience function', function() {
+          return Java.new('java.io.File', "/sys/someunlikelyfilenamethatwontexist").then(function(file) {
+            return file.exists().then(function(itExists) {
+              expect(itExists).toBe(false);
+            });
+          });
+        });
+
         it('should be used for new objects', function() {
           return Java.type('java.io.File').then(function(File) {
             return new File("/sys/someunlikelyfilenamethatwontexist").then(function(file) {
