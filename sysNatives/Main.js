@@ -52,7 +52,10 @@ function unwrapObject(thread, obj) {
       }
       return nativeArray;
     } else {
-      return obj.unbox();
+      if (window.isJavaPolyWorker)
+        return obj;
+      else
+        return obj.unbox();
     }
   }
 }
