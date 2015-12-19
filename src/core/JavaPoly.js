@@ -1,5 +1,6 @@
 import * as _ from 'underscore';
 import JavaClassWrapper from './JavaClassWrapper';
+import JavaObjectWrapper from './JavaObjectWrapper';
 import QueueExecutor from './QueueExecutor';
 import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
@@ -207,8 +208,24 @@ class JavaPoly {
       global.window.J = ProxyWrapper.createRootEntity();
     }
     global.window.Java = {
-      type: JavaClassWrapper.getClassWrapperByName
+      type: JavaClassWrapper.getClassWrapperByName,
+      "new": (name, ...args) => {
+        return Java.type(name).then((classWrapper) => new classWrapper(...args))
+      }
     };
+  }
+
+  wrapJavaObject(obj, methods) {
+    return new JavaObjectWrapper(obj, methods);
+  }
+
+  unwrapJavaObject(obj) {
+    // TODO: is a better check possible using prototypes
+    if (obj._javaObj) {
+      return obj._javaObj;
+    } else {
+      return null;
+    }
   }
 
 }
