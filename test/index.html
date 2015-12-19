@@ -10,6 +10,20 @@
   <script type="application/java-vm" src="classes/EvalTest.class"></script>
   <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
   <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
+
+  <style>
+    #mocha-report > .suite > ul {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    #mocha-report > .suite > ul > .suite {
+      border: 1px solid #eee;
+      padding: 0 8px;
+      margin-top: 15px;
+      flex-grow: 1;
+    }
+  </style>
+
 </head>
 <body>
   <div id="mocha"></div>
