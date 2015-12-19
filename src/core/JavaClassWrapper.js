@@ -6,7 +6,7 @@ class JavaClassWrapper {
     return new Promise(
       (resolve, reject) => {
         JavaClassWrapper.getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
-          classWrapper.runMethodWithJavaDispatching(methodObject._name, argumentsList).then(returnValue => resolve(returnValue));
+          classWrapper[methodObject._name](...argumentsList).then(returnValue => resolve(returnValue));
         });
       }
     );
