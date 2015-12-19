@@ -12,19 +12,27 @@ class JavaObjectWrapper {
       };
     }
 
+    function methodExists(name) {
+      return methods.findIndex(n => n == name) >= 0;
+    }
+
     // Add getters and setters for non-final fields
     for (const name of nonFinalFields) {
-      Object.defineProperty(this, name, {
-        get: () => wrapper.getFieldWithJavaDispatching(name),
-        set: (newValue) => { wrapper.setFieldWithJavaDispatching(name, newValue) }
-      });
+      if (!methodExists(name)) {
+        Object.defineProperty(this, name, {
+          get: () => wrapper.getFieldWithJavaDispatching(name),
+          set: (newValue) => { wrapper.setFieldWithJavaDispatching(name, newValue) }
+        });
+      }
     }
 
     // Add getters for final fields
     for (const name of finalFields) {
-      Object.defineProperty(this, name, {
-        get: () => wrapper.getFieldWithJavaDispatching(name)
-      });
+      if (!methodExists(name)) {
+        Object.defineProperty(this, name, {
+          get: () => wrapper.getFieldWithJavaDispatching(name)
+        });
+      }
     }
   }
 
