@@ -26,6 +26,12 @@ public class Main {
         case "OBJ_METHOD_INVOCATION":
           processObjMethodInvokation(messageId);
           break;
+        case "OBJ_FIELD_READ":
+          processObjFieldRead(messageId);
+          break;
+        case "OBJ_FIELD_WRITE":
+          processObjFieldWrite(messageId);
+          break;
         case "CLASS_LOADING":
           processClassLoading(messageId);
           break;
@@ -80,6 +86,30 @@ public class Main {
     }
   }
 
+  private static void processObjFieldRead(final String messageId) {
+    final Object[] data = getData(messageId);
+    Object returnValue = null;
+    try {
+      returnValue = readObjectField(data[0], (String) data[1]);
+    } catch (Exception e) {
+      dumpException(e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
+  }
+
+  private static void processObjFieldWrite(final String messageId) {
+    final Object[] data = getData(messageId);
+    Object returnValue = null;
+    try {
+      returnValue = writeObjectField(data[0], (String) data[1], data[2]);
+    } catch (Exception e) {
+      dumpException(e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
+  }
+
   public static void processClassLoading(String messageId) {
     final Object[] data = getData(messageId);
     final java.util.Set<String> methodNames = new java.util.TreeSet<>();
@@ -121,6 +151,19 @@ public class Main {
     final Method suitableMethod = matchMethod(methods, methodName, params);
     Object returnValue = suitableMethod.invoke(obj, params);
     return returnValue;
+  }
+
+  private static Object readObjectField(Object obj, String fieldName) throws Exception {
+    final Class<?> clazz = obj.getClass();
+    final Field field = clazz.getField(fieldName);
+    return field.get(obj);
+  }
+
+  private static boolean writeObjectField(Object obj, String fieldName, Object value) throws Exception {
+    final Class<?> clazz = obj.getClass();
+    final Field field = clazz.getField(fieldName);
+    field.set(obj, value);
+    return true;
   }
 
   public static void processClassCompilation(String messageId) {

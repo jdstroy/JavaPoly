@@ -28,6 +28,26 @@ function wrapNumber(thread, obj) {
   return util.boxPrimitiveValue(thread, 'D', obj)
 }
 
+function getPublicFields(obj) {
+  // Mimicking a set, based on http://stackoverflow.com/a/18890005
+  var nonFinalNamesSet = Object.create(null);
+  var finalNamesSet = Object.create(null);
+
+  var fields = obj.constructor.cls.fields;
+  // console.log("cls", obj.constructor.cls, " fields", fields);
+  for (var i in fields) {
+    var field = fields[i];
+    if (field.accessFlags.isPublic()) {
+      if (field.accessFlags.isFinal()) {
+        finalNamesSet[field.name] = true;
+      } else {
+        nonFinalNamesSet[field.name] = true;
+      }
+    }
+  }
+  return {nonFinal: Object.keys(nonFinalNamesSet), "final": Object.keys(finalNamesSet)};
+}
+
 function getPublicInstanceMethods(obj) {
   // Mimicking a set, based on http://stackoverflow.com/a/18890005
   var methodNamesSet = Object.create(null);
@@ -60,7 +80,8 @@ function javaObjToJS(thread, obj) {
       if (obj.unbox) {
         return obj.unbox();
       } else {
-        return javapoly.wrapJavaObject(obj, getPublicInstanceMethods(obj));
+        var fields = getPublicFields(obj);
+        return javapoly.wrapJavaObject(obj, getPublicInstanceMethods(obj), fields.nonFinal, fields.final);
       }
     }
   }

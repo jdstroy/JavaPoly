@@ -8,6 +8,7 @@
 
   <script type="application/java-vm" src="classes/Main.class"></script>
   <script type="application/java-vm" src="classes/EvalTest.class"></script>
+  <script type="application/java-vm" src="classes/Counter.class"></script>
   <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
   <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
 
@@ -123,6 +124,23 @@
       });
 
       describe('Object wrappers', function() {
+
+        it('should wrap fields', function() {
+          return Java.new('Counter').then(function(counter) {
+            var t1 = counter.increment(42).then(function() {
+              return counter.currentValue.then(function(cValue) {
+                expect(cValue).toEqual(15);
+              });
+            });
+            return t1.then(function() {
+              counter.currentValue = 42;
+              return counter.isValid().then(function(itIsValid) {
+                expect(itIsValid).toBe(false);
+              });
+            });
+          });
+        });
+
         it('should automatically unwrap when passed as parameter', function() {
           return Java.new("java.io.File", "/abc").then(function(abcFile) {
             return Java.new("java.io.File", "/xyz").then(function(xyzFile) {
@@ -151,7 +169,7 @@
           });
         });
 
-        describe('should wrap properties object', function() {
+        describe('should wrap Properties object', function() {
           it('get property', function() {
             return Java.type('java.lang.System').then(function(System) {
               return System.getProperties().then(function(properties) {

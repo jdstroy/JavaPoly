@@ -215,8 +215,8 @@ class JavaPoly {
     };
   }
 
-  wrapJavaObject(obj, methods) {
-    return new JavaObjectWrapper(obj, methods);
+  wrapJavaObject(obj, methods, nonFinalFields, finalFields) {
+    return new JavaObjectWrapper(obj, methods, nonFinalFields, finalFields);
   }
 
   unwrapJavaObject(obj) {
