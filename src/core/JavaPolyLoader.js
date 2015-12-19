@@ -181,11 +181,10 @@ class JavaPolyLoader {
             console.log('err loading JVM:', err);
             reject();
           } else {
-            // var self = this
-            self.javapolyLoader = this;
+            const _this = this;
             window.javaPolyInitialisedCallback = () => {
               // Compilation of Java sorces
-              const compilationHub = self.javapolyLoader.sources.map( (src) => src.compile() );
+              const compilationHub = _this.sources.map( (src) => src.compile() );
               Promise.all(compilationHub).then(resolve);
             }
 
