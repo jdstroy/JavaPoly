@@ -177,10 +177,10 @@ public class Main {
     } else {
       returnResult(messageId, "Compilation failed.");
     }
-  } 
+  }
 
   // TODO: method and constructor matching need to be more smart. Issue #40
-  private static Method matchMethod(Method[] methods, String methodName, Object[] params) {
+  private static Method matchMethod(final Method[] methods, final String methodName, final Object[] params) {
     for (Method method : methods) {
       if (methodName.equals(method.getName()) && method.getParameterCount() == params.length) {
         return method;

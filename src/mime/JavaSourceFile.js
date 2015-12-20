@@ -20,7 +20,10 @@ class JavaSourceFile extends JavaFile  {
     this.classname = classInfo.class;
     this.packagename = classInfo.package;
 
-    this.createProxyForClass(this.classname, this.packagename);
+    const isProxySupported = (typeof Proxy !== 'undefined');
+    if (isProxySupported) {
+      this.createProxyForClass(this.classname, this.packagename);
+    }
 
     let path = global.BrowserFS.BFSRequire('path');
 
