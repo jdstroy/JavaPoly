@@ -55,7 +55,7 @@ module.exports = function(grunt) {
         javaOptions: {
           "d": "build/classes/"
         },
-        sourceFiles: ['src/classes/com/javapoly/*.java']
+        sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']
       }
     },
     clean: {
