@@ -37,15 +37,15 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * When defined, this is used as the base URL for loading JavaPoly data such as system classes and native functions.
    * If empty, JavaPoly will try to automatically figure it out during initialisation.
    */
-  	
+
   /**
    * Javapoly worker path. null or a path, eg. build/javapoly_worker.js
-   * 
-   * @type {String} 
-   * when defined not null, we will try to use the webworkers path to run the core javapoly and jvm. 
+   *
+   * @type {String}
+   * when defined not null, we will try to use the webworkers path to run the core javapoly and jvm.
    * if web worker is not supported by browser, we will just load javapoly and jvm in browser main Thread.
    */
-   worker : null // 'build/javapoly_worker.js' 
+   worker : null // 'build/javapoly_worker.js'
 }
 
 
@@ -76,7 +76,7 @@ class JavaPoly {
      * @Type {Object}
      */
     this.dispatcher = null;
-    
+
     if (!this.options.javaPolyBaseUrl) {
       this.options.javaPolyBaseUrl = this.getScriptBase();
     }
@@ -114,7 +114,7 @@ class JavaPoly {
       }
     }, false);
   }
-    
+
 
   loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady) {
     this.dispatcher = new CommonDispatcher();
@@ -122,7 +122,7 @@ class JavaPoly {
     // Otherwise Start in Browser Main Thread,
     // Ensure we have loaded the browserfs.js file before handling Java/class file
     this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-      let javaPolyLoader = new JavaPolyLoader(this, javaMimeScripts, 
+      let javaPolyLoader = new JavaPolyLoader(this, javaMimeScripts,
           () => this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'),
           resolveJVMReady);
       });
@@ -133,7 +133,7 @@ class JavaPoly {
     this.dispatcher.installListener();
 
     // send JVM init request to webworker to init the jvm in javapoly workers.
-    // we may need to send some options, java-mime file path to web workers. 
+    // we may need to send some options, java-mime file path to web workers.
     // and we also want to know if JVM inin success in webworkers,
     // so here we send a JVM_INIT messsage from Browser to workers to start jvm in webworkers.
     // rather then init web worker when worker init by itself.
@@ -205,7 +205,7 @@ class JavaPoly {
     if (typeof Proxy === 'undefined') {
       console.warn('Your browser does not support Proxy, so J.java.lang.Integer.compare(42, 41) api is not available!');
     } else {
-      global.window.J = ProxyWrapper.createRootEntity();
+      global.window.J = ProxyWrapper.createRootEntity(null);
     }
     global.window.Java = {
       type: JavaClassWrapper.getClassWrapperByName,

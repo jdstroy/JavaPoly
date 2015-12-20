@@ -1,4 +1,5 @@
 import JavaFile from './JavaFile';
+import ProxyWrapper from '../core/ProxyWrapper';
 
 //const path = global.BrowserFS.BFSRequire('path');
 
@@ -19,10 +20,12 @@ class JavaSourceFile extends JavaFile  {
     this.classname = classInfo.class;
     this.packagename = classInfo.package;
 
+    this.createProxyForClass(this.classname, this.packagename);
+
     let path = global.BrowserFS.BFSRequire('path');
 
     this.filename = path.join(
-      javapoly.options.storageDir, 
+      javapoly.options.storageDir,
       this.packagename ? this.packagename.replace(/\./g, '/') : '.',
       this.classname + '.java'
     );
@@ -36,21 +39,59 @@ class JavaSourceFile extends JavaFile  {
     });
   }
 
+  createProxyForClass(classname, packagename) {
+    if (packagename != null) {
+      let name = packagename.split('.')[0];
+      global.window[name] = ProxyWrapper.createRootEntity(name);
+    } else {
+      global.window[classname] = ProxyWrapper.createRootEntity(classname);
+    }
+  }
+
   /**
    * This functions parse Java source file and detects its name and package
    * @param  {String} source Java source
    * @return {Object}        Object with fields: package and class
    */
   static detectClassAndPackageNames(source) {
-    // this regexp removes all comments in source
-    source = source.replace(/(\/\*[^]*\*\/|\/\/[^\n]*\n)/gi, ' ');
+    let className = null, packageName = null;
 
-    let className = source.match(/class\s+([^\s\{]+)(\s|\{)/);
-    let packageName = source.match(/package\s+([^\s;]+)\s*;/)
+    let parsedSource = JavaParser.parse(source);
+
+    if (parsedSource.node === 'CompilationUnit') {
+      for (var i = 0; i < parsedSource.types.length; i++) {
+        if (JavaSourceFile.isPublic(parsedSource.types[i])) {
+          className = parsedSource.types[i].name.identifier;
+          break;
+        }
+      }
+      if (parsedSource.package) {
+        packageName = JavaSourceFile.getPackageName(parsedSource.package.name);
+      }
+    }
 
     return {
-      package: packageName ? packageName[1] : null,
-      class:   className   ? className[1]   : null
+      package: packageName,
+      class:   className
+    }
+  }
+
+  static isPublic(node) {
+    if (node.modifiers) {
+      for (var i = 0; i < node.modifiers.length; i++) {
+        if (node.modifiers[i].keyword === 'public') {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  static getPackageName(node) {
+    if (node.node === 'QualifiedName') {
+      return JavaSourceFile.getPackageName(node.qualifier) + '.' + node.name.identifier;
+    } else {
+      return node.identifier;
     }
   }
 
@@ -61,8 +102,8 @@ class JavaSourceFile extends JavaFile  {
   compile() {
     return new Promise((resolve, reject) => {
       this.javapoly.javapoly.dispatcher.postMessage(
-        "FILE_COMPILE", 
-        ['-d', this.javapoly.options.storageDir, this.filename], 
+        "FILE_COMPILE",
+        ['-d', this.javapoly.options.storageDir, this.filename],
         (res) => {
           resolve();
         }

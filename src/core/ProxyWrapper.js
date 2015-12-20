@@ -9,7 +9,9 @@ class ProxyWrapper {
     object._parent = parent;
     object._name = name;
     if (parent !== null) {
-      object._identifier = (parent._name === null ? '' : parent._identifier + '.') + name;
+      object._identifier = (parent._identifier === null ? '' : parent._identifier + '.') + name;
+    } else {
+      object._identifier = name;
     }
     object._call = function(thisArg, argumentsList) {
       return new Promise(
@@ -34,8 +36,8 @@ class ProxyWrapper {
     return proxy;
   }
 
-  static createRootEntity() {
-    return this.createEntity(null, null);
+  static createRootEntity(name) {
+    return this.createEntity(name, null);
   }
 }
 

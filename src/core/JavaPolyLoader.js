@@ -23,13 +23,13 @@ const JAVA_MIME = [
 /**
  * The JavaPolyLoader load the jvm and do the basic init of javapoly.
  * can be run both in Browser or WebWorker
- * 
+ *
  * The JavaPoly loader will do the following step
  *  1. init the browserFS of JavaPoly,
  *  2. run the callback {callbackBeforeStartJVM}
- *  3. load java mime scripts 
+ *  3. load java mime scripts
  *  4. start jvm
- * 
+ *
  * @param javapoly
  *  the javapoly instance to loader
  * @param scripts
@@ -39,13 +39,13 @@ const JAVA_MIME = [
  *  the callback execute before JVM start
  * @param resolveJVMReady
  *  the callback execute when jvm start finished.
- * 
+ *
  */
 class JavaPolyLoader {
   constructor(javapoly, scripts, callbackBeforeStartJVM, resolveJVMReady) {
-    
+
     this.javapoly = javapoly;
-    
+
     /**
      * Stores referense to the BrowserFS fs-library
      * @type {BrowserFS}
@@ -94,7 +94,7 @@ class JavaPolyLoader {
      * @type {Array}
      */
     this.classpath = [this.options.storageDir];
-    
+
     this.initBrowserFS();
     if (callbackBeforeStartJVM) {
       this.loadingHub.push(callbackBeforeStartJVM());
@@ -144,21 +144,21 @@ class JavaPolyLoader {
     if (!window.isJavaPolyWorker) {
       mfs.mount('/home', new BrowserFS.FileSystem.LocalStorage());
     }
-    
+
     mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.doppioLibUrl));
     mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', this.options.javaPolyBaseUrl));
-    
+
     this.fs = BrowserFS.BFSRequire('fs');
     this.path = BrowserFS.BFSRequire('path');
     this.fsext = require('./../tools/fsext')(this.fs, this.path);
     this.fsext.rmkdirSync(this.options.storageDir);
-    
+
     // NOTES, we may also want to use fs in other place of javapoly
     this.javapoly.fs = this.fs;
   }
-  
+
   /**
-   * Return a promise that JVM will be initialised for this JavaPoly: 
+   * Return a promise that JVM will be initialised for this JavaPoly:
    * 1. Ensure that all loading promises are finished
    * 2. Create object for JVM
    */
@@ -183,7 +183,7 @@ class JavaPolyLoader {
           } else {
             const _this = this;
             window.javaPolyInitialisedCallback = () => {
-              // Compilation of Java sorces
+              // Compilation of Java sources
               const compilationHub = _this.sources.map( (src) => src.compile() );
               Promise.all(compilationHub).then(resolve);
             }

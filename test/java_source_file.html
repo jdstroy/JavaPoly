@@ -4,6 +4,7 @@
   <title>JavaPoly Tests: Java Source Files</title>
   <link href="mocha/mocha.css" rel="stylesheet" />
 
+  <script type="text/javascript" src="lib/javaparser7.js"></script>
   <script type="text/javascript" src="build/javapoly.js"></script>
 
   <script type="text/x-java-source">
@@ -20,6 +21,28 @@
   public class TestCompile2 {
       public static Integer testIt() {
         return 8008;
+      }
+  }
+  </script>
+
+  <script type="text/x-java-source">
+  // This class is not public and should not be parsed
+  class LocalClass { }
+
+  // Add generic to check parsing
+  public class TestProxyCreation<T> {
+      public static String testIt() {
+        return "Success";
+      }
+  }
+  </script>
+
+  <script type="text/x-java-source">
+  package jp.javapoly.sample;
+
+  public class TestProxyCreationForPackage {
+      public static String testIt() {
+        return "Success";
       }
   }
   </script>
@@ -61,7 +84,26 @@
           });
         });
       });
-      
+
+      var isProxySupported = (typeof Proxy !== 'undefined');
+
+      if (isProxySupported) {
+        describe('TestProxyCreation', function() {
+          it('Tests that custom root Proxy object works', function() {
+            return TestProxyCreation.testIt().then(function(result) {
+              expect(result).toEqual("Success");
+            });
+          });
+        });
+
+        describe('TestProxyCreationForPackage', function() {
+          it('Tests that custom root Proxy object for package works', function() {
+            return jp.javapoly.sample.TestProxyCreationForPackage.testIt().then(function(result) {
+              expect(result).toEqual("Success");
+            });
+          });
+        });
+      }
 
     });
 
