@@ -252,6 +252,12 @@
           expect(Java.type).toExist();
         });
 
+        it('doppio should not be a release build', function() {
+          Java.type('java.lang.Integer').then(function() {
+            expect(Doppio.VM.JVM.isReleaseBuild()).toBe(false);
+          });
+        });
+
         describe('Java.type', function() {
 
           it('should load class', function() {
