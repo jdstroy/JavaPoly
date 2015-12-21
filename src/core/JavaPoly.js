@@ -4,7 +4,7 @@ import JavaObjectWrapper from './JavaObjectWrapper';
 import QueueExecutor from './QueueExecutor';
 import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
-import CommonDispatcher from './CommonDispatcher.js'
+import BrowserDispatcher from './BrowserDispatcher.js'
 import WorkerCallBackDispatcher from './../webworkers/WorkerCallBackDispatcher.js'
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
@@ -117,7 +117,7 @@ class JavaPoly {
 
 
   loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady) {
-    this.dispatcher = new CommonDispatcher();
+    this.dispatcher = new BrowserDispatcher();
 
     // Otherwise Start in Browser Main Thread,
     // Ensure we have loaded the browserfs.js file before handling Java/class file

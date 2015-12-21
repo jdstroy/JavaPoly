@@ -1,5 +1,5 @@
 /**
- * The CommonDispatcher is used for the case when javaploy running in Browser.
+ * The CommonDispatcher is an abstract base class for other dispatchers.
  * 
  * we define the some global Object{javaPolyMessageTypes,javaPolyCallbacks,javaPolyData} 
  * for sharing args, callback function.
@@ -9,6 +9,11 @@
 class CommonDispatcher {
 
   constructor() {
+    // This class is abstract (can't be instantiated directly)
+    if (new.target === CommonDispatcher) {
+      throw TypeError("new of abstract class CommonDispatcher");
+    }
+
     this.initDispatcher();
   }
 
@@ -20,42 +25,10 @@ class CommonDispatcher {
     window.javaPolyIdCount = 0;
   }
 
-  installListener(){
-    window.addEventListener("message", function(event) {
-      if (event.origin == window.location.origin) {
-        if (typeof (event.data.javapoly) == "object") {
-          event.preventDefault();
-          window.javaPolyEvents.push(event);
-
-          if (window.javaPolyCallback) {
-            window.javaPolyCallback();
-          }
-        }
-      }
-    });    
-  }
-
-  postMessage(messageType, data, callback){
-    let id = window.javaPolyIdCount++;
-    window.javaPolyMessageTypes[id] = messageType;
-    window.javaPolyData[id] = data;
-    window.javaPolyCallbacks[id] = callback;
-
-    window.postMessage({ javapoly:{ messageId:""+id } }, "*");
-  }
-  
   getJavaPolyEventsLength(){
     return window.javaPolyEvents.length;
   }
 
-  /**
-   * pop a message and get the messageID
-   */
-  getMessageId(){
-    let event = window.javaPolyEvents.pop();
-    return event.data.javapoly.messageId;
-  }
-  
   getMessageType(msgId){
     // may want to delete the data after fetch
     let messageType = window.javaPolyMessageTypes[msgId];

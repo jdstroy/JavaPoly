@@ -71,6 +71,13 @@ class WorkerDispatcher extends CommonDispatcher{
       return obj;
   } 
 
+  /**
+   * pop a message and get the messageID
+   */
+  getMessageId(){
+    let event = window.javaPolyEvents.pop();
+    return event.data.javapoly.messageId;
+  }
 };
 
 export default WorkerDispatcher;
