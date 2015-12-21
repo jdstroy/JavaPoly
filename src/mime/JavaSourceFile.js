@@ -1,5 +1,6 @@
 import JavaFile from './JavaFile';
 import ProxyWrapper from '../core/ProxyWrapper';
+import JavaParser from 'jsjavaparser';
 
 //const path = global.BrowserFS.BFSRequire('path');
 
