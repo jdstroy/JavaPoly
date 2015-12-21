@@ -10,7 +10,7 @@ class CommonDispatcher {
 
   constructor() {
     // This class is abstract (can't be instantiated directly)
-    if (new.target === CommonDispatcher) {
+    if (this.constructor === CommonDispatcher) {
       throw TypeError("new of abstract class CommonDispatcher");
     }
 
