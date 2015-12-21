@@ -170,7 +170,8 @@ class JavaPolyLoader {
         this.loadingHub = [];
 
         this.javapoly.jvm = new Doppio.VM.JVM({
-          bootstrapClasspath: ['/sys/vendor/java_home/classes', "/javapoly/classes"],
+          doppioHomePath: this.options.doppioLibUrl,
+          bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
           classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',

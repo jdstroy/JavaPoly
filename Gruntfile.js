@@ -1,3 +1,5 @@
+const doppioPath = "./node_modules/@hrj/doppiojvm-snapshot/"
+
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -72,10 +74,10 @@ module.exports = function(grunt) {
           {expand: true, cwd: './src/natives/', src: ['*.js'], dest: './build/natives'}
         ]
       },
-      doppio_release: {
+      doppio_fastdev: {
         files: [
-          {expand: true, cwd: './node_modules/doppiojvm/dist/fast-dev/', src: ['**'], dest: './test/doppio'},
-          {expand: true, cwd: './node_modules/doppiojvm/', src: ['package.json'], dest: './test/doppio'}
+          {expand: true, cwd: doppioPath + '/dist/fast-dev/', src: ['**'], dest: './test/doppio'},
+          {expand: true, cwd: doppioPath, src: ['package.json'], dest: './test/doppio'}
         ]
       },
       browserfs: {
@@ -87,9 +89,9 @@ module.exports = function(grunt) {
     },
     compare_version: {
       doppio: {
-        from: './node_modules/doppiojvm',
+        from: doppioPath,
         to: './test/doppio',
-        tasks: ['clean:doppio', 'copy:doppio_release']
+        tasks: ['clean:doppio', 'copy:doppio_fastdev']
       },
       browserfs: {
         from: './node_modules/browserfs',
