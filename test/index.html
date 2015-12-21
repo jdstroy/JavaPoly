@@ -252,11 +252,14 @@
           expect(Java.type).toExist();
         });
 
-        it('doppio should not be a release build', function() {
-          Java.type('java.lang.Integer').then(function() {
-            expect(Doppio.VM.JVM.isReleaseBuild()).toBe(false);
+        if (!javapoly.options.worker) {
+          // Doppio not available when using web worker
+          it('doppio should not be a release build', function() {
+            Java.type('java.lang.Integer').then(function() {
+              expect(Doppio.VM.JVM.isReleaseBuild()).toBe(false);
+            });
           });
-        });
+        }
 
         describe('Java.type', function() {
 
@@ -321,17 +324,21 @@
           })
         });
 
-        describe('System', function() {
-          it('currentTimeMillis() should return a timestamp', function() {
-            return Java.type('java.lang.System').then(function(System) {
-              return System.currentTimeMillis().then(function(result) {
-                expect(result)
-                  .toExist()
-                  .toBeGreaterThanOrEqual(0);
+        if (!javapoly.options.worker) {
+          // Long type not supported in web worker
+
+          describe('System', function() {
+            it('currentTimeMillis() should return a timestamp', function() {
+              return Java.type('java.lang.System').then(function(System) {
+                return System.currentTimeMillis().then(function(result) {
+                  expect(result)
+                    .toExist()
+                    .toBeGreaterThanOrEqual(0);
+                });
               });
             });
           });
-        });
+        }
 
         describe('classes/Main.class', function() {
           it('instance and private methods should not exist in class wrapper', function() {
