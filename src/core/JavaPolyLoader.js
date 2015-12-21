@@ -155,6 +155,8 @@ class JavaPolyLoader {
     
     // NOTES, we may also want to use fs in other place of javapoly
     this.javapoly.fs = this.fs;
+
+    BrowserFS.install(window);
   }
   
   /**
@@ -170,7 +172,8 @@ class JavaPolyLoader {
         this.loadingHub = [];
 
         this.javapoly.jvm = new Doppio.VM.JVM({
-          bootstrapClasspath: ['/sys/vendor/java_home/classes', "/javapoly/classes"],
+          doppioHomePath: this.options.doppioLibUrl,
+          bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
           classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
@@ -187,6 +190,18 @@ class JavaPolyLoader {
               const compilationHub = _this.sources.map( (src) => src.compile() );
               Promise.all(compilationHub).then(resolve);
             }
+
+            /*
+            window.process.stdout.on('data', function(data) {
+              // data is a Node Buffer, which BrowserFS implements in the browser.
+              console.log("Received the following output: ", data.toString());
+            });
+            */
+            /*
+            window.process.stdout.on('ready', function() {
+              console.log("Received the following output: ", window.process.stdout.read());
+            });
+            */
 
             jvm.runClass('com.javapoly.Main', [], function(exitCode) {
               // Control flow shouldn't reach here under normal circumstances,
