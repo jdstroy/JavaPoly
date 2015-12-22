@@ -11,26 +11,19 @@ class BrowserDispatcher extends CommonDispatcher {
     // NOP
   }
 
-  postMessage(messageType, data, callback) {
+  postMessage(messageType, priority, data, callback) {
     let id = window.javaPolyIdCount++;
     window.javaPolyMessageTypes[id] = messageType;
     window.javaPolyData[id] = data;
     window.javaPolyCallbacks[id] = callback;
 
-    window.javaPolyEvents.push("" + id);
+    this.addMessage(id, priority);
 
     if (window.javaPolyCallback) {
       window.javaPolyCallback();
     }
   }
-  
-  /**
-   * pop a message and get the messageID
-   */
-  getMessageId() {
-    return window.javaPolyEvents.pop();
-  }
-  
+
 }
 
 export default BrowserDispatcher;

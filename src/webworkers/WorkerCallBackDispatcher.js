@@ -39,7 +39,7 @@ class WorkerCallBackDispatcher {
    * 
    * We also need to record callback function for every message. 
    */
-  postMessage(messageType, data, callback){
+  postMessage(messageType, priority, data, callback){
     
     let id = window.javaPolyIdCount++;
     window.javaPolyCallbacks[id] = callback;

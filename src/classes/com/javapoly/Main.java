@@ -171,6 +171,7 @@ public class Main {
     String[] stringData = java.util.Arrays.copyOf(data, data.length, String[].class);
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    println("Compiling: " + java.util.Arrays.toString(stringData));
     int result = compiler.run(null, null, null, stringData);
     if (result == 0) {
       returnResult(messageId, "Normal compilation.");

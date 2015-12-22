@@ -1,5 +1,7 @@
 import CommonDispatcher from '../core/CommonDispatcher.js'
 
+import WrapperUtil from "../core/WrapperUtil.js";
+
 /**
  * The WorkerDispatcher is executed in web workers side.
  * it is used to handle message/java-command from Browser side.
@@ -14,37 +16,33 @@ class WorkerDispatcher extends CommonDispatcher{
     super();
   }
 
-  /**
-   * Override the listener.
-   * 
-   * We get message data from message body rather then the shared global object.
-   */
   installListener(){
-    self.addEventListener('message', e => {
-      if (!e.data || !e.data.javapoly || !e.data.javapoly.messageType)//invalid command, ignore 
+    // NOP
+  }
+
+  // Handle message data coming from the web-worker message bridge
+  handle(data) {
+    if (typeof (data) == "object") {
+      let id = data.messageId;
+      if (!id)// invalid command, ignore
         return;
 
-      let data = e.data.javapoly;
-      // FIXME how to support self-defined object(also pass the function of object), stream, file handler...
-      if (typeof (data) == "object") {
-        let id = data.messageId;
-        if (!id)// invalid command, ignore
-          return;
+      //store the message to commonDispatcher for javapoly to handle
+      self.javaPolyMessageTypes[id] = data.messageType;
+      self.javaPolyData[id] = data.data;
+      self.javaPolyCallbacks[id] = (returnValue) => {
+        global.self.postMessage({
+          javapoly:{
+            messageId: id, messageType:data.messageType, returnValue:this.unwrapObjectForWebWorker(returnValue)
+        }});
+      } ;
 
-        //store the message to commonDispatcher for javapoly to handle
-        window.javaPolyMessageTypes[id] = data.messageType;
-        window.javaPolyData[id] = data.data;
-        window.javaPolyCallbacks[id] = (returnValue) => {
-          global.self.postMessage({javapoly:{messageId: id, messageType:data.messageType, returnValue:this.unwrapObjectForWebWorker(returnValue)}});
-        } ;
+      this.addMessage(id, data.priority);
 
-        e.preventDefault();
-        window.javaPolyEvents.push(e);
-        if (window.javaPolyCallback) {
-          window.javaPolyCallback();
-        }
+      if (self.javaPolyCallback) {
+        self.javaPolyCallback();
       }
-    }, false);
+    }
   }
 
   /**
@@ -55,8 +53,10 @@ class WorkerDispatcher extends CommonDispatcher{
    * We could use most unwrapper method from Main.js.unwrapObject();
    */
   unwrapObjectForWebWorker(obj) {
-    if (obj === null)
+    if (obj === null) {
       return null;
+    }
+
     if (obj['getClass']) {
       let cls = obj.getClass();
       if (cls.className === 'Ljava/lang/Long;'){
@@ -64,20 +64,13 @@ class WorkerDispatcher extends CommonDispatcher{
         // FIXME there will be precision lost problem here, 64bit integers don't work natively in javascript.
         // we may also return a Exception.
         return obj.unbox().toNumber();
-      }else{
+      } else {
         return obj.unbox();
       }
-    }else 
+    } else {
       return obj;
+    }
   } 
-
-  /**
-   * pop a message and get the messageID
-   */
-  getMessageId(){
-    let event = window.javaPolyEvents.pop();
-    return event.data.javapoly.messageId;
-  }
 };
 
 export default WorkerDispatcher;

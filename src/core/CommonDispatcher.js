@@ -1,9 +1,9 @@
 /**
  * The CommonDispatcher is an abstract base class for other dispatchers.
- * 
- * we define the some global Object{javaPolyMessageTypes,javaPolyCallbacks,javaPolyData} 
+ *
+ * we define the some global Object{javaPolyMessageTypes,javaPolyCallbacks,javaPolyData}
  * for sharing args, callback function.
- * 
+ *
  */
 
 class CommonDispatcher {
@@ -29,26 +29,50 @@ class CommonDispatcher {
     return window.javaPolyEvents.length;
   }
 
+  /* Add message with higher priority messages ahead of the lower priority ones */
+  addMessage(id, priority) {
+    // TODO: Use number instead of string for id (requires corresponding change in Main.java)
+
+    const queue = window.javaPolyEvents;
+    const pos = queue.findIndex(e => e[1] < priority);
+    const value = [""+id, priority];
+    if (pos < 0) {
+      // insert at end
+      queue.push(value);
+    } else {
+      // insert at position
+      queue.splice(pos, 0, value);
+    }
+  }
+
+  /**
+   * dequeue a message and get the messageID
+   */
+  getMessageId() {
+    const id = window.javaPolyEvents.shift()[0];
+    return id;
+  }
+
   getMessageType(msgId){
     // may want to delete the data after fetch
     let messageType = window.javaPolyMessageTypes[msgId];
     delete window.javaPolyMessageTypes[msgId];
     return messageType;
   }
-  
+
   getMessageData(msgId){
     // may want to delete the data after fetch
     let messageData =  window.javaPolyData[msgId];
     delete window.javaPolyData[msgId];
     return messageData;
   }
-  
+
   getMessageCallback(msgId){
     let callback = window.javaPolyCallbacks[msgId];
     delete window.javaPolyCallbacks[msgId];
     return callback;
   }
-  
+
   callbackMessage(msgId, returnValue){
     let callback = window.javaPolyCallbacks[msgId];
     delete window.javaPolyCallbacks[msgId];

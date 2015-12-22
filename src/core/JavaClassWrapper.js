@@ -28,14 +28,11 @@ class JavaClassWrapper {
         if (JavaClassWrapper.cache[clsName] !== undefined) {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
-          javapoly.queueExecutor.execute(nextCallback => {
-            const data = [clsName];
-            WrapperUtil.dispatchOnJVM('CLASS_LOADING', data, (methods) => {
-              const javaClassWrapper = new JavaClassWrapper(methods, clsName);
-              JavaClassWrapper.cache[clsName] = javaClassWrapper;
-              resolve(javaClassWrapper);
-              nextCallback();
-            });
+          const data = [clsName];
+          WrapperUtil.dispatchOnJVM('CLASS_LOADING', data, (methods) => {
+            const javaClassWrapper = new JavaClassWrapper(methods, clsName);
+            JavaClassWrapper.cache[clsName] = javaClassWrapper;
+            resolve(javaClassWrapper);
           });
         }
       }
