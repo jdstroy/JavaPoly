@@ -17,7 +17,7 @@ function getParams(searchString) {
 
 const params = getParams(window.location.search);
 
-const config = params.worker ? {worker:'build/javapoly_worker.js'} : {};
+const config = params.worker ? {worker:params.worker} : {};
 
 // Create main object that will be accessed via global objects J and Java
 global.window.javapoly = new JavaPoly(config);
