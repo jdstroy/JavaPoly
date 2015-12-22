@@ -23,10 +23,25 @@
       margin-top: 15px;
       flex-grow: 1;
     }
+    .workerChoice { list-style:none; padding: 1em;}
+    .workerChoice > li { display:inline; }
+    .workerChoice > li > a {
+      padding:.3em 1em; background: #eee; border-radius:.3em; text-decoration: none; color: black;
+      font-size: 1.2em; font-weight:bold;
+    }
+    .workerChoice > li > a:hover { background: greenyellow;}
+    .workerChoice > li.selected > a {
+      border:2px solid green;
+    }
   </style>
 
 </head>
 <body>
+  <ul class="workerChoice">
+    <li class="browser"><a href='/'>Browser version</a></li>
+    <li class="worker"><a href='/?worker=true'>Web worker version</a></li>
+  </ul>
+
   <div id="mocha"></div>
 
   <script src="expect/umd/expect.min.js"></script>
@@ -49,7 +64,12 @@
       }
     });
 
-    describe('JavaPoly', function() {
+    var isWorkerBased = !!javapoly.options.worker;
+    document.querySelector(".workerChoice " + (isWorkerBased ? ".worker" : ".browser")).classList.add("selected");
+
+    var titleSuffix = isWorkerBased ? " Web Worker" : " Browser";
+
+    describe('JavaPoly' + titleSuffix, function() {
       this.timeout(100000); // Let jvm to start and do not interrupt promises
 
       var isProxySupported = (typeof Proxy !== 'undefined');
@@ -123,7 +143,7 @@
         }
       });
 
-      if (!javapoly.options.worker) {
+      if (!isWorkerBased) {
         // Object wrappers are not supported in web-worker mode
 
         describe('Object wrappers', function() {
@@ -252,7 +272,7 @@
           expect(Java.type).toExist();
         });
 
-        if (!javapoly.options.worker) {
+        if (!isWorkerBased) {
           // Doppio not available when using web worker
           it('doppio should not be a release build', function() {
             Java.type('java.lang.Integer').then(function() {
@@ -324,7 +344,7 @@
           })
         });
 
-        if (!javapoly.options.worker) {
+        if (!isWorkerBased) {
           // Long type not supported in web worker
 
           describe('System', function() {
