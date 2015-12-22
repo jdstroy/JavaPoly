@@ -3,6 +3,7 @@
   <meta charset="utf-8">
   <title>JavaPoly Tests: Java Source Files</title>
   <link href="mocha/mocha.css" rel="stylesheet" />
+  <link href="style.css" rel="stylesheet" />
 
   <script type="text/javascript" src="build/javapoly.js"></script>
 
@@ -48,6 +49,11 @@
 
 </head>
 <body>
+  <ul class="workerChoice">
+    <li class="browser"><a href='/java_source_file.html'>Browser version</a></li>
+    <li class="worker"><a href='/java_source_file.html?worker=build/javapoly_worker.js'>Web worker version</a></li>
+  </ul>
+
   <div id="mocha"></div>
 
   <script src="expect/umd/expect.min.js"></script>
@@ -61,7 +67,12 @@
       }
     });
 
-    describe('JavaPoly', function() {
+    var isWorkerBased = !!javapoly.options.worker;
+    document.querySelector(".workerChoice " + (isWorkerBased ? ".worker" : ".browser")).classList.add("selected");
+    var titleSuffix = isWorkerBased ? " Web Worker" : " Browser";
+
+
+    describe('JavaPoly' + titleSuffix, function() {
       this.timeout(1000000); // Let jvm to start and do not interrupt promises
 
       describe('TestCompile1', function() {

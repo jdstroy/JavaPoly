@@ -3,6 +3,7 @@
   <meta charset="utf-8">
   <title>JavaPoly Tests</title>
   <link href="mocha/mocha.css" rel="stylesheet" />
+  <link href="style.css" rel="stylesheet" />
 
   <script type="text/javascript" src="build/javapoly.js"></script>
 
@@ -11,29 +12,6 @@
   <script type="application/java-vm" src="classes/Counter.class"></script>
   <script type="application/java-vm" src="classes/MainWithPackage.class"></script>
   <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
-
-  <style>
-    #mocha-report > .suite > ul {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    #mocha-report > .suite > ul > .suite {
-      border: 1px solid #eee;
-      padding: 0 8px;
-      margin-top: 15px;
-      flex-grow: 1;
-    }
-    .workerChoice { list-style:none; padding: 1em;}
-    .workerChoice > li { display:inline; }
-    .workerChoice > li > a {
-      padding:.3em 1em; background: #eee; border-radius:.3em; text-decoration: none; color: black;
-      font-size: 1.2em; font-weight:bold;
-    }
-    .workerChoice > li > a:hover { background: greenyellow;}
-    .workerChoice > li.selected > a {
-      border:2px solid green;
-    }
-  </style>
 
 </head>
 <body>
