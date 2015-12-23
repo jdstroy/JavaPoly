@@ -7,10 +7,6 @@ class BrowserDispatcher extends CommonDispatcher {
     super();
   }
 
-  installListener() {
-    // NOP
-  }
-
   postMessage(messageType, priority, data, callback) {
     let id = window.javaPolyIdCount++;
     window.javaPolyMessageTypes[id] = messageType;

@@ -15,6 +15,8 @@ class WorkerCallBackDispatcher {
     window.javaPolyIdCount = 0;
     //used to record callback for every message.
     window.javaPolyCallbacks = {};
+
+    this.installListener();
   }
 
   //listen at browser side, to recv return value and callback

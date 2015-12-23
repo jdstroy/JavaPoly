@@ -14,10 +14,6 @@ class WorkerDispatcher extends CommonDispatcher{
     super();
   }
 
-  installListener(){
-    // NOP
-  }
-
   // Handle message data coming from the web-worker message bridge
   handle(data) {
     if (typeof (data) == "object") {

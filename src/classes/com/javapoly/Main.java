@@ -8,8 +8,6 @@ public class Main {
   public static void main(final String[] args) {
     println("Java Main started");
 
-    installListener();
-
     try {
       boolean done = false;
       while (!done) {
@@ -199,7 +197,6 @@ public class Main {
     return null;
   }
 
-  private static native void installListener();
   private static native String getMessageId();
   private static native Object[] getData(String messageId);
   private static native String getMessageType(String messageId);

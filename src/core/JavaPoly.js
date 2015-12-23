@@ -126,7 +126,6 @@ class JavaPoly {
 
   loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveDispatcherReady) {
     this.dispatcher = new WorkerCallBackDispatcher(new global.Worker(this.options.worker));
-    this.dispatcher.installListener();
 
     resolveDispatcherReady(this.dispatcher);
 
