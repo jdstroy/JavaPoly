@@ -26,21 +26,17 @@ const JAVA_MIME = [
  *
  * The JavaPoly loader will do the following step
  *  1. init the browserFS of JavaPoly,
- *  2. run the callback {callbackBeforeStartJVM}
- *  3. load java mime scripts
- *  4. start jvm
+ *  2. load java mime scripts
+ *  3. start jvm
  *
  * @param javapoly
  *  the javapoly instance to loader
  * @param scripts
  *  the scripts {src, type} include the java mime script to load,
  *  we will only load the script in JAVA_MIME.
- * @param callbackBeforeStartJVM
- *  the callback execute before JVM start
- *
  */
 class JavaPolyLoader {
-  constructor(javapoly, scripts, callbackBeforeStartJVM) {
+  constructor(javapoly, scripts) {
 
     this.javapoly = javapoly;
 
@@ -94,9 +90,6 @@ class JavaPolyLoader {
     this.classpath = [this.options.storageDir];
 
     this.initBrowserFS();
-    if (callbackBeforeStartJVM) {
-      this.loadingHub.push(callbackBeforeStartJVM());
-    }
     this.loadScripts(scripts);
     this.initJVM();
   }

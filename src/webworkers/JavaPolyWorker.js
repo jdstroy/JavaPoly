@@ -21,12 +21,12 @@ class JavaPolyWorker {
   /**
    * init the jvm and load library in web workers
    */
-  init(javaMimeScripts, cb) {
+  init(javaMimeScripts) {
     this.dispatcher= self.dispatcher;
     this.dispatcherReady = Promise.resolve(this.dispatcher);
     window.isJavaPolyWorker = true;
 
-    new JavaPolyLoader(this, javaMimeScripts, () => cb(true));
+    new JavaPolyLoader(this, javaMimeScripts);
   }
 
 }
@@ -48,9 +48,8 @@ self.addEventListener('message', function(e) {
     // so here we add a JVM_INIT command.
     case 'JVM_INIT':
       self.javaPolyWorker = new JavaPolyWorker(data.data.options);
-      self.javaPolyWorker.init( data.data.scripts, (result) => {
-        global.self.postMessage({javapoly:{messageId:data.messageId, messageType:'JVM_INIT', returnValue:result}});
-      } );
+      self.javaPolyWorker.init(data.data.scripts);
+      global.self.postMessage({javapoly:{messageId:data.messageId, messageType:'JVM_INIT', returnValue:true}});
       break;
     default:
       self.dispatcher.handle(data);

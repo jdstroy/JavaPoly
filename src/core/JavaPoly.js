@@ -119,9 +119,10 @@ class JavaPoly {
     // Otherwise Start in Browser Main Thread,
     // Ensure we have loaded the browserfs.js file before handling Java/class file
     this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-      let javaPolyLoader = new JavaPolyLoader(this, javaMimeScripts,
-          () => this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'));
+      this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js').then(() => {
+        new JavaPolyLoader(this, javaMimeScripts);
       });
+    });
   }
 
   loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveDispatcherReady) {
