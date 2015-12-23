@@ -6,8 +6,8 @@ module.exports = function(grunt) {
     browserify: {
       production: {
         files:{
-          'build/javapoly.js':['src/**/main.js'],
-          'build/javapoly_worker.js':['src/**/webworkers/JavaPolyWorker.js']
+          'build/javapoly.js':['src/main.js'],
+          'build/javapoly_worker.js':['src/webworkers/JavaPolyWorker.js']
         },
         options: {
           transform: [
@@ -17,8 +17,8 @@ module.exports = function(grunt) {
       },
       development:{
         files:{
-          'build/javapoly.js':['src/**/main.test.js'],
-          'build/javapoly_worker.js':['src/**/webworkers/JavaPolyWorker.js']
+          'build/javapoly.js':['src/main.test.js'],
+          'build/javapoly_worker.js':['src/webworkers/JavaPolyWorker.js']
         },
         options: {
           transform: [
