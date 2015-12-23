@@ -22,9 +22,9 @@ class WorkerCallBackDispatcher {
   //listen at browser side, to recv return value and callback
   installListener(){
     this.worker.addEventListener('message', e => {
-      let data = e.data.javapoly;
+      const data = e.data.javapoly;
 
-      let cb = window.javaPolyCallbacks[data.messageId];
+      const cb = window.javaPolyCallbacks[data.messageId];
       delete window.javaPolyCallbacks[data.messageId];
 
       // 1. JVM Init response
@@ -43,7 +43,7 @@ class WorkerCallBackDispatcher {
    */
   postMessage(messageType, priority, data, callback) {
 
-    let id = window.javaPolyIdCount++;
+    const id = window.javaPolyIdCount++;
     window.javaPolyCallbacks[id] = callback;
 
     this.worker.postMessage({javapoly:{messageId:""+id, messageType:messageType, data:data}});

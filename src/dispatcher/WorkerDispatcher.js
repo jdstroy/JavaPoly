@@ -41,9 +41,9 @@ class WorkerDispatcher extends CommonDispatcher{
 
   /**
    * some special converting for data sent from web worker to browser.
-   * Because browser don't understand javapoly internal data type when javapoly working in web workers. 
+   * Because browser don't understand javapoly internal data type when javapoly working in web workers.
    * we need to convert them to javascript type before sent.
-   * 
+   *
    * We could use most unwrapper method from Main.js.unwrapObject();
    */
   unwrapObjectForWebWorker(obj) {
@@ -64,7 +64,7 @@ class WorkerDispatcher extends CommonDispatcher{
     } else {
       return obj;
     }
-  } 
+  }
 };
 
 export default WorkerDispatcher;
