@@ -1,7 +1,5 @@
 import JavaPolyLoader from '../core/JavaPolyLoader';
-import WorkerDispatcher from './WorkerDispatcher.js'
-import WrapperUtil from '../core/WrapperUtil.js'
-
+import WorkerDispatcher from '../dispatcher/WorkerDispatcher.js'
 
 class JavaPolyWorker {
   constructor(options) {

@@ -3,8 +3,8 @@ import JavaClassWrapper from './JavaClassWrapper';
 import JavaObjectWrapper from './JavaObjectWrapper';
 import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
-import BrowserDispatcher from './BrowserDispatcher.js'
-import WorkerCallBackDispatcher from './../webworkers/WorkerCallBackDispatcher.js'
+import BrowserDispatcher from '../dispatcher/BrowserDispatcher.js'
+import WorkerCallBackDispatcher from '../dispatcher/WorkerCallBackDispatcher.js'
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**

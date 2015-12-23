@@ -1,14 +1,12 @@
-import CommonDispatcher from '../core/CommonDispatcher.js'
-
-import WrapperUtil from "../core/WrapperUtil.js";
+import CommonDispatcher from '../dispatcher/CommonDispatcher.js'
 
 /**
  * The WorkerDispatcher is executed in web workers side.
  * it is used to handle message/java-command from Browser side.
- * 
+ *
  * It recv message from browser side and pass the message to JVM, and then return the returnValue to browser side.
  * The message dispatch from worker to JVM using the way javapoly do (extends from CommonDispatcher).
- * 
+ *
  */
 class WorkerDispatcher extends CommonDispatcher{
 
