@@ -26,7 +26,7 @@ class JavaPolyWorker {
     this.dispatcherReady = Promise.resolve(this.dispatcher);
     window.isJavaPolyWorker = true;
 
-    new JavaPolyLoader(this, javaMimeScripts, null, () => cb(true));
+    new JavaPolyLoader(this, javaMimeScripts, () => cb(true));
   }
 
 }
