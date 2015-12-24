@@ -1,27 +1,5 @@
 import JavaFile from './JavaFile';
 
-//const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
-//const path   = global.BrowserFS.BFSRequire('path');
-
-// TODO need to reuse the code in JavaClassFile rather than copy
-const http_retrieve_buffer = function(url) {
-  return new Promise((resolve, reject) => {
-    let xmlr = new XMLHttpRequest();
-    xmlr.open('GET', url, true);
-    xmlr.responseType = 'arraybuffer';
-    xmlr.onreadystatechange = ()=> {
-      if (xmlr.readyState === 4) {
-        if (xmlr.status === 200) {
-          resolve(xmlr.response);
-        } else {
-          reject();
-        }
-      }
-    }
-    xmlr.send(null);
-  });
-}
-
 class JavaArchiveFile extends JavaFile  {
   constructor(javaPolyLoader, script) {
   	let Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
@@ -31,7 +9,7 @@ class JavaArchiveFile extends JavaFile  {
     let scriptSrc = script.src;
 
     this.javaPolyLoader.loadingHub.push(
-      http_retrieve_buffer(scriptSrc).then(data => {
+      JavaFile.http_retrieve_buffer(scriptSrc).then(data => {
        let jarFileData = new Buffer(data);
        let jarName = path.basename(scriptSrc);
 
