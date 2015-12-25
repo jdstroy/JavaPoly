@@ -26,23 +26,17 @@ const JAVA_MIME = [
  *
  * The JavaPoly loader will do the following step
  *  1. init the browserFS of JavaPoly,
- *  2. run the callback {callbackBeforeStartJVM}
- *  3. load java mime scripts
- *  4. start jvm
+ *  2. load java mime scripts
+ *  3. start jvm
  *
  * @param javapoly
  *  the javapoly instance to loader
  * @param scripts
  *  the scripts {src, type} include the java mime script to load,
  *  we will only load the script in JAVA_MIME.
- * @param callbackBeforeStartJVM
- *  the callback execute before JVM start
- * @param resolveJVMReady
- *  the callback execute when jvm start finished.
- *
  */
 class JavaPolyLoader {
-  constructor(javapoly, scripts, callbackBeforeStartJVM, resolveJVMReady) {
+  constructor(javapoly, scripts) {
 
     this.javapoly = javapoly;
 
@@ -96,11 +90,8 @@ class JavaPolyLoader {
     this.classpath = [this.options.storageDir];
 
     this.initBrowserFS();
-    if (callbackBeforeStartJVM) {
-      this.loadingHub.push(callbackBeforeStartJVM());
-    }
     this.loadScripts(scripts);
-    this.initJVM().then(resolveJVMReady);
+    this.initJVM();
   }
 
   loadScripts(scripts) {
@@ -130,6 +121,9 @@ class JavaPolyLoader {
         }
       }
     };
+
+    // Compilation of Java sources
+    this.sources.forEach( (src) => src.compile() );
   }
 
   /**
@@ -163,39 +157,29 @@ class JavaPolyLoader {
    * 2. Create object for JVM
    */
   initJVM() {
-    return new Promise( (resolve, reject) => {
-      Promise.all(this.loadingHub).then(()=> {
-        // Delete loadingHub (if somewhere else it is used so it's gonna be runtime error of that usage)
-        delete this.loadingHub;
-        this.loadingHub = [];
+    Promise.all(this.loadingHub).then(()=> {
+      // Delete loadingHub (if somewhere else it is used so it's gonna be runtime error of that usage)
+      delete this.loadingHub;
+      this.loadingHub = [];
 
-        this.javapoly.jvm = new Doppio.VM.JVM({
-          doppioHomePath: this.options.doppioLibUrl,
-          bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
-          classpath: this.classpath,
-          javaHomePath: '/sys/vendor/java_home',
-          extractionPath: '/tmp',
-          nativeClasspath: ['/sys/natives', "/javapoly/natives"],
-          assertionsEnabled: true
-        }, (err, jvm) => {
-          if (err) {
-            console.log('err loading JVM:', err);
-            reject();
-          } else {
-            const _this = this;
-            window.javaPolyInitialisedCallback = () => {
-              // Compilation of Java sources
-              const compilationHub = _this.sources.map( (src) => src.compile() );
-              Promise.all(compilationHub).then(resolve);
-            }
-
-            jvm.runClass('com.javapoly.Main', [], function(exitCode) {
-              // Control flow shouldn't reach here under normal circumstances,
-              // because Main thread keeps polling for messages.
-              console.log("JVM Exit code: ", exitCode);
-            });
-          }
-        });
+      this.javapoly.jvm = new Doppio.VM.JVM({
+        doppioHomePath: this.options.doppioLibUrl,
+        bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
+        classpath: this.classpath,
+        javaHomePath: '/sys/vendor/java_home',
+        extractionPath: '/tmp',
+        nativeClasspath: ['/sys/natives', "/javapoly/natives"],
+        assertionsEnabled: true
+      }, (err, jvm) => {
+        if (err) {
+          console.log('err loading JVM:', err);
+        } else {
+          jvm.runClass('com.javapoly.Main', [], function(exitCode) {
+            // Control flow shouldn't reach here under normal circumstances,
+            // because Main thread keeps polling for messages.
+            console.log("JVM Exit code: ", exitCode);
+          });
+        }
       });
     });
   }

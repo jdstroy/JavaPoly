@@ -1,7 +1,5 @@
-import * as _ from 'underscore';
 import JavaPolyLoader from '../core/JavaPolyLoader';
-import WorkerDispatcher from './WorkerDispatcher.js'
-
+import WorkerDispatcher from '../dispatcher/WorkerDispatcher.js'
 
 class JavaPolyWorker {
   constructor(options) {
@@ -11,9 +9,6 @@ class JavaPolyWorker {
      * @type {Object}
      */
     this.options = options;
-
-    // NOTES, hack global window variable used in doppio, javapoly.
-    global.window = global.self;
 
     // load browserfs.min.js and doppio.js
     importScripts(this.options.browserfsLibUrl + 'browserfs.min.js');
@@ -26,37 +21,38 @@ class JavaPolyWorker {
   /**
    * init the jvm and load library in web workers
    */
-  init(javaMimeScripts, cb) {
-    this.dispatcher = new WorkerDispatcher();
+  init(javaMimeScripts) {
+    this.dispatcher= self.dispatcher;
+    this.dispatcherReady = Promise.resolve(this.dispatcher);
     window.isJavaPolyWorker = true;
 
-    new JavaPolyLoader(this, javaMimeScripts, null, () => cb(true));
+    new JavaPolyLoader(this, javaMimeScripts);
   }
 
 }
 
+// NOTES, hack global window variable used in doppio, javapoly.
+global.window = global.self;
 
+self.dispatcher = new WorkerDispatcher();
 
 self.addEventListener('message', function(e) {
-  if (!e.data || !e.data.javapoly)//invalid command, ignore 
+  if (!e.data || !e.data.javapoly)//invalid command, ignore
     return;
-  let data = e.data.javapoly; 
+
+  // e.preventDefault();
+  let data = e.data.javapoly;
 
   switch (data.messageType) {
-  // NOTES, we need some options,Java MIME script path info from browser main thread.
-  // so here we add a JVM_INIT command.
+    // NOTES, we need some options,Java MIME script path info from browser main thread.
+    // so here we add a JVM_INIT command.
     case 'JVM_INIT':
-      self.removeEventListener('message', this);
       self.javaPolyWorker = new JavaPolyWorker(data.data.options);
-      self.javaPolyWorker.init( data.data.scripts, (result) => {
-        global.self.postMessage({javapoly:{messageId:data.messageId, messgeType:'JVM_INIT', returnValue:result}});
-      } );
-      //FIXME may want to remove this listener after webworker start success.
+      self.javaPolyWorker.init(data.data.scripts);
+      global.self.postMessage({javapoly:{messageId:data.messageId, messageType:'JVM_INIT', returnValue:true}});
       break;
     default:
-      //NOTES, the jvm message will be listened by the dispatcher.
+      self.dispatcher.handle(data);
       break;
   };
 }, false);
-
-

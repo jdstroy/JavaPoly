@@ -106,15 +106,6 @@ registerNatives({
       javapoly.dispatcher.callbackMessage(msgId,javaObjToJS(thread, returnValue));
      },
 
-    'installListener()V': function(thread) {
-      javapoly.dispatcher.installListener();
-      if (window.javaPolyInitialisedCallback) {
-        var callback = window.javaPolyInitialisedCallback;
-        delete window.javaPolyInitialisedCallback;
-        callback();
-      }
-    },
-
     'getMessageId()Ljava/lang/String;': function(thread) {
        if (javapoly.dispatcher.getJavaPolyEventsLength() > 0) {
          return wrapObject(thread, javapoly.dispatcher.getMessageId());

@@ -1,6 +1,7 @@
 import JavaFile from './JavaFile';
 import ProxyWrapper from '../core/ProxyWrapper';
 import JavaParser from 'jsjavaparser';
+import WrapperUtil from '../core/WrapperUtil';
 
 //const path = global.BrowserFS.BFSRequire('path');
 
@@ -105,13 +106,11 @@ class JavaSourceFile extends JavaFile  {
    */
   compile() {
     return new Promise((resolve, reject) => {
-      this.javapoly.javapoly.dispatcher.postMessage(
+      WrapperUtil.dispatchOnJVM(
         "FILE_COMPILE",
         ['-d', this.javapoly.options.storageDir, this.filename],
-        (res) => {
-          resolve();
-        }
-      );
+        resolve
+      )
     });
   }
 }

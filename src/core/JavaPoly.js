@@ -1,11 +1,10 @@
 import * as _ from 'underscore';
 import JavaClassWrapper from './JavaClassWrapper';
 import JavaObjectWrapper from './JavaObjectWrapper';
-import QueueExecutor from './QueueExecutor';
 import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
-import BrowserDispatcher from './BrowserDispatcher.js'
-import WorkerCallBackDispatcher from './../webworkers/WorkerCallBackDispatcher.js'
+import BrowserDispatcher from '../dispatcher/BrowserDispatcher.js'
+import WorkerCallBackDispatcher from '../dispatcher/WorkerCallBackDispatcher.js'
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**
@@ -53,13 +52,10 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
  * Main JavaPoly class that do all underliying job for initialization
  * Simple usage:
  * 1. Create object: (new JavaPoly());
- * 2. And catch document event 'JVMReady' where event.details contains JavaPoly object that emmitted this event
+ * 2. Use JavaPoly API classes such as `J` and `Java`.
  *
  * (new JavaPoly());
- * document.addEventListener('JVMReady', function(e) {
- *   var javaPoly = e.detail;
- *   // place for your jvm code
- * });
+ * Java.type(....).then(() => {  } );
  */
 class JavaPoly {
   constructor(_options) {
@@ -81,24 +77,24 @@ class JavaPoly {
       this.options.javaPolyBaseUrl = this.getScriptBase();
     }
 
-    let jvmReadyPromise = this.initJavaPoly();
-
-    this.queueExecutor = new QueueExecutor(jvmReadyPromise);
+    const dispatcherDeferred = new JavaPoly.deferred();
+    this.dispatcherReady = dispatcherDeferred.promise;
+    this.initJavaPoly(dispatcherDeferred.resolve, dispatcherDeferred.reject);
 
     // Init objects for user to make possible start to work with JavaPoly instantly
     this.initGlobalApiObjects();
   }
 
   // returns a promise that jvm will be ready to execute
-  initJavaPoly() {
+  initJavaPoly(resolve, reject) {
     if (this.options.initOnStart === true) {
-      return new Promise((resolve) => { this.beginLoading(resolve) });
+      return this.beginLoading(resolve);
     } else {
-      return Promise.reject('not initialised');
+      return reject('not initialised');
     }
   }
 
-  beginLoading(resolveJVMReady) {
+  beginLoading(resolveDispatcherReady) {
     global.document.addEventListener('DOMContentLoaded', e => {
       let javaMimeScripts = [];
       _.each(global.document.scripts, script => {
@@ -108,43 +104,47 @@ class JavaPoly {
       // start JVM and JavaPoly Core in Web Worker
       // only if worker option enable and browser support WebWorkers
       if (this.options.worker && global.Worker){
-        this.loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveJVMReady);
+        this.loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveDispatcherReady);
       }else{
-        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady);
+        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveDispatcherReady);
       }
     }, false);
   }
 
 
-  loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady) {
+  loadJavaPolyCoreInBrowser(javaMimeScripts,resolveDispatcherReady) {
     this.dispatcher = new BrowserDispatcher();
+    resolveDispatcherReady(this.dispatcher);
 
     // Otherwise Start in Browser Main Thread,
     // Ensure we have loaded the browserfs.js file before handling Java/class file
     this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-      let javaPolyLoader = new JavaPolyLoader(this, javaMimeScripts,
-          () => this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js'),
-          resolveJVMReady);
+      this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js').then(() => {
+        new JavaPolyLoader(this, javaMimeScripts);
       });
+    });
   }
 
-  loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveJVMReady) {
+  loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveDispatcherReady) {
     this.dispatcher = new WorkerCallBackDispatcher(new global.Worker(this.options.worker));
-    this.dispatcher.installListener();
+
+    resolveDispatcherReady(this.dispatcher);
 
     // send JVM init request to webworker to init the jvm in javapoly workers.
     // we may need to send some options, java-mime file path to web workers.
     // and we also want to know if JVM inin success in webworkers,
     // so here we send a JVM_INIT messsage from Browser to workers to start jvm in webworkers.
     // rather then init web worker when worker init by itself.
-    this.dispatcher.postMessage('JVM_INIT', {options:this.options, scripts:javaMimeScripts}, (success) =>{
+    this.dispatcher.postMessage('JVM_INIT', 0, {options:this.options, scripts:javaMimeScripts}, (success) =>{
       if (success == true){ // JVM init success..
         console.log('JVM init success in webWorkers');
-        resolveJVMReady();
       } else {
         console.log('JVM init failed in webWorkers');
         // try to load in main thread directly when JVM init failed in WebWorkers ?
-        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveJVMReady);
+
+        // TODO: This won't be as simple as calling this function as messages would have been already entered into
+        // dispatcher. We need to delay calling resovleDispatcherReady until the JVM success result comes back.
+        // this.loadJavaPolyCoreInBrowser(javaMimeScripts, resolveDispatcherReady);
       }
     });
   }
@@ -226,6 +226,16 @@ class JavaPoly {
     } else {
       return null;
     }
+  }
+
+  // Utility function to create a deferred promise
+  static deferred() {
+    this.promise = new Promise(function(resolve, reject) {
+      this.resolve = resolve;
+      this.reject = reject;
+    }.bind(this));
+    Object.freeze(this);
+    return this;
   }
 
 }
