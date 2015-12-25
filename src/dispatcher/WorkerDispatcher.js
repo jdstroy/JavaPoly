@@ -43,7 +43,7 @@ class WorkerDispatcher extends CommonDispatcher{
         self.javaPolyCallbacks[id] = (returnValue) => {
           global.self.postMessage({
             javapoly:{
-              messageId: id, messageType:data.messageType, returnValue:this.unwrapObjectForWebWorker(returnValue)
+              messageId: id, messageType:data.messageType, returnValue:returnValue
           }});
         };
       }
@@ -56,32 +56,6 @@ class WorkerDispatcher extends CommonDispatcher{
     }
   }
 
-  /**
-   * some special converting for data sent from web worker to browser.
-   * Because browser don't understand javapoly internal data type when javapoly working in web workers.
-   * we need to convert them to javascript type before sent.
-   *
-   * We could use most unwrapper method from Main.js.unwrapObject();
-   */
-  unwrapObjectForWebWorker(obj) {
-    if (obj === null) {
-      return null;
-    }
-
-    if (obj['getClass']) {
-      let cls = obj.getClass();
-      if (cls.className === 'Ljava/lang/Long;'){
-        // for long, we now convert it javascript number.
-        // FIXME there will be precision lost problem here, 64bit integers don't work natively in javascript.
-        // we may also return a Exception.
-        return obj.unbox().toNumber();
-      } else {
-        return obj.unbox();
-      }
-    } else {
-      return obj;
-    }
-  }
 };
 
 export default WorkerDispatcher;
