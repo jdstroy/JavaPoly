@@ -26,8 +26,10 @@ class CommonDispatcher {
   }
 
   /* Add message with higher priority messages ahead of the lower priority ones */
-  addMessage(id, priority) {
+  addMessage(id, priority, messageType, data) {
     // TODO: Use number instead of string for id (requires corresponding change in Main.java)
+    self.javaPolyMessageTypes[id] = messageType;
+    self.javaPolyData[id] = data;
 
     const queue = window.javaPolyEvents;
     const pos = queue.findIndex(e => e[1] < priority);

@@ -1,4 +1,4 @@
-import CommonDispatcher from '../dispatcher/CommonDispatcher.js'
+import CommonDispatcher from './CommonDispatcher.js'
 
 /**
  * The WorkerDispatcher is executed in web workers side.
@@ -34,9 +34,6 @@ class WorkerDispatcher extends CommonDispatcher{
         return;
 
       //store the message to commonDispatcher for javapoly to handle
-      self.javaPolyMessageTypes[id] = data.messageType;
-      self.javaPolyData[id] = data.data;
-
       if (callback) {
         self.javaPolyCallbacks[id] = callback;
       } else {
@@ -48,7 +45,7 @@ class WorkerDispatcher extends CommonDispatcher{
         };
       }
 
-      this.addMessage(id, data.priority);
+      this.addMessage(id, data.priority, data.messageType, data.data);
 
       if (self.javaPolyCallback) {
         self.javaPolyCallback();
