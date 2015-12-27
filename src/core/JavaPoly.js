@@ -85,7 +85,6 @@ class JavaPoly {
     this.initGlobalApiObjects();
   }
 
-  // returns a promise that jvm will be ready to execute
   initJavaPoly(resolve, reject) {
     if (this.options.initOnStart === true) {
       return this.beginLoading(resolve);
