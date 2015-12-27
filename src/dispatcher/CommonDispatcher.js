@@ -25,10 +25,6 @@ class CommonDispatcher {
     window.javaPolyIdCount = 0;
   }
 
-  getJavaPolyEventsLength(){
-    return window.javaPolyEvents.length;
-  }
-
   /* Add message with higher priority messages ahead of the lower priority ones */
   addMessage(id, priority) {
     // TODO: Use number instead of string for id (requires corresponding change in Main.java)
@@ -46,11 +42,16 @@ class CommonDispatcher {
   }
 
   /**
-   * dequeue a message and get the messageID
+   * dequeue a message and get the messageID. Returns undefined when there is no message in the queue.
    */
   getMessageId() {
-    const id = window.javaPolyEvents.shift()[0];
-    return id;
+    const msg = window.javaPolyEvents.shift();
+    if (msg) {
+      const id = msg[0];
+      return id;
+    } else {
+      return undefined;
+    }
   }
 
   getMessageType(msgId){

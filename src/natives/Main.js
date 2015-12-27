@@ -107,15 +107,16 @@ registerNatives({
      },
 
     'getMessageId()Ljava/lang/String;': function(thread) {
-       if (javapoly.dispatcher.getJavaPolyEventsLength() > 0) {
-         return wrapObject(thread, javapoly.dispatcher.getMessageId());
-       } else {
-         thread.setStatus(6); // ASYNC_WAITING
-         window.javaPolyCallback = function() {
-           delete window.javaPolyCallback;
-           thread.asyncReturn( wrapObject(thread, javapoly.dispatcher.getMessageId()));
-         }
-       }
+      var id = javapoly.dispatcher.getMessageId();
+      if (id) {
+        return wrapObject(thread, id);
+      } else {
+        thread.setStatus(6); // ASYNC_WAITING
+        window.javaPolyCallback = function() {
+          delete window.javaPolyCallback;
+          thread.asyncReturn( wrapObject(thread, javapoly.dispatcher.getMessageId()));
+        }
+      }
     },
 
     'getMessageType(Ljava/lang/String;)Ljava/lang/String;': function(thread, msgId) {
