@@ -97,7 +97,6 @@ class JavaPolyLoader {
   loadScripts(scripts) {
     // Load java mime files
     for(const script of scripts) {
-      console.log(script);
       const scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
       // Create only when scriptTypes is only 1
       if (scriptTypes.length === 1) {
