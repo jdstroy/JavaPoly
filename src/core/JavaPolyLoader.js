@@ -96,11 +96,12 @@ class JavaPolyLoader {
 
   loadScripts(scripts) {
     // Load java mime files
-    for(let script of scripts) {
-      let scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
+    for(const script of scripts) {
+      console.log(script);
+      const scriptTypes = JAVA_MIME.filter(item => item.mime.some(m => m === script.type));
       // Create only when scriptTypes is only 1
       if (scriptTypes.length === 1) {
-        let scriptType = scriptTypes[0].type;
+        const scriptType = scriptTypes[0].type;
 
         if (scriptTypes[0].srcRequired && !script.src) {
           throw `An attribute 'src' should be declared for MIME-type '${script.type}'`;
@@ -111,7 +112,7 @@ class JavaPolyLoader {
             this.scripts.push(new JavaClassFile(this, script));
             break;
           case 'java':
-            let javaSource = new JavaSourceFile(this, script);
+            const javaSource = new JavaSourceFile(this, script);
             this.scripts.push(javaSource);
             this.sources.push(javaSource);
             break;
@@ -130,7 +131,7 @@ class JavaPolyLoader {
    * Initialization of BrowserFS
    */
   initBrowserFS(){
-    let mfs = new BrowserFS.FileSystem.MountableFileSystem();
+    const mfs = new BrowserFS.FileSystem.MountableFileSystem();
     BrowserFS.initialize(mfs);
     mfs.mount('/tmp', new BrowserFS.FileSystem.InMemory());
 

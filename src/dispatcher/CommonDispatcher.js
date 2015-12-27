@@ -55,26 +55,26 @@ class CommonDispatcher {
 
   getMessageType(msgId){
     // may want to delete the data after fetch
-    let messageType = window.javaPolyMessageTypes[msgId];
+    const messageType = window.javaPolyMessageTypes[msgId];
     delete window.javaPolyMessageTypes[msgId];
     return messageType;
   }
 
   getMessageData(msgId){
     // may want to delete the data after fetch
-    let messageData =  window.javaPolyData[msgId];
+    const messageData =  window.javaPolyData[msgId];
     delete window.javaPolyData[msgId];
     return messageData;
   }
 
   getMessageCallback(msgId){
-    let callback = window.javaPolyCallbacks[msgId];
+    const callback = window.javaPolyCallbacks[msgId];
     delete window.javaPolyCallbacks[msgId];
     return callback;
   }
 
   callbackMessage(msgId, returnValue){
-    let callback = window.javaPolyCallbacks[msgId];
+    const callback = window.javaPolyCallbacks[msgId];
     delete window.javaPolyCallbacks[msgId];
     callback(returnValue);
   }

@@ -17,7 +17,7 @@ class JavaSourceFile extends JavaFile  {
      */
     this.source = script.text;
 
-    let classInfo = JavaSourceFile.detectClassAndPackageNames(this.source);
+    const classInfo = JavaSourceFile.detectClassAndPackageNames(this.source);
 
     this.classname = classInfo.class;
     this.packagename = classInfo.package;
@@ -27,7 +27,7 @@ class JavaSourceFile extends JavaFile  {
       this.createProxyForClass(this.classname, this.packagename);
     }
 
-    let path = global.BrowserFS.BFSRequire('path');
+    const path = global.BrowserFS.BFSRequire('path');
 
     this.filename = path.join(
       javapoly.options.storageDir,
@@ -61,7 +61,7 @@ class JavaSourceFile extends JavaFile  {
   static detectClassAndPackageNames(source) {
     let className = null, packageName = null;
 
-    let parsedSource = JavaParser.parse(source);
+    const parsedSource = JavaParser.parse(source);
 
     if (parsedSource.node === 'CompilationUnit') {
       for (var i = 0; i < parsedSource.types.length; i++) {

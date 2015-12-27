@@ -3,10 +3,10 @@ class JavaFile {
     this.javaPolyLoader = javaPolyLoader;
     this.script = script;
   }
-  
+
   static http_retrieve_buffer (url) {
     return new Promise((resolve, reject) => {
-      let xmlr = new XMLHttpRequest();
+      const xmlr = new XMLHttpRequest();
       xmlr.open('GET', url, true);
       xmlr.responseType = 'arraybuffer';
       xmlr.onreadystatechange = ()=> {

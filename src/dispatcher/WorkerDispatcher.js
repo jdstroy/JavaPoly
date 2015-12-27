@@ -29,7 +29,7 @@ class WorkerDispatcher extends CommonDispatcher{
   // Handle message data coming from the web-worker message bridge
   handle(data, callback) {
     if (typeof (data) == "object") {
-      let id = data.messageId;
+      const id = data.messageId;
       if (!id)// invalid command, ignore
         return;
 

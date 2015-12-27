@@ -41,7 +41,7 @@ self.addEventListener('message', function(e) {
     return;
 
   // e.preventDefault();
-  let data = e.data.javapoly;
+  const data = e.data.javapoly;
 
   switch (data.messageType) {
     // NOTES, we need some options,Java MIME script path info from browser main thread.

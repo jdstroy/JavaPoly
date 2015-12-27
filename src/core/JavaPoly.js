@@ -59,7 +59,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
  */
 class JavaPoly {
   constructor(_options) {
-    let options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
+    const options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
 
     /**
      * Object with options of JavaPoly
@@ -96,7 +96,7 @@ class JavaPoly {
 
   beginLoading(resolveDispatcherReady) {
     global.document.addEventListener('DOMContentLoaded', e => {
-      let javaMimeScripts = [];
+      const javaMimeScripts = [];
       _.each(global.document.scripts, script => {
         javaMimeScripts.push({type:script.type, src:script.src, text:script.text});
       });
@@ -179,7 +179,7 @@ class JavaPoly {
    */
   loadExternalJs(fileSrc){
   	return new Promise((resolve, reject) => {
-    	let jsElm = global.document.createElement("script");
+    	const jsElm = global.document.createElement("script");
     	jsElm.type = "text/javascript";
 
     	if(jsElm.readyState){
