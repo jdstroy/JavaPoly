@@ -52,7 +52,7 @@ self.addEventListener('message', function(e) {
       global.self.postMessage({javapoly:{messageId:data.messageId, messageType:'JVM_INIT', returnValue:true}});
       break;
     default:
-      self.dispatcher.handle(data);
+      self.dispatcher.handleWorkerMessage(data);
       break;
   };
 }, false);
