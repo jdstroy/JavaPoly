@@ -25,6 +25,16 @@ class CommonDispatcher {
     window.javaPolyIdCount = 0;
   }
 
+  // JVM messages are added to a queue and dequed from the JVM main thread.
+  handleJVMMessage(id, priority, messageType, data, callback) {
+
+    this.addMessage(id, priority, messageType, data, callback);
+
+    if (window.javaPolyCallback) {
+      window.javaPolyCallback();
+    }
+  }
+
   /* Add message with higher priority messages ahead of the lower priority ones */
   addMessage(id, priority, messageType, data, callback) {
     self.javaPolyMessageTypes[id] = messageType;

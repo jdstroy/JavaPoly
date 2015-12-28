@@ -10,11 +10,7 @@ class BrowserDispatcher extends CommonDispatcher {
   postMessage(messageType, priority, data, callback) {
     const id = window.javaPolyIdCount++;
 
-    this.addMessage(id, priority, messageType, data, callback);
-
-    if (window.javaPolyCallback) {
-      window.javaPolyCallback();
-    }
+    this.handleJVMMessage(id, priority, messageType, data, callback);
   }
 
 }

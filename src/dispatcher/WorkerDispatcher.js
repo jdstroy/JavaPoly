@@ -39,11 +39,7 @@ class WorkerDispatcher extends CommonDispatcher{
       };
     }
 
-    this.addMessage(id, data.priority, data.messageType, data.data, callback);
-
-    if (self.javaPolyCallback) {
-      self.javaPolyCallback();
-    }
+    this.handleJVMMessage(id, data.priority, data.messageType, data.data, callback);
   }
 
 };
