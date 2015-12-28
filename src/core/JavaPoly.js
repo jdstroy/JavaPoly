@@ -5,6 +5,7 @@ import ProxyWrapper from './ProxyWrapper';
 import JavaPolyLoader from './JavaPolyLoader.js'
 import BrowserDispatcher from '../dispatcher/BrowserDispatcher.js'
 import WorkerCallBackDispatcher from '../dispatcher/WorkerCallBackDispatcher.js'
+import JavaParser from 'jsjavaparser';
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**
@@ -205,6 +206,12 @@ class JavaPoly {
       console.warn('Your browser does not support Proxy, so J.java.lang.Integer.compare(42, 41) api is not available!');
     } else {
       global.window.J = ProxyWrapper.createRootEntity(null);
+      _.each(document.scripts, script => {
+        if (script.type === 'text/x-java-source') {
+          let classInfo = JavaPoly.detectClassAndPackageNames(script.text);
+          JavaPoly.createProxyForClass(classInfo.class, classInfo.package);
+        }
+      });
     }
     global.window.Java = {
       type: JavaClassWrapper.getClassWrapperByName,
@@ -212,6 +219,62 @@ class JavaPoly {
         return Java.type(name).then((classWrapper) => new classWrapper(...args))
       }
     };
+  }
+
+  /**
+   * This functions parse Java source file and detects its name and package
+   * @param  {String} source Java source
+   * @return {Object}        Object with fields: package and class
+   */
+  static detectClassAndPackageNames(source) {
+    let className = null, packageName = null;
+
+    let parsedSource = JavaParser.parse(source);
+
+    if (parsedSource.node === 'CompilationUnit') {
+      for (var i = 0; i < parsedSource.types.length; i++) {
+        if (JavaPoly.isPublic(parsedSource.types[i])) {
+          className = parsedSource.types[i].name.identifier;
+          break;
+        }
+      }
+      if (parsedSource.package) {
+        packageName = JavaPoly.getPackageName(parsedSource.package.name);
+      }
+    }
+
+    return {
+      package: packageName,
+      class:   className
+    }
+  }
+
+  static isPublic(node) {
+    if (node.modifiers) {
+      for (var i = 0; i < node.modifiers.length; i++) {
+        if (node.modifiers[i].keyword === 'public') {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  static getPackageName(node) {
+    if (node.node === 'QualifiedName') {
+      return JavaPoly.getPackageName(node.qualifier) + '.' + node.name.identifier;
+    } else {
+      return node.identifier;
+    }
+  }
+
+  static createProxyForClass(classname, packagename) {
+    if (packagename != null) {
+      let name = packagename.split('.')[0];
+      global.window[name] = ProxyWrapper.createRootEntity(name);
+    } else {
+      global.window[classname] = ProxyWrapper.createRootEntity(classname);
+    }
   }
 
   wrapJavaObject(obj, methods, nonFinalFields, finalFields) {

@@ -5,8 +5,6 @@
   <link href="mocha/mocha.css" rel="stylesheet" />
   <link href="style.css" rel="stylesheet" />
 
-  <script type="text/javascript" src="build/javapoly.js"></script>
-
   <script type="text/x-java-source">
   package com.javapoly.test;
   public class TestCompile1 {
@@ -47,6 +45,18 @@
   }
   </script>
 
+  <script type="text/x-java-source">
+  import com.javapoly.dom.Window;
+
+  public class HelloWorld {
+    public static void sayHello() {
+      Window.alert("Hello World, from Java!");
+    }
+  }
+  </script>
+
+  <script type="text/javascript" src="build/javapoly.js"></script>
+
 </head>
 <body>
   <ul class="workerChoice">
@@ -66,6 +76,8 @@
         expect.assert(this.actual >= limit, 'expected %s to be greater than or equal to ' + limit, this.actual);
       }
     });
+
+    HelloWorld.sayHello();
 
     var isWorkerBased = !!javapoly.options.worker;
     document.querySelector(".workerChoice " + (isWorkerBased ? ".worker" : ".browser")).classList.add("selected");

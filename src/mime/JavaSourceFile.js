@@ -1,7 +1,7 @@
 import JavaFile from './JavaFile';
 import ProxyWrapper from '../core/ProxyWrapper';
-import JavaParser from 'jsjavaparser';
 import WrapperUtil from '../core/WrapperUtil';
+import JavaPoly from '../core/JavaPoly';
 
 //const path = global.BrowserFS.BFSRequire('path');
 
@@ -17,15 +17,10 @@ class JavaSourceFile extends JavaFile  {
      */
     this.source = script.text;
 
-    const classInfo = JavaSourceFile.detectClassAndPackageNames(this.source);
+    let classInfo = JavaPoly.detectClassAndPackageNames(script.text);
 
     this.classname = classInfo.class;
     this.packagename = classInfo.package;
-
-    const isProxySupported = (typeof Proxy !== 'undefined');
-    if (isProxySupported) {
-      this.createProxyForClass(this.classname, this.packagename);
-    }
 
     const path = global.BrowserFS.BFSRequire('path');
 
@@ -42,62 +37,6 @@ class JavaSourceFile extends JavaFile  {
         console.error(err);
       }
     });
-  }
-
-  createProxyForClass(classname, packagename) {
-    if (packagename != null) {
-      let name = packagename.split('.')[0];
-      global.window[name] = ProxyWrapper.createRootEntity(name);
-    } else {
-      global.window[classname] = ProxyWrapper.createRootEntity(classname);
-    }
-  }
-
-  /**
-   * This functions parse Java source file and detects its name and package
-   * @param  {String} source Java source
-   * @return {Object}        Object with fields: package and class
-   */
-  static detectClassAndPackageNames(source) {
-    let className = null, packageName = null;
-
-    const parsedSource = JavaParser.parse(source);
-
-    if (parsedSource.node === 'CompilationUnit') {
-      for (var i = 0; i < parsedSource.types.length; i++) {
-        if (JavaSourceFile.isPublic(parsedSource.types[i])) {
-          className = parsedSource.types[i].name.identifier;
-          break;
-        }
-      }
-      if (parsedSource.package) {
-        packageName = JavaSourceFile.getPackageName(parsedSource.package.name);
-      }
-    }
-
-    return {
-      package: packageName,
-      class:   className
-    }
-  }
-
-  static isPublic(node) {
-    if (node.modifiers) {
-      for (var i = 0; i < node.modifiers.length; i++) {
-        if (node.modifiers[i].keyword === 'public') {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  static getPackageName(node) {
-    if (node.node === 'QualifiedName') {
-      return JavaSourceFile.getPackageName(node.qualifier) + '.' + node.name.identifier;
-    } else {
-      return node.identifier;
-    }
   }
 
   /**
