@@ -101,7 +101,7 @@
           });
         }
 
-        describe('proxy creation for java source files ', function() {
+        describe('proxy creation for java source files: Math.abs', function() {
           it('HelloWorld.abs() returns correct value', function() {
             return HelloWorld.abs(-10).then(function(result) {
               expect(result).toEqual(10);
