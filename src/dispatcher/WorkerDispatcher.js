@@ -34,10 +34,8 @@ class WorkerDispatcher extends CommonDispatcher{
         return;
 
       //store the message to commonDispatcher for javapoly to handle
-      if (callback) {
-        self.javaPolyCallbacks[id] = callback;
-      } else {
-        self.javaPolyCallbacks[id] = (returnValue) => {
+      if (!callback) {
+        callback = (returnValue) => {
           global.self.postMessage({
             javapoly:{
               messageId: id, messageType:data.messageType, returnValue:returnValue
@@ -45,7 +43,7 @@ class WorkerDispatcher extends CommonDispatcher{
         };
       }
 
-      this.addMessage(id, data.priority, data.messageType, data.data);
+      this.addMessage(id, data.priority, data.messageType, data.data, callback);
 
       if (self.javaPolyCallback) {
         self.javaPolyCallback();
