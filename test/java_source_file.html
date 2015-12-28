@@ -52,6 +52,10 @@
     public static void sayHello() {
       Window.alert("Hello World, from Java!");
     }
+
+    public static double abs(double x) {
+      return com.javapoly.dom.Math.abs(x);
+    }
   }
   </script>
 
@@ -87,12 +91,23 @@
       var isProxySupported = (typeof Proxy !== 'undefined');
 
       if (isProxySupported) {
+
+        if (!isWorkerBased) {
+          // window.alert() not available for web workers
+          describe('proxy creation for java source files ', function() {
+            it('HelloWorld.sayHello() does not throw exception', function() {
+              HelloWorld.sayHello();
+            });
+          });
+        }
+
         describe('proxy creation for java source files ', function() {
-          it('HelloWorld.sayHello() does not throw exception', function() {
-            HelloWorld.sayHello();
+          it('HelloWorld.abs() returns correct value', function() {
+            return HelloWorld.abs(-10).then(function(result) {
+              expect(result).toEqual(10);
+            });
           });
         });
-
 
         describe('TestProxyCreation', function() {
           it('Tests that custom root Proxy object works', function() {
