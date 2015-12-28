@@ -28,23 +28,21 @@ class WorkerDispatcher extends CommonDispatcher{
 
   // Handle message data coming from the web-worker message bridge
   handle(data, callback) {
-    if (typeof (data) == "object") {
-      const id = data.messageId;
+    const id = data.messageId;
 
-      if (!callback) {
-        callback = (returnValue) => {
-          global.self.postMessage({
-            javapoly:{
-              messageId: id, messageType:data.messageType, returnValue:returnValue
-          }});
-        };
-      }
+    if (!callback) {
+      callback = (returnValue) => {
+        global.self.postMessage({
+          javapoly:{
+            messageId: id, messageType:data.messageType, returnValue:returnValue
+        }});
+      };
+    }
 
-      this.addMessage(id, data.priority, data.messageType, data.data, callback);
+    this.addMessage(id, data.priority, data.messageType, data.data, callback);
 
-      if (self.javaPolyCallback) {
-        self.javaPolyCallback();
-      }
+    if (self.javaPolyCallback) {
+      self.javaPolyCallback();
     }
   }
 
