@@ -77,15 +77,39 @@
       }
     });
 
-    HelloWorld.sayHello();
-
     var isWorkerBased = !!javapoly.options.worker;
     document.querySelector(".workerChoice " + (isWorkerBased ? ".worker" : ".browser")).classList.add("selected");
     var titleSuffix = isWorkerBased ? " Web Worker" : " Browser";
 
-
     describe('JavaPoly' + titleSuffix, function() {
       this.timeout(1000000); // Let jvm to start and do not interrupt promises
+
+      var isProxySupported = (typeof Proxy !== 'undefined');
+
+      if (isProxySupported) {
+        describe('proxy creation for java source files ', function() {
+          it('HelloWorld.sayHello() does not throw exception', function() {
+            HelloWorld.sayHello();
+          });
+        });
+
+
+        describe('TestProxyCreation', function() {
+          it('Tests that custom root Proxy object works', function() {
+            return TestProxyCreation.testIt().then(function(result) {
+              expect(result).toEqual("Success");
+            });
+          });
+        });
+
+        describe('TestProxyCreationForPackage', function() {
+          it('Tests that custom root Proxy object for package works', function() {
+            return jp.javapoly.sample.TestProxyCreationForPackage.testIt().then(function(result) {
+              expect(result).toEqual("Success");
+            });
+          });
+        });
+      }
 
       describe('TestCompile1', function() {
         it('static method returns String', function() {
@@ -106,26 +130,6 @@
           });
         });
       });
-
-      var isProxySupported = (typeof Proxy !== 'undefined');
-
-      if (isProxySupported) {
-        describe('TestProxyCreation', function() {
-          it('Tests that custom root Proxy object works', function() {
-            return TestProxyCreation.testIt().then(function(result) {
-              expect(result).toEqual("Success");
-            });
-          });
-        });
-
-        describe('TestProxyCreationForPackage', function() {
-          it('Tests that custom root Proxy object for package works', function() {
-            return jp.javapoly.sample.TestProxyCreationForPackage.testIt().then(function(result) {
-              expect(result).toEqual("Success");
-            });
-          });
-        });
-      }
 
     });
 
