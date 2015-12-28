@@ -30,10 +30,7 @@ class WorkerDispatcher extends CommonDispatcher{
   handle(data, callback) {
     if (typeof (data) == "object") {
       const id = data.messageId;
-      if (!id)// invalid command, ignore
-        return;
 
-      //store the message to commonDispatcher for javapoly to handle
       if (!callback) {
         callback = (returnValue) => {
           global.self.postMessage({
