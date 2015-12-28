@@ -1,4 +1,5 @@
 import CommonDispatcher from './CommonDispatcher.js'
+import DoppioManager from '../core/DoppioManager.js'
 
 /**
  * The WorkerDispatcher is executed in web workers side.
@@ -10,9 +11,17 @@ import CommonDispatcher from './CommonDispatcher.js'
  */
 class WorkerDispatcher extends CommonDispatcher{
 
-  constructor(){
-    super();
+  constructor(options){
+    super(options);
     this.idCount = 0;
+  }
+
+  initDoppioManager() {
+    const options = this.options;
+    importScripts(options.browserfsLibUrl + 'browserfs.min.js');
+    importScripts(options.doppioLibUrl + 'doppio.js');
+
+    return Promise.resolve(new DoppioManager(window.javapoly));
   }
 
   // Called by the worker when loading scripts
@@ -39,7 +48,7 @@ class WorkerDispatcher extends CommonDispatcher{
       };
     }
 
-    this.handleJVMMessage(id, data.priority, data.messageType, data.data, callback);
+    this.handleIncomingMessage(id, data.priority, data.messageType, data.data, callback);
   }
 
 };

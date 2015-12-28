@@ -29,7 +29,7 @@ class JavaClassWrapper {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
           const data = [clsName];
-          WrapperUtil.dispatchOnJVM('CLASS_LOADING', data, (methods) => {
+          WrapperUtil.dispatchOnJVM('CLASS_LOADING', 0, data, (methods) => {
             const javaClassWrapper = new JavaClassWrapper(methods, clsName);
             JavaClassWrapper.cache[clsName] = javaClassWrapper;
             resolve(javaClassWrapper);
@@ -63,7 +63,7 @@ class JavaClassWrapper {
     return new Promise(
       (resolve, reject) => {
         const data = [this.clsName, argumentsList];
-        WrapperUtil.dispatchOnJVM('CLASS_CONSTRUCTOR_INVOCATION', data, (returnValue) => {
+        WrapperUtil.dispatchOnJVM('CLASS_CONSTRUCTOR_INVOCATION', 0, data, (returnValue) => {
           resolve(returnValue);
         });
       }
@@ -74,7 +74,7 @@ class JavaClassWrapper {
     return new Promise(
       (resolve, reject) => {
         const data = [this.clsName, methodName, argumentsList];
-        WrapperUtil.dispatchOnJVM('CLASS_METHOD_INVOCATION', data, (returnValue) => {
+        WrapperUtil.dispatchOnJVM('CLASS_METHOD_INVOCATION', 0, data, (returnValue) => {
           resolve(returnValue);
         });
       }

@@ -2,9 +2,9 @@ import * as _ from 'underscore';
 import JavaClassWrapper from './JavaClassWrapper';
 import JavaObjectWrapper from './JavaObjectWrapper';
 import ProxyWrapper from './ProxyWrapper';
-import JavaPolyLoader from './JavaPolyLoader.js'
 import BrowserDispatcher from '../dispatcher/BrowserDispatcher.js'
 import WorkerCallBackDispatcher from '../dispatcher/WorkerCallBackDispatcher.js'
+import WrapperUtil from './WrapperUtil.js';
 import JavaParser from 'jsjavaparser';
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
@@ -95,58 +95,62 @@ class JavaPoly {
   }
 
   beginLoading(resolveDispatcherReady) {
+    // User worker only if worker option is enabled and browser supports WebWorkers
+    if (this.options.worker && global.Worker){
+      this.loadJavaPolyCoreInWebWorker(resolveDispatcherReady);
+    }else{
+      this.loadJavaPolyCoreInBrowser(resolveDispatcherReady);
+    }
+
     global.document.addEventListener('DOMContentLoaded', e => {
-      const javaMimeScripts = [];
       _.each(global.document.scripts, script => {
-        javaMimeScripts.push({type:script.type, src:script.src, text:script.text});
+        this.processScript(script);
       });
 
-      // start JVM and JavaPoly Core in Web Worker
-      // only if worker option enable and browser support WebWorkers
-      if (this.options.worker && global.Worker){
-        this.loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveDispatcherReady);
-      }else{
-        this.loadJavaPolyCoreInBrowser(javaMimeScripts,resolveDispatcherReady);
-      }
+      WrapperUtil.dispatchOnJVM('META_START_JVM', 0, null);
+
     }, false);
   }
 
+  processScript(script) {
+    const scriptSrc = script.src;
+    switch (script.type) {
+      case "application/java-archive":
+        WrapperUtil.dispatchOnJVM('FS_MOUNT_JAR', 10, {src:scriptSrc});
+        break;
 
-  loadJavaPolyCoreInBrowser(javaMimeScripts,resolveDispatcherReady) {
-    this.dispatcher = new BrowserDispatcher();
-    resolveDispatcherReady(this.dispatcher);
+      case "application/java-vm":
+        WrapperUtil.dispatchOnJVM('FS_MOUNT_CLASS', 10, {src:scriptSrc});
+        break;
 
-    // Otherwise Start in Browser Main Thread,
-    // Ensure we have loaded the browserfs.js file before handling Java/class file
-    this.loadExternalJs(this.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-      this.loadExternalJs(this.options.doppioLibUrl + 'doppio.js').then(() => {
-        new JavaPolyLoader(this, javaMimeScripts);
-      });
-    });
+      case "text/x-java-source":
+        const scriptText = script.text;
+        const classInfo = JavaPoly.detectClassAndPackageNames(scriptText);
+
+        const className = classInfo.class;
+        const packageName = classInfo.package;
+
+        WrapperUtil.dispatchOnJVM(
+          "FILE_COMPILE", 10,
+          [className, packageName ? packageName : "", this.options.storageDir, scriptText]
+        )
+        break;
+
+      default:
+        break;
+    }
   }
 
-  loadJavaPolyCoreInWebWorker(javaMimeScripts,resolveDispatcherReady) {
-    this.dispatcher = new WorkerCallBackDispatcher(new global.Worker(this.options.worker));
+  loadJavaPolyCoreInBrowser(resolveDispatcherReady) {
+    this.dispatcher = new BrowserDispatcher(this.options);
+    resolveDispatcherReady(this.dispatcher);
+  }
+
+  loadJavaPolyCoreInWebWorker(resolveDispatcherReady) {
+    this.dispatcher = new WorkerCallBackDispatcher(this.options, new global.Worker(this.options.worker));
 
     resolveDispatcherReady(this.dispatcher);
 
-    // send JVM init request to webworker to init the jvm in javapoly workers.
-    // we may need to send some options, java-mime file path to web workers.
-    // and we also want to know if JVM inin success in webworkers,
-    // so here we send a JVM_INIT messsage from Browser to workers to start jvm in webworkers.
-    // rather then init web worker when worker init by itself.
-    this.dispatcher.postMessage('JVM_INIT', 0, {options:this.options, scripts:javaMimeScripts}, (success) =>{
-      if (success == true){ // JVM init success..
-        console.log('JVM init success in webWorkers');
-      } else {
-        console.log('JVM init failed in webWorkers');
-        // try to load in main thread directly when JVM init failed in WebWorkers ?
-
-        // TODO: This won't be as simple as calling this function as messages would have been already entered into
-        // dispatcher. We need to delay calling resovleDispatcherReady until the JVM success result comes back.
-        // this.loadJavaPolyCoreInBrowser(javaMimeScripts, resolveDispatcherReady);
-      }
-    });
   }
 
   /* This should be called outside of Promise, or any such async call */
@@ -169,37 +173,6 @@ class JavaPoly {
       return script.getAttribute('src', -1)
     }
   }
-
-  /**
-   * load js library file.
-   * @param fileSrc
-   * 		the uri src of the file
-   * @return Promise
-   * 		we could use Promise to wait for js loaded finished.
-   */
-  loadExternalJs(fileSrc){
-  	return new Promise((resolve, reject) => {
-    	const jsElm = global.document.createElement("script");
-    	jsElm.type = "text/javascript";
-
-    	if(jsElm.readyState){
-    		jsElm.onreadystatechange = function(){
-    			if (jsElm.readyState=="loaded" || jsElm.readyState=="complete"){
-    				jsElm.onreadysteatechange=null;
-    				resolve();
-    			}
-    		}
-    	}else{
-    		jsElm.onload=function(){
-    			resolve();
-    			// FIXME reject when timeout
-    		}
-    	}
-
-    	jsElm.src = fileSrc;
-    	global.document.getElementsByTagName("head")[0].appendChild(jsElm);
-  	});
-  };
 
   initGlobalApiObjects() {
     if (typeof Proxy === 'undefined') {

@@ -1,32 +1,14 @@
-import JavaPolyLoader from '../core/JavaPolyLoader';
 import WorkerDispatcher from '../dispatcher/WorkerDispatcher.js'
 
 class JavaPolyWorker {
   constructor(options) {
-
-    /**
-     * Object with options of JavaPoly
-     * @type {Object}
-     */
     this.options = options;
-
-    // load browserfs.min.js and doppio.js
-    importScripts(this.options.browserfsLibUrl + 'browserfs.min.js');
-    importScripts(this.options.doppioLibUrl + 'doppio.js');
-
-    //create a global javapoly object in webworkers.
-    self.javapoly = this;
+    this.isJavaPolyWorker = true;
   }
 
-  /**
-   * init the jvm and load library in web workers
-   */
-  init(javaMimeScripts) {
-    this.dispatcher= self.dispatcher;
+  init(dispatcher) {
+    this.dispatcher = dispatcher;
     this.dispatcherReady = Promise.resolve(this.dispatcher);
-    window.isJavaPolyWorker = true;
-
-    new JavaPolyLoader(this, javaMimeScripts);
   }
 
 }
@@ -34,25 +16,23 @@ class JavaPolyWorker {
 // NOTES, hack global window variable used in doppio, javapoly.
 global.window = global.self;
 
-self.dispatcher = new WorkerDispatcher();
-
 self.addEventListener('message', function(e) {
-  if (!e.data || !e.data.javapoly)//invalid command, ignore
+  if (!e.data || !e.data.javapoly) {
+    //invalid command, ignore
     return;
+  }
 
-  // e.preventDefault();
   const data = e.data.javapoly;
 
   switch (data.messageType) {
-    // NOTES, we need some options,Java MIME script path info from browser main thread.
-    // so here we add a JVM_INIT command.
-    case 'JVM_INIT':
-      self.javaPolyWorker = new JavaPolyWorker(data.data.options);
-      self.javaPolyWorker.init(data.data.scripts);
-      global.self.postMessage({javapoly:{messageId:data.messageId, messageType:'JVM_INIT', returnValue:true}});
+    case 'WORKER_INIT':
+      const options = data.data.options;
+      self.javapoly = new JavaPolyWorker(options);
+      self.javapoly.init(new WorkerDispatcher(options));
+      global.self.postMessage({javapoly:{messageId:data.messageId, messageType:'WORKER_INIT', returnValue:true}});
       break;
     default:
-      self.dispatcher.handleWorkerMessage(data);
+      self.javapoly.dispatcher.handleWorkerMessage(data);
       break;
   };
 }, false);
