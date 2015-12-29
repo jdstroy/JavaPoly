@@ -1,6 +1,7 @@
+import Wrapper from "./Wrapper";
 import WrapperUtil from "./WrapperUtil";
 
-class JavaClassWrapper {
+class JavaClassWrapper extends Wrapper {
 
   static runProxyMethod(methodObject, argumentsList) {
     return new Promise(
@@ -21,8 +22,8 @@ class JavaClassWrapper {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
           const data = [clsName];
-          WrapperUtil.dispatchOnJVM('CLASS_LOADING', 0, data, (methods) => {
-            const javaClassWrapper = new JavaClassWrapper(methods, clsName);
+          WrapperUtil.dispatchOnJVM('CLASS_LOADING', 0, data, (result) => {
+            const javaClassWrapper = new JavaClassWrapper(result[0], result[1], result[2], clsName);
             JavaClassWrapper.cache[clsName] = javaClassWrapper;
             resolve(javaClassWrapper);
           });
@@ -31,15 +32,11 @@ class JavaClassWrapper {
     );
   }
 
-  constructor(methods, clsName) {
+  constructor(methods, nonFinalFields, finalFields, clsName) {
+    super();
     this.clsName = clsName;
-    const wrapper = this;
-    for (const name of methods) {
-      this[name] = function() {
-        return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
-      };
-    }
 
+    const wrapper = this;
     function objConstructorFunction() {
       return wrapper.runConstructorWithJavaDispatching(Array.prototype.slice.call(arguments))
     }
@@ -47,7 +44,11 @@ class JavaClassWrapper {
     // Note: There is some JS magic here. This JS constructor function returns an object which is different than the one
     // being constructed (this). The returned object is a function extended with this. The idea is that `new` operator
     // can be called on the returned object to mimic Java's `new` operator.
-    return Object.assign(objConstructorFunction, this);
+    const retFunction = Object.assign(objConstructorFunction, this);
+
+    this.init(retFunction, methods, nonFinalFields, finalFields);
+
+    return retFunction;
   }
 
   runConstructorWithJavaDispatching(argumentsList) {
@@ -61,6 +62,24 @@ class JavaClassWrapper {
     return new Promise((resolve, reject) => {
       const data = [this.clsName, methodName, argumentsList];
       WrapperUtil.dispatchOnJVM('CLASS_METHOD_INVOCATION', 0, data, resolve);
+    });
+  }
+
+  getFieldWithJavaDispatching(name) {
+    return new Promise((resolve, reject) => {
+      const data = [this.clsName, name];
+      WrapperUtil.dispatchOnJVM('CLASS_FIELD_READ', 0, data, (returnValue) => {
+        resolve(returnValue);
+      });
+    });
+  }
+
+  setFieldWithJavaDispatching(name, value) {
+    return new Promise((resolve, reject) => {
+      const data = [this.clsName, name, value];
+      WrapperUtil.dispatchOnJVM('CLASS_FIELD_WRITE', 0, data, (returnValue) => {
+        resolve(returnValue);
+      });
     });
   }
 

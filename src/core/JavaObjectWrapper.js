@@ -1,39 +1,11 @@
+import Wrapper from "./Wrapper";
 import WrapperUtil from "./WrapperUtil";
 
-class JavaObjectWrapper {
+class JavaObjectWrapper extends Wrapper {
   constructor(javaObj, methods, nonFinalFields, finalFields) {
+    super();
     this._javaObj = javaObj;
-    const wrapper = this;
-
-    // Add method handlers
-    for (const name of methods) {
-      this[name] = function() {
-        return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
-      };
-    }
-
-    function methodExists(name) {
-      return methods.findIndex(n => n == name) >= 0;
-    }
-
-    // Add getters and setters for non-final fields
-    for (const name of nonFinalFields) {
-      if (!methodExists(name)) {
-        Object.defineProperty(this, name, {
-          get: () => wrapper.getFieldWithJavaDispatching(name),
-          set: (newValue) => { wrapper.setFieldWithJavaDispatching(name, newValue) }
-        });
-      }
-    }
-
-    // Add getters for final fields
-    for (const name of finalFields) {
-      if (!methodExists(name)) {
-        Object.defineProperty(this, name, {
-          get: () => wrapper.getFieldWithJavaDispatching(name)
-        });
-      }
-    }
+    this.init(this, methods, nonFinalFields, finalFields);
   }
 
   getFieldWithJavaDispatching(name) {

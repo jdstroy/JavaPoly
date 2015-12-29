@@ -320,6 +320,16 @@
               });
             });
           })
+
+          it('final fields should be accessible', function() {
+            return Java.type('java.lang.Math').then(function(JMath) {
+              return JMath.PI.then(function(result) {
+                expect(result)
+                  .toBeLessThan(4.0)
+                  .toBeGreaterThanOrEqual(3.14);
+              });
+            });
+          })
         });
 
         if (!isWorkerBased) {

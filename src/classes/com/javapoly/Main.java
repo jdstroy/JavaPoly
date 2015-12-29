@@ -28,8 +28,14 @@ public class Main {
         case "OBJ_METHOD_INVOCATION":
           processObjMethodInvokation(messageId);
           break;
+        case "CLASS_FIELD_READ":
+          processClassFieldRead(messageId);
+          break;
         case "OBJ_FIELD_READ":
           processObjFieldRead(messageId);
+          break;
+        case "CLASS_FIELD_WRITE":
+          processClassFieldWrite(messageId);
           break;
         case "OBJ_FIELD_WRITE":
           processObjFieldWrite(messageId);
@@ -88,11 +94,35 @@ public class Main {
     }
   }
 
+  private static void processClassFieldRead(final String messageId) {
+    final Object[] data = getData(messageId);
+    Object returnValue = null;
+    try {
+      returnValue = readClassField((String) data[0], (String) data[1]);
+    } catch (Exception e) {
+      dumpException(e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
+  }
+
   private static void processObjFieldRead(final String messageId) {
     final Object[] data = getData(messageId);
     Object returnValue = null;
     try {
       returnValue = readObjectField(data[0], (String) data[1]);
+    } catch (Exception e) {
+      dumpException(e);
+    } finally {
+      returnResult(messageId, returnValue);
+    }
+  }
+
+  private static void processClassFieldWrite(final String messageId) {
+    final Object[] data = getData(messageId);
+    Object returnValue = null;
+    try {
+      returnValue = writeClassField((String) data[0], (String) data[1], data[2]);
     } catch (Exception e) {
       dumpException(e);
     } finally {
@@ -115,8 +145,12 @@ public class Main {
   public static void processClassLoading(String messageId) {
     final Object[] data = getData(messageId);
     final java.util.Set<String> methodNames = new java.util.TreeSet<>();
+    final java.util.Set<String> nonFinalFieldNames = new java.util.TreeSet<>();
+    final java.util.Set<String> finalFieldNames = new java.util.TreeSet<>();
     try {
       final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass((String) data[0]);
+
+      // Add static methods
       final Method[] methods = clazz.getMethods();
       for (final Method method: methods) {
         final int modifiers = method.getModifiers();
@@ -124,10 +158,23 @@ public class Main {
           methodNames.add(method.getName());
         }
       }
+
+      // Add static fields
+      final Field[] fields = clazz.getFields();
+      for (final Field field: fields) {
+        final int modifiers = field.getModifiers();
+        if (Modifier.isStatic(modifiers)) {
+          if (Modifier.isFinal(modifiers)) {
+            finalFieldNames.add(field.getName());
+          } else {
+            nonFinalFieldNames.add(field.getName());
+          }
+        }
+      }
     } catch (Exception e) {
       dumpException(e);
     } finally {
-      returnResult(messageId, methodNames.toArray());
+      returnResult(messageId, new Object[] { methodNames.toArray(), nonFinalFieldNames.toArray(), finalFieldNames.toArray()});
     }
   }
 
@@ -154,10 +201,23 @@ public class Main {
     return returnValue;
   }
 
+  private static Object readClassField(String className, String fieldName) throws Exception {
+    final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+    final Field field = clazz.getField(fieldName);
+    return field.get(null);
+  }
+
   private static Object readObjectField(Object obj, String fieldName) throws Exception {
     final Class<?> clazz = obj.getClass();
     final Field field = clazz.getField(fieldName);
     return field.get(obj);
+  }
+
+  private static boolean writeClassField(String className, String fieldName, Object value) throws Exception {
+    final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+    final Field field = clazz.getField(fieldName);
+    field.set(null, value);
+    return true;
   }
 
   private static boolean writeObjectField(Object obj, String fieldName, Object value) throws Exception {
