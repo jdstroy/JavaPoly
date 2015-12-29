@@ -12,14 +12,6 @@ class JavaClassWrapper {
     );
   }
 
-  static array2bytestr(byteArray) {
-    var rv = '';
-    for (var i = 0; i < byteArray.length; i++) {
-      rv += String.fromCharCode(byteArray[i]);
-    }
-    return rv;
-  }
-
   static getClassWrapperByName(clsName) {
     return new Promise(
       (resolve, reject) => {
@@ -60,25 +52,17 @@ class JavaClassWrapper {
   }
 
   runConstructorWithJavaDispatching(argumentsList) {
-    return new Promise(
-      (resolve, reject) => {
-        const data = [this.clsName, argumentsList];
-        WrapperUtil.dispatchOnJVM('CLASS_CONSTRUCTOR_INVOCATION', 0, data, (returnValue) => {
-          resolve(returnValue);
-        });
-      }
-    );
+    return new Promise((resolve, reject) => {
+      const data = [this.clsName, argumentsList];
+      WrapperUtil.dispatchOnJVM('CLASS_CONSTRUCTOR_INVOCATION', 0, data, resolve);
+    });
   }
 
   runMethodWithJavaDispatching(methodName, argumentsList) {
-    return new Promise(
-      (resolve, reject) => {
-        const data = [this.clsName, methodName, argumentsList];
-        WrapperUtil.dispatchOnJVM('CLASS_METHOD_INVOCATION', 0, data, (returnValue) => {
-          resolve(returnValue);
-        });
-      }
-    );
+    return new Promise((resolve, reject) => {
+      const data = [this.clsName, methodName, argumentsList];
+      WrapperUtil.dispatchOnJVM('CLASS_METHOD_INVOCATION', 0, data, resolve);
+    });
   }
 
 }
