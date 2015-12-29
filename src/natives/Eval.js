@@ -52,7 +52,7 @@ registerNatives({
 
     // TODO: This causes an exception from doppio: http://git.javadeploy.net/hrjet9/doppio-js-mirror/issues/1
     'asLong(Ljava/lang/Object;)J': function(thread, arg0) {
-      return arg0;
+      return Doppio.VM.Long.fromNumber(arg0);
     },
 
     'asString(Ljava/lang/Object;)Ljava/lang/String;': function(thread, arg0) {

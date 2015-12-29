@@ -15,7 +15,7 @@ public class EvalTest {
     final boolean test2Pass = square13.asDouble() == 169.0;
 
     final JSPrimitive square169 = (JSPrimitive) squareFunc.invoke(square13);
-    final boolean test3Pass = square169.asDouble() == 28561.0;
+    final boolean test3Pass = square169.asLong() == 28561;
 
     // define a string manipulation function
     final JSObject firstPartFunc = (JSObject) Eval.eval("(function(str, delim, n){return str.split(delim)[n];})");
