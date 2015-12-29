@@ -8,11 +8,13 @@
 
 class CommonDispatcher {
 
-  constructor() {
+  constructor(options) {
     // This class is abstract (can't be instantiated directly)
     if (this.constructor === CommonDispatcher) {
       throw TypeError("new of abstract class CommonDispatcher");
     }
+
+    this.options = options;
 
     this.initDispatcher();
   }
@@ -25,6 +27,18 @@ class CommonDispatcher {
     this.javaPolyIdCount = 0;
 
     this.javaPolyCallback = null;
+
+    this.doppioManager = this.initDoppioManager(this.options);
+  }
+
+  handleIncomingMessage(id, priority, messageType, data, callback) {
+    if (messageType.startsWith("META_")) {
+      this.handleMetaMessage(id, priority, messageType, data, callback);
+    } else if (messageType.startsWith("FS_")) {
+      this.handleFSMessage(id, priority, messageType, data, callback);
+    } else {
+      this.handleJVMMessage(id, priority, messageType, data, callback);
+    }
   }
 
   // JVM messages are added to a queue and dequed from the JVM main thread.
@@ -37,11 +51,38 @@ class CommonDispatcher {
     }
   }
 
+  // FS messages are processed immediately
+  handleFSMessage(id, priority, messageType, data, callback) {
+    switch(messageType) {
+      case "FS_MOUNT_JAR":
+        this.doppioManager.then(dm => dm.mountJar(data.src));
+        break;
+      case "FS_MOUNT_CLASS":
+        this.doppioManager.then(dm => dm.mountClass(data.src));
+        break;
+      default:
+        console.log("FS TODO", messageType);
+        break;
+    }
+  }
+
+  // Meta messages are processed immediately
+  handleMetaMessage(id, priority, messageType, data, callback) {
+    switch(messageType) {
+      case "META_START_JVM":
+        this.doppioManager.then(dm => dm.initJVM());
+        break;
+      default:
+        console.log("META TODO", messageType);
+        break;
+    }
+  }
+
   /* Add message with higher priority messages ahead of the lower priority ones */
   addMessage(id, priority, messageType, data, callback) {
-    self.javaPolyMessageTypes[id] = messageType;
-    self.javaPolyData[id] = data;
-    self.javaPolyCallbacks[id] = callback;
+    this.javaPolyMessageTypes[id] = messageType;
+    this.javaPolyData[id] = data;
+    this.javaPolyCallbacks[id] = callback;
 
     const queue = this.javaPolyEvents;
     const pos = queue.findIndex(e => e[1] < priority);
@@ -95,7 +136,9 @@ class CommonDispatcher {
   callbackMessage(msgId, returnValue){
     const callback = this.javaPolyCallbacks[msgId];
     delete this.javaPolyCallbacks[msgId];
-    callback(returnValue);
+    if (callback) {
+      callback(returnValue);
+    }
   }
 
 }

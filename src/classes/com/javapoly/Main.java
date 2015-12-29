@@ -2,6 +2,10 @@ package com.javapoly;
 
 import java.lang.reflect.*;
 import javax.tools.*;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.FileSystems;
+import java.io.IOException;
 
 public class Main {
 
@@ -166,15 +170,43 @@ public class Main {
 
   public static void processClassCompilation(String messageId) {
     final Object[] data = getData(messageId);
-    String[] stringData = java.util.Arrays.copyOf(data, data.length, String[].class);
+    final String[] stringData = java.util.Arrays.copyOf(data, data.length, String[].class);
+    final String className = stringData[0];
+    final String pkgName = stringData[1];
+    final String storageDir = stringData[2];
+    final String scriptText = stringData[3];
+    final Path storageDirPath = FileSystems.getDefault().getPath(storageDir);
+    final String pkgDir = pkgName.replace(".", "/");
+    final Path pkgDirPath = storageDirPath.resolve(pkgDir);
+    final Path filePath = pkgDirPath.resolve(className + ".java");
 
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    println("Compiling: " + java.util.Arrays.toString(stringData));
-    int result = compiler.run(null, null, null, stringData);
-    if (result == 0) {
-      returnResult(messageId, "Normal compilation.");
-    } else {
+    try {
+      // Files.createDirectories(pkgDirPath);
+      pkgDirPath.toFile().mkdirs();
+      writeToFile(filePath, scriptText);
+
+      final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+      final String[] compileData = {"-d", storageDir, filePath.toAbsolutePath().toString()};
+      println("Compiling: " + java.util.Arrays.toString(compileData));
+
+      int result = compiler.run(null, null, null, compileData);
+      if (result == 0) {
+        returnResult(messageId, "Normal compilation.");
+      } else {
+        returnResult(messageId, "Compilation failed.");
+      }
+    } catch (final IOException e) {
+      dumpException(e);
       returnResult(messageId, "Compilation failed.");
+    }
+  }
+
+  private static void writeToFile(final Path path, final String data) throws IOException{
+    // This doesn't work because of https://github.com/plasma-umass/doppio/issues/403
+    // Files.write(filePath, scriptText.getBytes());
+
+    try(final java.io.FileWriter fileWriter = new java.io.FileWriter(path.toFile())) {
+      fileWriter.write(data);
     }
   }
 

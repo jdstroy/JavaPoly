@@ -39,7 +39,7 @@ class JavaObjectWrapper {
   getFieldWithJavaDispatching(name) {
     return new Promise((resolve, reject) => {
       const data = [this._javaObj, name];
-      WrapperUtil.dispatchOnJVM('OBJ_FIELD_READ', data, (returnValue) => {
+      WrapperUtil.dispatchOnJVM('OBJ_FIELD_READ', 0, data, (returnValue) => {
         resolve(returnValue);
       });
     });
@@ -48,7 +48,7 @@ class JavaObjectWrapper {
   setFieldWithJavaDispatching(name, value) {
     return new Promise((resolve, reject) => {
       const data = [this._javaObj, name, value];
-      WrapperUtil.dispatchOnJVM('OBJ_FIELD_WRITE', data, (returnValue) => {
+      WrapperUtil.dispatchOnJVM('OBJ_FIELD_WRITE', 0, data, (returnValue) => {
         resolve(returnValue);
       });
     });
@@ -57,7 +57,7 @@ class JavaObjectWrapper {
   runMethodWithJavaDispatching(methodName, argumentsList) {
     return new Promise((resolve, reject) => {
       const data = [this._javaObj, methodName, argumentsList];
-      WrapperUtil.dispatchOnJVM('OBJ_METHOD_INVOCATION', data, (returnValue) => {
+      WrapperUtil.dispatchOnJVM('OBJ_METHOD_INVOCATION', 0, data, (returnValue) => {
         resolve(returnValue);
       });
     });
