@@ -35,7 +35,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
   /**
    * Optional: javaPolyBaseUrl
    * When defined, this is used as the base URL for loading JavaPoly data such as system classes and native functions.
-   * If empty, JavaPoly will try to automatically figure it out during initialisation.
+   * If empty, JavaPoly will try to automatically figure it out during initialization.
    */
    javaPolyBaseUrl: null,
 
