@@ -121,7 +121,7 @@ public class Main {
       for (int i = 0; i < methods.length; i++) {
         final Method method = methods[i];
         final int modifiers = method.getModifiers();
-        if (Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers)) {
+        if (Modifier.isStatic(modifiers)) {
           methodNames.add(method.getName());
         }
       }
