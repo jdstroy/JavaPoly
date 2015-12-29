@@ -8,7 +8,7 @@ class BrowserDispatcher extends CommonDispatcher {
   }
 
   postMessage(messageType, priority, data, callback) {
-    const id = window.javaPolyIdCount++;
+    const id = this.javaPolyIdCount++;
 
     this.handleJVMMessage(id, priority, messageType, data, callback);
   }
