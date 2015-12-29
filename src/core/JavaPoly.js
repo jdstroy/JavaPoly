@@ -177,22 +177,32 @@ class JavaPoly {
 
   initGlobalApiObjects() {
     if (typeof Proxy === 'undefined') {
-      console.warn('Your browser does not support Proxy, so J.java.lang.Integer.compare(42, 41) api is not available!');
+      this._createProxyWarningDescriptor('com', 'package');
+      this._createProxyWarningDescriptor('org', 'package');
+      this._createProxyWarningDescriptor('net', 'package');
+      this._createProxyWarningDescriptor('java', 'package');
+      this._createProxyWarningDescriptor('javax', 'package');
     } else {
       global.window.J = ProxyWrapper.createRootEntity(null);
-      _.each(document.scripts, script => {
-        if (script.type === 'text/x-java-source') {
-          let classInfo = JavaPoly.detectClassAndPackageNames(script.text);
-          JavaPoly.createProxyForClass(classInfo.class, classInfo.package);
-        }
-      });
     }
+    _.each(document.scripts, script => {
+      if (script.type === 'text/x-java-source') {
+        let classInfo = JavaPoly.detectClassAndPackageNames(script.text);
+        this.createProxyForClass(classInfo.class, classInfo.package);
+      }
+    });
     global.window.Java = {
       type: JavaClassWrapper.getClassWrapperByName,
       "new": (name, ...args) => {
         return Java.type(name).then((classWrapper) => new classWrapper(...args))
       }
     };
+  }
+
+  _createProxyWarningDescriptor(name, type) {
+    if(!this.proxyWarnings) this.proxyWarnings = {};
+    var self = this;
+    Object.defineProperty(global.window, name, {configurable: true, get: function(){ if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: http://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
   }
 
   /**
@@ -242,12 +252,22 @@ class JavaPoly {
     }
   }
 
-  static createProxyForClass(classname, packagename) {
+  createProxyForClass(classname, packagename) {
+    let name = null;
+    let type = null;
     if (packagename != null) {
-      let name = packagename.split('.')[0];
-      global.window[name] = ProxyWrapper.createRootEntity(name);
+      name = packagename.split('.')[0];
+      type = 'package';
     } else {
-      global.window[classname] = ProxyWrapper.createRootEntity(classname);
+      name = classname;
+      type = 'class';
+    }
+
+    if (typeof Proxy !== 'undefined') {
+      global.window[name] = ProxyWrapper.createRootEntity(name);
+    }
+    else {
+      this._createProxyWarningDescriptor(name, type);
     }
   }
 
