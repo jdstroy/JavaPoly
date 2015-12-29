@@ -1,5 +1,5 @@
 import CommonDispatcher from './CommonDispatcher.js'
-import DoppioManager from '../backend/DoppioManager.js'
+import DoppioManager from '../doppioManager/DoppioManager.js'
 
 /* Used for the case when javaploy is running in Browser */
 class BrowserDispatcher extends CommonDispatcher {
