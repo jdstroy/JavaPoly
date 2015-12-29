@@ -118,8 +118,7 @@ public class Main {
     try {
       final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass((String) data[0]);
       final Method[] methods = clazz.getMethods();
-      for (int i = 0; i < methods.length; i++) {
-        final Method method = methods[i];
+      for (final Method method: methods) {
         final int modifiers = method.getModifiers();
         if (Modifier.isStatic(modifiers)) {
           methodNames.add(method.getName());
