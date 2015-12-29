@@ -112,10 +112,10 @@ registerNatives({
         return wrapObject(thread, id);
       } else {
         thread.setStatus(6); // ASYNC_WAITING
-        window.javaPolyCallback = function() {
-          delete window.javaPolyCallback;
+        javapoly.dispatcher.setJavaPolyCallback(function() {
+          javapoly.dispatcher.setJavaPolyCallback(null);
           thread.asyncReturn( wrapObject(thread, javapoly.dispatcher.getMessageId()));
-        }
+        });
       }
     },
 

@@ -20,11 +20,13 @@ class CommonDispatcher {
   }
 
   initDispatcher() {
-    window.javaPolyEvents = [];
-    window.javaPolyMessageTypes = {};
-    window.javaPolyCallbacks = {};
-    window.javaPolyData = {};
-    window.javaPolyIdCount = 0;
+    this.javaPolyEvents = [];
+    this.javaPolyMessageTypes = {};
+    this.javaPolyCallbacks = {};
+    this.javaPolyData = {};
+    this.javaPolyIdCount = 0;
+
+    this.javaPolyCallback = null;
 
     this.doppioManager = this.initDoppioManager(this.options);
   }
@@ -44,8 +46,8 @@ class CommonDispatcher {
 
     this.addMessage(id, priority, messageType, data, callback);
 
-    if (window.javaPolyCallback) {
-      window.javaPolyCallback();
+    if (this.javaPolyCallback){
+      this.javaPolyCallback();
     }
   }
 
@@ -78,11 +80,11 @@ class CommonDispatcher {
 
   /* Add message with higher priority messages ahead of the lower priority ones */
   addMessage(id, priority, messageType, data, callback) {
-    self.javaPolyMessageTypes[id] = messageType;
-    self.javaPolyData[id] = data;
-    self.javaPolyCallbacks[id] = callback;
+    this.javaPolyMessageTypes[id] = messageType;
+    this.javaPolyData[id] = data;
+    this.javaPolyCallbacks[id] = callback;
 
-    const queue = window.javaPolyEvents;
+    const queue = this.javaPolyEvents;
     const pos = queue.findIndex(e => e[1] < priority);
     const value = [""+id, priority];
     if (pos < 0) {
@@ -98,7 +100,7 @@ class CommonDispatcher {
    * dequeue a message and get the messageID. Returns undefined when there is no message in the queue.
    */
   getMessageId() {
-    const msg = window.javaPolyEvents.shift();
+    const msg = this.javaPolyEvents.shift();
     if (msg) {
       const id = msg[0];
       return id;
@@ -109,27 +111,31 @@ class CommonDispatcher {
 
   getMessageType(msgId){
     // may want to delete the data after fetch
-    const messageType = window.javaPolyMessageTypes[msgId];
-    delete window.javaPolyMessageTypes[msgId];
+    const messageType = this.javaPolyMessageTypes[msgId];
+    delete this.javaPolyMessageTypes[msgId];
     return messageType;
   }
 
   getMessageData(msgId){
     // may want to delete the data after fetch
-    const messageData =  window.javaPolyData[msgId];
-    delete window.javaPolyData[msgId];
+    const messageData =  this.javaPolyData[msgId];
+    delete this.javaPolyData[msgId];
     return messageData;
   }
 
   getMessageCallback(msgId){
-    const callback = window.javaPolyCallbacks[msgId];
-    delete window.javaPolyCallbacks[msgId];
+    const callback = this.javaPolyCallbacks[msgId];
+    delete this.javaPolyCallbacks[msgId];
     return callback;
   }
 
+  setJavaPolyCallback(callback){
+    this.javaPolyCallback = callback;
+  }
+
   callbackMessage(msgId, returnValue){
-    const callback = window.javaPolyCallbacks[msgId];
-    delete window.javaPolyCallbacks[msgId];
+    const callback = this.javaPolyCallbacks[msgId];
+    delete this.javaPolyCallbacks[msgId];
     if (callback) {
       callback(returnValue);
     }

@@ -13,9 +13,9 @@ class WorkerCallBackDispatcher {
     this.options = options;
     this.worker = worker;
 
-    window.javaPolyIdCount = 0;
+    this.javaPolyIdCount = 0;
     //used to record callback for every message.
-    window.javaPolyCallbacks = {};
+    this.javaPolyCallbacks = {};
 
     this.installListener();
   }
@@ -25,8 +25,8 @@ class WorkerCallBackDispatcher {
     this.worker.addEventListener('message', e => {
       const data = e.data.javapoly;
 
-      const cb = window.javaPolyCallbacks[data.messageId];
-      delete window.javaPolyCallbacks[data.messageId];
+      const cb = this.javaPolyCallbacks[data.messageId];
+      delete this.javaPolyCallbacks[data.messageId];
 
       // 1. JVM Init response
       // 2. JVM command(METHOD_INVOKATION/CLASS_LOADING/...) response
@@ -62,8 +62,8 @@ class WorkerCallBackDispatcher {
    */
   postMessage(messageType, priority, data, callback) {
 
-    const id = window.javaPolyIdCount++;
-    window.javaPolyCallbacks[id] = callback;
+    const id = this.javaPolyIdCount++;
+    this.javaPolyCallbacks[id] = callback;
 
     this.worker.postMessage({javapoly:{messageId:""+id, messageType:messageType, priority: priority, data:data}});
   }
