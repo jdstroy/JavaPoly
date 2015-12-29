@@ -37,6 +37,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * When defined, this is used as the base URL for loading JavaPoly data such as system classes and native functions.
    * If empty, JavaPoly will try to automatically figure it out during initialisation.
    */
+   javaPolyBaseUrl: null,
 
   /**
    * Javapoly worker path. null or a path, eg. build/javapoly_worker.js
