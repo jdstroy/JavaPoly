@@ -6,6 +6,10 @@ function wrapObject(thread, obj) {
     return wrapString(thread, obj);
   } else if (objectType === 'number') {
     return wrapNumber(thread, obj);
+  } else if (objectType === 'boolean') {
+    // We need to cast to number because Doppio JVM represents booleans as numbers
+    const intValue = obj ? 1 : 0;
+    return util.boxPrimitiveValue(thread, 'Z', intValue);
   } else {
     var possibleJavaObj = javapoly.unwrapJavaObject(obj);
     return possibleJavaObj == null ? obj : possibleJavaObj;

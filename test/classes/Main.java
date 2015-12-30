@@ -13,6 +13,12 @@ public class Main {
     return str.length() == n;
   }
 
+  /* A simple function to test round trip of boolean values, since booleans are treated as numbers internally and need
+   * special conversions */
+  public static boolean flip(final boolean b) {
+    return !b;
+  }
+
   /* private method defined only to check accessibilty */
   private static void privateMethod() {
     throw new RuntimeException("Should never be called");

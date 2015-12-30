@@ -367,6 +367,18 @@
             });
           });
 
+          it('function that flips a boolean value', function() {
+            return Java.type('Main').then(function(Main) {
+              var trueCheck = Main.flip(true).then(function(result) {
+                expect(result).toEqual(false);
+              });
+              var falseCheck = Main.flip(false).then(function(result) {
+                expect(result).toEqual(true);
+              });
+              return Promise.all([trueCheck, falseCheck]);
+            });
+          });
+
           it('function that returns a true value', function() {
             return Java.type('Main').then(function(Main) {
               return Main.checkLength("xyz", 3).then(function(result) {
