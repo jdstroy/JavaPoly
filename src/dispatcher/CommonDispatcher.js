@@ -8,18 +8,18 @@
 
 class CommonDispatcher {
 
-  constructor(options) {
+  constructor(javapoly) {
     // This class is abstract (can't be instantiated directly)
     if (this.constructor === CommonDispatcher) {
       throw TypeError("new of abstract class CommonDispatcher");
     }
 
-    this.options = options;
+    this.options = javapoly.options;
 
-    this.initDispatcher();
+    this.initDispatcher(javapoly);
   }
 
-  initDispatcher() {
+  initDispatcher(javapoly) {
     this.javaPolyEvents = [];
     this.javaPolyMessageTypes = {};
     this.javaPolyCallbacks = {};
@@ -28,7 +28,7 @@ class CommonDispatcher {
 
     this.javaPolyCallback = null;
 
-    this.doppioManager = this.initDoppioManager(this.options);
+    this.doppioManager = this.initDoppioManager(javapoly);
   }
 
   handleIncomingMessage(id, priority, messageType, data, callback) {

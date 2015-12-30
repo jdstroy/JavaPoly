@@ -28,7 +28,7 @@ self.addEventListener('message', function(e) {
     case 'WORKER_INIT':
       const options = data.data.options;
       self.javapoly = new JavaPolyWorker(options);
-      self.javapoly.init(new WorkerDispatcher(options));
+      self.javapoly.init(new WorkerDispatcher(self.javapoly));
       global.self.postMessage({javapoly:{messageId:data.messageId, messageType:'WORKER_INIT', returnValue:true}});
       break;
     default:

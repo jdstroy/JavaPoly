@@ -85,6 +85,7 @@ class JavaPoly {
 
     // Init objects for user to make possible start to work with JavaPoly instantly
     this.initGlobalApiObjects();
+
   }
 
   initJavaPoly(resolve, reject) {
@@ -143,7 +144,7 @@ class JavaPoly {
   }
 
   loadJavaPolyCoreInBrowser(resolveDispatcherReady) {
-    this.dispatcher = new BrowserDispatcher(this.options);
+    this.dispatcher = new BrowserDispatcher(this);
     resolveDispatcherReady(this.dispatcher);
   }
 

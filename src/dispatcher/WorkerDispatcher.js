@@ -11,17 +11,17 @@ import DoppioManager from '../doppioManager/DoppioManager.js'
  */
 class WorkerDispatcher extends CommonDispatcher{
 
-  constructor(options){
-    super(options);
+  constructor(javapoly){
+    super(javapoly);
     this.idCount = 0;
   }
 
-  initDoppioManager() {
-    const options = this.options;
+  initDoppioManager(javapoly) {
+    const options = javapoly.options;
     importScripts(options.browserfsLibUrl + 'browserfs.min.js');
     importScripts(options.doppioLibUrl + 'doppio.js');
 
-    return Promise.resolve(new DoppioManager(window.javapoly));
+    return Promise.resolve(new DoppioManager(javapoly));
   }
 
   // Called by the worker when loading scripts

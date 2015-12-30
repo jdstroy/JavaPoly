@@ -4,14 +4,14 @@ import DoppioManager from '../doppioManager/DoppioManager.js'
 /* Used for the case when javaploy is running in Browser */
 class BrowserDispatcher extends CommonDispatcher {
 
-  constructor(options) {
-    super(options);
+  constructor(javapoly) {
+    super(javapoly);
   }
 
-  initDoppioManager(options) {
-    return this.loadExternalJs(options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
-      return this.loadExternalJs(options.doppioLibUrl + 'doppio.js').then(() => {
-        return new DoppioManager(window.javapoly);
+  initDoppioManager(javapoly) {
+    return this.loadExternalJs(javapoly.options.browserfsLibUrl + 'browserfs.min.js').then(()=> {
+      return this.loadExternalJs(javapoly.options.doppioLibUrl + 'doppio.js').then(() => {
+        return new DoppioManager(javapoly);
       });
     });
   }
