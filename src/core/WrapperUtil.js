@@ -1,6 +1,6 @@
 class WrapperUtil {
-  static dispatchOnJVM(messageType, priority, data, callback) {
-    window.javapoly.dispatcherReady.then(dispatcher => dispatcher.postMessage(messageType, priority, data,callback));
+  static dispatchOnJVM(javapoly, messageType, priority, data, callback) {
+    javapoly.dispatcherReady.then(dispatcher => dispatcher.postMessage(messageType, priority, data,callback));
   }
 
 }

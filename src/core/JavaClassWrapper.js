@@ -3,17 +3,17 @@ import WrapperUtil from "./WrapperUtil";
 
 class JavaClassWrapper extends Wrapper {
 
-  static runProxyMethod(methodObject, argumentsList) {
+  static runProxyMethod(javapoly, methodObject, argumentsList) {
     return new Promise(
       (resolve, reject) => {
-        JavaClassWrapper.getClassWrapperByName(methodObject._parent._identifier).then(classWrapper => {
+        JavaClassWrapper.getClassWrapperByName(javapoly, methodObject._parent._identifier).then(classWrapper => {
           classWrapper[methodObject._name](...argumentsList).then(returnValue => resolve(returnValue));
         });
       }
     );
   }
 
-  static getClassWrapperByName(clsName) {
+  static getClassWrapperByName(javapoly, clsName) {
     return new Promise(
       (resolve, reject) => {
         if (JavaClassWrapper.cache === undefined)
@@ -22,8 +22,8 @@ class JavaClassWrapper extends Wrapper {
           resolve(JavaClassWrapper.cache[clsName]);
         } else {
           const data = [clsName];
-          WrapperUtil.dispatchOnJVM('CLASS_LOADING', 0, data, (result) => {
-            const javaClassWrapper = new JavaClassWrapper(result[0], result[1], result[2], clsName);
+          WrapperUtil.dispatchOnJVM(javapoly, 'CLASS_LOADING', 0, data, (result) => {
+            const javaClassWrapper = new JavaClassWrapper(javapoly, result[0], result[1], result[2], clsName);
             JavaClassWrapper.cache[clsName] = javaClassWrapper;
             resolve(javaClassWrapper);
           });
@@ -32,9 +32,10 @@ class JavaClassWrapper extends Wrapper {
     );
   }
 
-  constructor(methods, nonFinalFields, finalFields, clsName) {
+  constructor(javapoly, methods, nonFinalFields, finalFields, clsName) {
     super();
     this.clsName = clsName;
+    this.javapoly = javapoly;
 
     const wrapper = this;
     function objConstructorFunction() {
@@ -54,21 +55,21 @@ class JavaClassWrapper extends Wrapper {
   runConstructorWithJavaDispatching(argumentsList) {
     return new Promise((resolve, reject) => {
       const data = [this.clsName, argumentsList];
-      WrapperUtil.dispatchOnJVM('CLASS_CONSTRUCTOR_INVOCATION', 0, data, resolve);
+      WrapperUtil.dispatchOnJVM(this.javapoly, 'CLASS_CONSTRUCTOR_INVOCATION', 0, data, resolve);
     });
   }
 
   runMethodWithJavaDispatching(methodName, argumentsList) {
     return new Promise((resolve, reject) => {
       const data = [this.clsName, methodName, argumentsList];
-      WrapperUtil.dispatchOnJVM('CLASS_METHOD_INVOCATION', 0, data, resolve);
+      WrapperUtil.dispatchOnJVM(this.javapoly, 'CLASS_METHOD_INVOCATION', 0, data, resolve);
     });
   }
 
   getFieldWithJavaDispatching(name) {
     return new Promise((resolve, reject) => {
       const data = [this.clsName, name];
-      WrapperUtil.dispatchOnJVM('CLASS_FIELD_READ', 0, data, (returnValue) => {
+      WrapperUtil.dispatchOnJVM(this.javapoly, 'CLASS_FIELD_READ', 0, data, (returnValue) => {
         resolve(returnValue);
       });
     });
@@ -77,7 +78,7 @@ class JavaClassWrapper extends Wrapper {
   setFieldWithJavaDispatching(name, value) {
     return new Promise((resolve, reject) => {
       const data = [this.clsName, name, value];
-      WrapperUtil.dispatchOnJVM('CLASS_FIELD_WRITE', 0, data, (returnValue) => {
+      WrapperUtil.dispatchOnJVM(this.javapoly, 'CLASS_FIELD_WRITE', 0, data, (returnValue) => {
         resolve(returnValue);
       });
     });

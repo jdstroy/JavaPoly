@@ -2,7 +2,7 @@ import JavaClassWrapper from './JavaClassWrapper';
 
 class ProxyWrapper {
 
-  static createEntity(name, parent) {
+  static createEntity(javapoly, name, parent) {
     // We don't now in advance is it a function or just an Object
     // But objects cannot be called, so it is a function
     const object = function() {};
@@ -16,7 +16,7 @@ class ProxyWrapper {
     object._call = function(thisArg, argumentsList) {
       return new Promise(
         (resolve, reject) => {
-          JavaClassWrapper.runProxyMethod(object, argumentsList).then(rv => resolve(rv));
+          JavaClassWrapper.runProxyMethod(javapoly, object, argumentsList).then(rv => resolve(rv));
         }
       );
     };
@@ -36,8 +36,8 @@ class ProxyWrapper {
     return proxy;
   }
 
-  static createRootEntity(name) {
-    return this.createEntity(name, null);
+  static createRootEntity(javapoly, name) {
+    return this.createEntity(javapoly, name, null);
   }
 }
 

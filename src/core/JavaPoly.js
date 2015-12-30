@@ -108,7 +108,7 @@ class JavaPoly {
         this.processScript(script);
       });
 
-      WrapperUtil.dispatchOnJVM('META_START_JVM', 0, null);
+      WrapperUtil.dispatchOnJVM(this,'META_START_JVM', 0, null);
 
     }, false);
   }
@@ -117,11 +117,11 @@ class JavaPoly {
     const scriptSrc = script.src;
     switch (script.type) {
       case "application/java-archive":
-        WrapperUtil.dispatchOnJVM('FS_MOUNT_JAR', 10, {src:scriptSrc});
+        WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAR', 10, {src:scriptSrc});
         break;
 
       case "application/java-vm":
-        WrapperUtil.dispatchOnJVM('FS_MOUNT_CLASS', 10, {src:scriptSrc});
+        WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_CLASS', 10, {src:scriptSrc});
         break;
 
       case "text/x-java-source":
@@ -132,7 +132,7 @@ class JavaPoly {
         const packageName = classInfo.package;
 
         WrapperUtil.dispatchOnJVM(
-          "FILE_COMPILE", 10,
+          this, "FILE_COMPILE", 10,
           [className, packageName ? packageName : "", this.options.storageDir, scriptText]
         )
         break;
@@ -217,11 +217,11 @@ class JavaPoly {
       };
       window.__proto__.__proto__.__proto__.__proto__ = new Proxy(window.__proto__.__proto__.__proto__.__proto__, proxyHandler);
 
-      global.window.J = ProxyWrapper.createRootEntity(null);
+      global.window.J = ProxyWrapper.createRootEntity(this, null);
     }
     this.analyzeScripts();
     global.window.Java = {
-      type: JavaClassWrapper.getClassWrapperByName,
+      type: (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName),
       "new": (name, ...args) => {
         return Java.type(name).then((classWrapper) => new classWrapper(...args))
       }
@@ -296,7 +296,7 @@ class JavaPoly {
   }
 
   wrapJavaObject(obj, methods, nonFinalFields, finalFields) {
-    return new JavaObjectWrapper(obj, methods, nonFinalFields, finalFields);
+    return new JavaObjectWrapper(javapoly, obj, methods, nonFinalFields, finalFields);
   }
 
   unwrapJavaObject(obj) {
