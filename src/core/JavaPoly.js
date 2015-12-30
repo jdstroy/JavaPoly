@@ -175,34 +175,57 @@ class JavaPoly {
     }
   }
 
-  initGlobalApiObjects() {
-    if (typeof Proxy === 'undefined') {
-      this._createProxyWarningDescriptor('com', 'package');
-      this._createProxyWarningDescriptor('org', 'package');
-      this._createProxyWarningDescriptor('net', 'package');
-      this._createProxyWarningDescriptor('java', 'package');
-      this._createProxyWarningDescriptor('javax', 'package');
-    } else {
-      global.window.J = ProxyWrapper.createRootEntity(null);
-    }
+  analyzeScripts() {
     _.each(document.scripts, script => {
       if (script.type === 'text/x-java-source') {
-        let classInfo = JavaPoly.detectClassAndPackageNames(script.text);
-        this.createProxyForClass(classInfo.class, classInfo.package);
+        if(!script.analyzed) {
+          script.analyzed = true;
+          const classInfo = JavaPoly.detectClassAndPackageNames(script.text);
+          this.createProxyForClass(classInfo.class, classInfo.package);
+        }
       }
     });
+  }
+
+  initGlobalApiObjects() {
+
+    // Initialize proxies for the most common/built-in packages.
+    // This will make built-in jvm packages available, since the built-ins won't have their source code in the script tags (and thus wouldn't be analyzed at parse time).
+    // Most importantly, it will setup warnings when Proxy is not defined in legacy browsers (warn upon access of one of these super common packages)
+    this.createProxyForClass(null, 'com');
+    this.createProxyForClass(null, 'org');
+    this.createProxyForClass(null, 'net');
+    this.createProxyForClass(null, 'sun');
+    this.createProxyForClass(null, 'java');
+    this.createProxyForClass(null, 'javax');
+
+    if (typeof Proxy !== 'undefined') {
+      const self = this;
+
+      // Setup a global Proxy(window) that keeps track of accesses to global properties.
+      // Attempt to analyze any (previously unparsed) scripts, and return the Java class if it is now defined.
+      // Keep track of undefined accesses, and if they become defined asynchronously by the JVM later we can warn.
+      const proxyHandler = {
+        has: function(target, name) {
+          if(target.hasOwnProperty(name)) return true;
+          self.analyzeScripts();
+          if(target.hasOwnProperty(name) || window.hasOwnProperty(name)) return true;
+          if(!self.warnedAccessedGlobals) self.warnedAccessedGlobals = {};
+          if(!self.warnedAccessedGlobals[name]) self.warnedAccessedGlobals[name] = false;
+          return false;
+        }
+      };
+      window.__proto__.__proto__.__proto__.__proto__ = new Proxy(window.__proto__.__proto__.__proto__.__proto__, proxyHandler);
+
+      global.window.J = ProxyWrapper.createRootEntity(null);
+    }
+    this.analyzeScripts();
     global.window.Java = {
       type: JavaClassWrapper.getClassWrapperByName,
       "new": (name, ...args) => {
         return Java.type(name).then((classWrapper) => new classWrapper(...args))
       }
     };
-  }
-
-  _createProxyWarningDescriptor(name, type) {
-    if(!this.proxyWarnings) this.proxyWarnings = {};
-    var self = this;
-    Object.defineProperty(global.window, name, {configurable: true, get: function(){ if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: http://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
   }
 
   /**
@@ -267,7 +290,8 @@ class JavaPoly {
       global.window[name] = ProxyWrapper.createRootEntity(name);
     }
     else {
-      this._createProxyWarningDescriptor(name, type);
+      const self = this;
+      Object.defineProperty(global.window, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: http://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
     }
   }
 
