@@ -297,13 +297,7 @@ public class Main {
   public static native void println(String s);
 
   public static void dumpException(final Throwable e) {
-    final java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-    try (final java.io.PrintWriter pr = new java.io.PrintWriter(baos)) {
-      e.printStackTrace(pr);
-      pr.flush();
-    } finally {
-      println(baos.toString());
-    }
+    e.printStackTrace();
   }
 
 }

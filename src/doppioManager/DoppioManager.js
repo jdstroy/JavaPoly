@@ -54,6 +54,7 @@ class DoppioManager {
     this.path = BrowserFS.BFSRequire('path');
     this.fsext = require('./../tools/fsext')(this.fs, this.path);
     this.fsext.rmkdirSync(options.storageDir);
+    BrowserFS.install(this);
   }
 
   mountJar(src) {
@@ -124,6 +125,8 @@ class DoppioManager {
         if (err) {
           console.log('err loading JVM:', err);
         } else {
+          this.installStreamHandlers();
+
           jvm.runClass('com.javapoly.Main', [], function(exitCode) {
             // Control flow shouldn't reach here under normal circumstances,
             // because Main thread keeps polling for messages.
@@ -131,6 +134,21 @@ class DoppioManager {
           });
         }
       });
+    });
+  }
+
+  installStreamHandlers() {
+    this.process.stdout.on('data', (data) => {
+      const ds = data.toString();
+      if (ds != "\n") {
+        console.log("JVM stdout>", ds);
+      }
+    });
+    this.process.stderr.on('data', (data) => {
+      const ds = data.toString();
+      if (ds != "\n") {
+        console.warn("JVM stderr>", ds);
+      }
     });
   }
 
