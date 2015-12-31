@@ -10,7 +10,7 @@ import java.io.IOException;
 public class Main {
 
   public static void main(final String[] args) {
-    println("Java Main started");
+    System.out.println("Java Main started");
 
     try {
       boolean done = false;
@@ -47,7 +47,7 @@ public class Main {
           processClassCompilation(messageId);
           break;
         default:
-          println("Unknown message type, callback will be executed");
+          System.out.println("Unknown message type, callback will be executed");
           dispatchMessage(messageId);
         }
       }
@@ -55,7 +55,7 @@ public class Main {
       dumpException(e);
     }
 
-    println("Java Main ended");
+    System.out.println("Java Main ended");
   }
 
   private static void processClassMethodInvokation(String messageId) {
@@ -246,7 +246,7 @@ public class Main {
 
       final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
       final String[] compileData = {"-d", storageDir, filePath.toAbsolutePath().toString()};
-      println("Compiling: " + java.util.Arrays.toString(compileData));
+      System.out.println("Compiling: " + java.util.Arrays.toString(compileData));
 
       int result = compiler.run(null, null, null, compileData);
       if (result == 0) {
@@ -293,8 +293,6 @@ public class Main {
   private static native String getMessageType(String messageId);
   private static native void dispatchMessage(String messageId);
   private static native void returnResult(String messageId, Object returnValue);
-
-  public static native void println(String s);
 
   public static void dumpException(final Throwable e) {
     e.printStackTrace();

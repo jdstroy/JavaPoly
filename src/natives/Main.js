@@ -94,10 +94,6 @@ function javaObjToJS(thread, obj) {
 registerNatives({
   'com/javapoly/Main': {
 
-    'println(Ljava/lang/String;)V': function(thread, text) {
-       console.log("JVM>", text.toString());
-     },
-
     'dispatchMessage(Ljava/lang/String;)V': function(thread, msgId) {
       var callback = javapoly.dispatcher.getMessageCallback(msgId);
       thread.setStatus(6); // ASYNC_WAITING
