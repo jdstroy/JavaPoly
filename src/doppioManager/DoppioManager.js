@@ -55,6 +55,8 @@ class DoppioManager {
     this.fsext = require('./../tools/fsext')(this.fs, this.path);
     this.fsext.rmkdirSync(options.storageDir);
     BrowserFS.install(this);
+    this.installStreamHandlers();
+
   }
 
   mountJar(src) {
@@ -125,8 +127,6 @@ class DoppioManager {
         if (err) {
           console.log('err loading JVM:', err);
         } else {
-          this.installStreamHandlers();
-
           jvm.runClass('com.javapoly.Main', [], function(exitCode) {
             // Control flow shouldn't reach here under normal circumstances,
             // because Main thread keeps polling for messages.
