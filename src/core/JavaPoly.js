@@ -288,7 +288,7 @@ class JavaPoly {
     }
 
     if (typeof Proxy !== 'undefined') {
-      global.window[name] = ProxyWrapper.createRootEntity(name);
+      global.window[name] = ProxyWrapper.createRootEntity(this, name);
     }
     else {
       const self = this;

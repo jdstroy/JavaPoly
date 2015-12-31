@@ -24,7 +24,7 @@ class ProxyWrapper {
     const proxy = new Proxy(object, {
       get: (target, property) => {
         if (!target.hasOwnProperty(property)) {
-          target[property] = this.createEntity(property, target);
+          target[property] = this.createEntity(javapoly, property, target);
         }
         return target[property];
       },
