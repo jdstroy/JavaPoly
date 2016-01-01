@@ -86,6 +86,13 @@ class JavaPoly {
     // Init objects for user to make possible start to work with JavaPoly instantly
     this.initGlobalApiObjects();
 
+    const id = (++JavaPoly.idCount)+'';
+    JavaPoly.instances[id] = this;
+    this.getId = () => id;
+  }
+
+  static getInstance(javapolyId){
+    return JavaPoly.instances[javapolyId];
   }
 
   initJavaPoly(resolve, reject) {
@@ -320,5 +327,9 @@ class JavaPoly {
   }
 
 }
+
+JavaPoly.idCount = 0;
+JavaPoly.instances = {};
+global.window.JavaPoly = JavaPoly;
 
 export default JavaPoly;

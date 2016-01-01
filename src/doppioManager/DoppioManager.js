@@ -127,7 +127,7 @@ class DoppioManager {
         if (err) {
           console.log('err loading JVM:', err);
         } else {
-          jvm.runClass('com.javapoly.Main', [], function(exitCode) {
+          jvm.runClass('com.javapoly.Main', [this.javapoly.getId()], function(exitCode) {
             // Control flow shouldn't reach here under normal circumstances,
             // because Main thread keeps polling for messages.
             console.log("JVM Exit code: ", exitCode);

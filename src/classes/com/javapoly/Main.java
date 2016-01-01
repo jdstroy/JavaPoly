@@ -12,6 +12,10 @@ public class Main {
   public static void main(final String[] args) {
     System.out.println("Java Main started");
 
+    // when running multiple instances of JavaPoly, we want know which javapoly/jvm instance we are working in.
+    // set the javapoly instance by id.
+    setJavaPolyInstanceId(args[0]);
+
     try {
       boolean done = false;
       while (!done) {
@@ -293,6 +297,7 @@ public class Main {
   private static native String getMessageType(String messageId);
   private static native void dispatchMessage(String messageId);
   private static native void returnResult(String messageId, Object returnValue);
+  private static native void setJavaPolyInstanceId(String javapolyId);
 
   public static void dumpException(final Throwable e) {
     e.printStackTrace();

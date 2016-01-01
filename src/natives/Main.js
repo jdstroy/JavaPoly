@@ -1,3 +1,5 @@
+var javapoly0;
+
 function wrapObject(thread, obj) {
   var objectType = typeof obj;
   if (Array.isArray(obj)) {
@@ -11,13 +13,13 @@ function wrapObject(thread, obj) {
     const intValue = obj ? 1 : 0;
     return util.boxPrimitiveValue(thread, 'Z', intValue);
   } else {
-    var possibleJavaObj = javapoly.unwrapJavaObject(obj);
+    var possibleJavaObj = javapoly0.unwrapJavaObject(obj);
     return possibleJavaObj == null ? obj : possibleJavaObj;
   }
 }
 
 function wrapString(thread, obj) {
-  return javapoly.jvm.internString(obj);
+  return javapoly0.jvm.internString(obj);
 }
 
 function wrapArray(thread, obj) {
@@ -85,7 +87,7 @@ function javaObjToJS(thread, obj) {
         return obj.unbox();
       } else {
         var fields = getPublicFields(obj);
-        return javapoly.wrapJavaObject(obj, getPublicInstanceMethods(obj), fields.nonFinal, fields.final);
+        return javapoly0.wrapJavaObject(obj, getPublicInstanceMethods(obj), fields.nonFinal, fields.final);
       }
     }
   }
@@ -95,7 +97,7 @@ registerNatives({
   'com/javapoly/Main': {
 
     'dispatchMessage(Ljava/lang/String;)V': function(thread, msgId) {
-      var callback = javapoly.dispatcher.getMessageCallback(msgId);
+      var callback = javapoly0.dispatcher.getMessageCallback(msgId);
       thread.setStatus(6); // ASYNC_WAITING
       callback(thread, function() {
         thread.asyncReturn();
@@ -103,24 +105,24 @@ registerNatives({
     },
 
     'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
-      javapoly.dispatcher.callbackMessage(msgId,javaObjToJS(thread, returnValue));
+      javapoly0.dispatcher.callbackMessage(msgId,javaObjToJS(thread, returnValue));
      },
 
     'getMessageId()Ljava/lang/String;': function(thread) {
-      var id = javapoly.dispatcher.getMessageId();
+      var id = javapoly0.dispatcher.getMessageId();
       if (id) {
         return wrapObject(thread, id);
       } else {
         thread.setStatus(6); // ASYNC_WAITING
-        javapoly.dispatcher.setJavaPolyCallback(function() {
-          javapoly.dispatcher.setJavaPolyCallback(null);
-          thread.asyncReturn( wrapObject(thread, javapoly.dispatcher.getMessageId()));
+        javapoly0.dispatcher.setJavaPolyCallback(function() {
+          javapoly0.dispatcher.setJavaPolyCallback(null);
+          thread.asyncReturn( wrapObject(thread, javapoly0.dispatcher.getMessageId()));
         });
       }
     },
 
     'getMessageType(Ljava/lang/String;)Ljava/lang/String;': function(thread, msgId) {
-      var unwrappedData = javapoly.dispatcher.getMessageType(msgId);
+      var unwrappedData = javapoly0.dispatcher.getMessageType(msgId);
       if (typeof unwrappedData !== 'undefined') {
         return wrapObject(thread, unwrappedData);
       } else {
@@ -129,12 +131,16 @@ registerNatives({
     },
 
     'getData(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, msgId) {
-      var unwrappedData = javapoly.dispatcher.getMessageData(msgId);
+      var unwrappedData = javapoly0.dispatcher.getMessageData(msgId);
       if (typeof unwrappedData !== 'undefined') {
         return wrapObject(thread, unwrappedData);
       } else {
         return null;
       }
+    },
+
+    'setJavaPolyInstanceId(Ljava/lang/String;)V': function(thread, javapolyId){
+      javapoly0 = JavaPoly.getInstance(javapolyId);
     }
   }
 });

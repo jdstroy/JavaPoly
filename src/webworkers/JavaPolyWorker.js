@@ -4,6 +4,14 @@ class JavaPolyWorker {
   constructor(options) {
     this.options = options;
     this.isJavaPolyWorker = true;
+
+    const id = (++JavaPolyWorker.idCount)+'';
+    JavaPolyWorker.instances[id] = this;
+    this.getId = () => id;
+  }
+
+  static getInstance(javapolyId){
+    return JavaPolyWorker.instances[javapolyId];
   }
 
   init(dispatcher) {
@@ -15,6 +23,10 @@ class JavaPolyWorker {
 
 // NOTES, hack global window variable used in doppio, javapoly.
 global.window = global.self;
+
+JavaPolyWorker.idCount = 0;
+JavaPolyWorker.instances = {};
+global.self.JavaPoly = JavaPolyWorker;
 
 self.addEventListener('message', function(e) {
   if (!e.data || !e.data.javapoly) {
