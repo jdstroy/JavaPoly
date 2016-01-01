@@ -4,14 +4,17 @@ class JavaPolyWorker {
   constructor(options) {
     this.options = options;
     this.isJavaPolyWorker = true;
+  }
 
-    const id = (++JavaPolyWorker.idCount)+'';
-    JavaPolyWorker.instances[id] = this;
-    this.getId = () => id;
+  getId(){
+    // running multiple javapoly instances in webworker will generate corresponding number of web workers.
+    // with only one javapoly instance in each workers.
+    // so we cloud just store the only one javapoly instance in global.self to simplify.
+    return 'default';
   }
 
   static getInstance(javapolyId){
-    return JavaPolyWorker.instances[javapolyId];
+    return self.javapoly;
   }
 
   init(dispatcher) {
@@ -23,9 +26,6 @@ class JavaPolyWorker {
 
 // NOTES, hack global window variable used in doppio, javapoly.
 global.window = global.self;
-
-JavaPolyWorker.idCount = 0;
-JavaPolyWorker.instances = {};
 global.self.JavaPoly = JavaPolyWorker;
 
 self.addEventListener('message', function(e) {
