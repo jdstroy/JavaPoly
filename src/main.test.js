@@ -19,5 +19,6 @@ const params = getParams(window.location.search);
 
 const config = params.worker ? {worker:params.worker} : {};
 
-// Create main object that will be accessed via global objects J and Java
-global.window.javapoly = new JavaPoly(config);
+// Create a default JavaPoly Instance in global.window.defaultJavaPoly.
+// The main object that will be accessed via global objects J and Java
+global.window.defaultJavapoly = new JavaPoly(config);
