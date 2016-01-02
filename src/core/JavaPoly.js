@@ -196,7 +196,6 @@ class JavaPoly {
   }
 
   initGlobalApiObjects() {
-
     // Initialize proxies for the most common/built-in packages.
     // This will make built-in jvm packages available, since the built-ins won't have their source code in the script tags (and thus wouldn't be analyzed at parse time).
     // Most importantly, it will setup warnings when Proxy is not defined in legacy browsers (warn upon access of one of these super common packages)
@@ -213,17 +212,18 @@ class JavaPoly {
       // Setup a global Proxy(window) that keeps track of accesses to global properties.
       // Attempt to analyze any (previously unparsed) scripts, and return the Java class if it is now defined.
       // Keep track of undefined accesses, and if they become defined asynchronously by the JVM later we can warn.
+      var mywin = {}.hasOwnProperty.bind(window);
       const proxyHandler = {
         has: function(target, name) {
           if(target.hasOwnProperty(name)) return true;
           self.analyzeScripts();
-          if(target.hasOwnProperty(name) || window.hasOwnProperty(name)) return true;
+          if(target.hasOwnProperty(name) || mywin(name)) return true;
           if(!self.warnedAccessedGlobals) self.warnedAccessedGlobals = {};
           if(!self.warnedAccessedGlobals[name]) self.warnedAccessedGlobals[name] = false;
           return false;
         }
       };
-      window.__proto__.__proto__.__proto__.__proto__ = new Proxy(window.__proto__.__proto__.__proto__.__proto__, proxyHandler);
+      window.__proto__.__proto__.__proto__ = new Proxy(window.__proto__.__proto__.__proto__, proxyHandler);
 
       global.window.J = ProxyWrapper.createRootEntity(this, null);
     }
