@@ -81,7 +81,7 @@
       }
     });
 
-    var isWorkerBased = !!javapoly.options.worker;
+    var isWorkerBased = !!defaultJavapoly.options.worker;
     document.querySelector(".workerChoice " + (isWorkerBased ? ".worker" : ".browser")).classList.add("selected");
     var titleSuffix = isWorkerBased ? " Web Worker" : " Browser";
 
