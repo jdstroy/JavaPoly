@@ -46,7 +46,14 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * when defined not null, we will try to use the webworkers path to run the core javapoly and jvm.
    * if web worker is not supported by browser, we will just load javapoly and jvm in browser main Thread.
    */
-   worker : null // 'build/javapoly_worker.js'
+   worker : null, // 'build/javapoly_worker.js'
+
+  /**
+   * Enable Java Assertions
+   *
+   * @type {boolean}
+   */
+   assertionsEnabled : false
 }
 
 
