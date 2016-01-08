@@ -115,6 +115,7 @@ class DoppioManager {
 
   initJVM() {
     const options = this.getOptions();
+    const responsiveness = this.javapoly.isJavaPolyWorker ? 100 : 10;
     Promise.all(this.mountHub).then(() => {
       this.javapoly.jvm = new Doppio.VM.JVM({
         doppioHomePath: options.doppioLibUrl,
@@ -123,7 +124,8 @@ class DoppioManager {
         javaHomePath: '/sys/vendor/java_home',
         extractionPath: '/tmp',
         nativeClasspath: ['/sys/natives', "/javapoly/natives"],
-        assertionsEnabled: options.assertionsEnabled
+        assertionsEnabled: options.assertionsEnabled,
+        responsiveness: responsiveness
       }, (err, jvm) => {
         if (err) {
           console.log('err loading JVM:', err);
