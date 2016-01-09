@@ -144,13 +144,13 @@ class DoppioManager {
     this.process.stdout.on('data', (data) => {
       const ds = data.toString();
       if (ds != "\n") {
-        console.log("JVM stdout>", ds);
+        console.log("JVM " + this.javapoly.getId() + " stdout>", ds);
       }
     });
     this.process.stderr.on('data', (data) => {
       const ds = data.toString();
       if (ds != "\n") {
-        console.warn("JVM stderr>", ds);
+        console.warn("JVM " + this.javapoly.getId() + " stderr>", ds);
       }
     });
   }
