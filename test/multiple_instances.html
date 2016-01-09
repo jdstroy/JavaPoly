@@ -1,0 +1,201 @@
+<html>
+<head>
+<meta charset="utf-8">
+<title>JavaPoly Tests: Multiple Javapoly instances</title>
+<link href="mocha/mocha.css" rel="stylesheet" />
+<link href="style.css" rel="stylesheet" />
+
+<script type="text/javascript" src="build/javapoly.js"></script>
+</head>
+<body>
+	<ul class="workerChoice">
+		<li class="browser"><a href='/multiple_instances.html'>Browserversion</a></li>
+		<li class="worker"><a href='/multiple_instances.html?worker=build/javapoly_worker.js'>Web worker version</a></li>
+	</ul>
+
+	<div id="mocha"></div>
+
+	<script src="expect/umd/expect.min.js"></script>
+	<script src="mocha/mocha.js"></script>
+
+	<script type="text/javascript">
+    mocha.setup('bdd');
+    expect.extend({
+      toBeGreaterThanOrEqual(limit) {
+        expect.assert(this.actual >= limit, 'expected %s to be greater than or equal to ' + limit, this.actual);
+        return this;
+      },
+      toStartWith(prefix) {
+        expect.assert(this.actual.startsWith(prefix), 'expected %s to start with ' + prefix, this.actual);
+        return this;
+      },
+      toEndWith(suffix) {
+        expect.assert(this.actual.endsWith(suffix), 'expected %s to end with ' + suffix, this.actual);
+        return this;
+      }
+    });
+
+    var isWorkerBased = !!defaultJavapoly.options.worker;
+    document.querySelector(".workerChoice " + (isWorkerBased ? ".worker" : ".browser")).classList.add("selected");
+
+    // new another java poly instance, using the same otpions
+    var newJavapoly = new JavaPoly(defaultJavapoly.options);
+    //console.log(defaultJavapoly);
+    //console.log(newJavapoly);
+
+    var titleSuffix = isWorkerBased ? " Web Worker" : " Browser";
+    
+    var testWithJavaPolyInstance = function(api) {
+
+      var isProxySupported = (typeof Proxy !== 'undefined');
+
+      describe('Proxy access', function() {
+
+        if (!isProxySupported) {
+
+          it('checks that J is undefined if Proxy is not supported', function() {
+            expect(typeof api.J === 'undefined').toBe(true);
+          });
+
+        } else {
+
+          it('checks that J is defined', function() {
+            expect(api.J).toExist();
+          });
+
+          describe('java.lang.Integer', function() {
+
+            it('toHexString', function() {
+              return api.J.java.lang.Integer.toHexString(42).then(function(result) {
+                expect(result).toEqual('2a');
+              });
+            });
+
+            it('reverse', function() {
+              return api.J.java.lang.Integer.reverse(42).then(function(result) {
+                expect(result).toEqual(1409286144);
+              });
+            });
+
+            it('compare', function() {
+              return api.J.java.lang.Integer.compare(42, 41).then(function(result) {
+                expect(result).toEqual(1);
+              });
+            });
+
+            it('parseInt', function() {
+              return api.J.java.lang.Integer.parseInt('42').then(function(result) {
+                expect(result).toEqual(42);
+              });
+            });
+
+          });
+
+          describe('java.lang.Double', function() {
+            it('toHexString', function() {
+              return api.J.java.lang.Double.toHexString(42).then(function(result) {
+                expect(result).toEqual('0x1.5p5');
+              });
+            });
+          });
+        }
+      });
+      
+      describe('String identifiers access', function() {
+
+        it('checks that Java is defined', function() {
+          expect(api.Java).toExist();
+          expect(api.Java.type).toExist();
+        });
+        
+        describe('Java.type', function() {
+
+          it('should load class', function() {
+            return api.Java.type('java.lang.Integer').then(function(Integer) {
+              expect(Integer).toExist();
+            });
+          });
+
+          describe('java.lang.Integer', function() {
+            it('instance method should not exist in class wrapper: byteValue', function() {
+              return api.Java.type('java.lang.Integer').then(function(Integer) {
+                expect(Integer.byteValue).toNotExist();
+              });
+            });
+
+            it('toHexString', function() {
+              return api.Java.type('java.lang.Integer').then(function(Integer) {
+                return Integer.toHexString(42).then(function(result) {
+                  expect(result).toEqual('2a');
+                });
+              });
+            });
+
+            it('toString', function() {
+              return api.Java.type('java.lang.Integer').then(function(Integer) {
+                return Integer.toString(42, 16).then(function(result) {
+                  expect(result).toEqual('2a');
+                });
+              });
+            });
+
+            it('parseInt', function() {
+              return api.Java.type('java.lang.Integer').then(function(Integer) {
+                return Integer.parseInt('42').then(function(result) {
+                  expect(result).toEqual(42);
+                });
+              });
+            });
+          });
+
+        });
+
+        describe('Math', function() {
+          it('addExact() should add', function() {
+            return api.Java.type('java.lang.Math').then(function(Math) {
+              return Math.addExact(3, 7).then(function(result) {
+                expect(result).toEqual(10);
+              });
+            });
+          });
+
+          it('random() should return a value', function() {
+            return api.Java.type('java.lang.Math').then(function(Math) {
+              return Math.random().then(function(result) {
+                expect(result)
+                  .toExist()
+                  .toBeLessThan(1.0)
+                  .toBeGreaterThanOrEqual(0);
+              });
+            });
+          })
+
+          it('final fields should be accessible', function() {
+            return api.Java.type('java.lang.Math').then(function(JMath) {
+              return JMath.PI.then(function(result) {
+                expect(result)
+                  .toBeLessThan(4.0)
+                  .toBeGreaterThanOrEqual(3.14);
+              });
+            });
+          })
+        });
+      });
+    };
+
+    describe('JavaPoly' + titleSuffix, function (){
+      this.timeout(1000000); // Let jvm to start and do not interrupt promises
+        
+      describe('using global.window / default javapoly instance', function(){
+        testWithJavaPolyInstance(window);
+      });
+        
+      describe('using new created Javapoly instance', function(){
+        testWithJavaPolyInstance(newJavapoly);
+      }); 
+    });
+
+    mocha.run();
+   </script>
+</body>
+</html>
