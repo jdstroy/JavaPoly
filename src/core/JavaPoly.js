@@ -90,12 +90,14 @@ class JavaPoly {
     this.dispatcherReady = dispatcherDeferred.promise;
     this.initJavaPoly(dispatcherDeferred.resolve, dispatcherDeferred.reject);
 
-    // Init objects for user to make possible start to work with JavaPoly instantly
-    this.initGlobalApiObjects();
-
     const id = (++JavaPoly.idCount)+'';
     JavaPoly.instances[id] = this;
     this.getId = () => id;
+
+    // Init objects for user to make possible start to work with JavaPoly instantly
+    // only bind this api to global.window for the default javapoly instance (the 1th instance, created in main.js).
+    const api = this.initApiObjects(JavaPoly.idCount==1);
+    return api;
   }
 
   static getInstance(javapolyId){
@@ -196,22 +198,31 @@ class JavaPoly {
         if(!script.analyzed) {
           script.analyzed = true;
           const classInfo = JavaPoly.detectClassAndPackageNames(script.text);
-          this.createProxyForClass(classInfo.class, classInfo.package);
+          this.createProxyForClass(global.window, classInfo.class, classInfo.package);
         }
       }
     });
   }
 
-  initGlobalApiObjects() {
+  /**
+   * init the api objects of JavaPoly.
+   * @param ifBindApiToGlobalWindow
+   *   boolean, if we want access this java poly instance by global window.
+   */
+  initApiObjects(ifBindApiToGlobalWindow) {
+    let api = {};
+    api.id = this.getId();
+    api.options = this.options;
+
     // Initialize proxies for the most common/built-in packages.
     // This will make built-in jvm packages available, since the built-ins won't have their source code in the script tags (and thus wouldn't be analyzed at parse time).
     // Most importantly, it will setup warnings when Proxy is not defined in legacy browsers (warn upon access of one of these super common packages)
-    this.createProxyForClass(null, 'com');
-    this.createProxyForClass(null, 'org');
-    this.createProxyForClass(null, 'net');
-    this.createProxyForClass(null, 'sun');
-    this.createProxyForClass(null, 'java');
-    this.createProxyForClass(null, 'javax');
+    this.createProxyForClass(api, null, 'com');
+    this.createProxyForClass(api, null, 'org');
+    this.createProxyForClass(api, null, 'net');
+    this.createProxyForClass(api, null, 'sun');
+    this.createProxyForClass(api, null, 'java');
+    this.createProxyForClass(api, null, 'javax');
 
     if (typeof Proxy !== 'undefined') {
       const self = this;
@@ -232,15 +243,24 @@ class JavaPoly {
       };
       window.__proto__.__proto__.__proto__ = new Proxy(window.__proto__.__proto__.__proto__, proxyHandler);
 
-      global.window.J = ProxyWrapper.createRootEntity(this, null);
+      api.J = ProxyWrapper.createRootEntity(this, null);
     }
     this.analyzeScripts();
-    global.window.Java = {
-      type: (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName),
+    const javaType = (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName);
+    api.Java = {
+      type: javaType,
       "new": (name, ...args) => {
-        return Java.type(name).then((classWrapper) => new classWrapper(...args))
+        return javaType(name).then((classWrapper) => new classWrapper(...args))
       }
     };
+
+    if (ifBindApiToGlobalWindow) {
+      global.window.Java = api.Java;
+      if (api.J)
+        global.window.J = api.J;
+    }
+
+    return api;
   }
 
   /**
@@ -290,7 +310,7 @@ class JavaPoly {
     }
   }
 
-  createProxyForClass(classname, packagename) {
+  createProxyForClass(obj, classname, packagename) {
     let name = null;
     let type = null;
     if (packagename != null) {
@@ -302,11 +322,11 @@ class JavaPoly {
     }
 
     if (typeof Proxy !== 'undefined') {
-      global.window[name] = ProxyWrapper.createRootEntity(this, name);
+      obj[name] = ProxyWrapper.createRootEntity(this, name);
     }
     else {
       const self = this;
-      Object.defineProperty(global.window, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: http://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
+      Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: http://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
     }
   }
 
