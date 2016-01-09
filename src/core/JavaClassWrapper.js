@@ -18,13 +18,16 @@ class JavaClassWrapper extends Wrapper {
       (resolve, reject) => {
         if (JavaClassWrapper.cache === undefined)
           JavaClassWrapper.cache = {};
-        if (JavaClassWrapper.cache[clsName] !== undefined) {
-          resolve(JavaClassWrapper.cache[clsName]);
+        if (JavaClassWrapper.cache[javapoly.getId()] === undefined)
+          JavaClassWrapper.cache[javapoly.getId()] = {};
+        const cache = JavaClassWrapper.cache[javapoly.getId()];
+        if (cache[clsName] !== undefined) {
+          resolve(cache[clsName]);
         } else {
           const data = [clsName];
           WrapperUtil.dispatchOnJVM(javapoly, 'CLASS_LOADING', 0, data, (result) => {
             const javaClassWrapper = new JavaClassWrapper(javapoly, result[0], result[1], result[2], clsName);
-            JavaClassWrapper.cache[clsName] = javaClassWrapper;
+            cache[clsName] = javaClassWrapper;
             resolve(javaClassWrapper);
           });
         }
