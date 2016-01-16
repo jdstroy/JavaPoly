@@ -19,7 +19,7 @@
   "devDependencies": {
     "babel-preset-es2015": "^6.3.13",
     "babelify": "^7.2.0",
-    "browserfs": "^0.5.10",
+    "browserfs": "^0.5.11",
     "@hrj/doppiojvm-snapshot": "^0.4.3",
     "expect": "^1.13.1",
     "grunt": "^0.4.5",

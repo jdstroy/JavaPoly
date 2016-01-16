@@ -47,95 +47,108 @@ class DoppioManager {
 
     const options = this.getOptions();
 
-    mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', options.doppioLibUrl));
-    mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest('listings.json', options.javaPolyBaseUrl));
+    this.bfsReady = new Promise((resolve) => {
+      DoppioManager.xhrRetrieve(options.doppioLibUrl + "/listings.json", "json").then(doppioListings => {
+        DoppioManager.xhrRetrieve(options.javaPolyBaseUrl + "/listings.json", "json").then(javapolyListings => {
+          mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest(doppioListings, options.doppioLibUrl));
+          mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest(javapolyListings, options.javaPolyBaseUrl));
 
-    this.fs = BrowserFS.BFSRequire('fs');
-    this.path = BrowserFS.BFSRequire('path');
-    this.fsext = require('./../tools/fsext')(this.fs, this.path);
-    this.fsext.rmkdirSync(options.storageDir);
-    BrowserFS.install(this);
-    this.installStreamHandlers();
+          this.fs = BrowserFS.BFSRequire('fs');
+          this.path = BrowserFS.BFSRequire('path');
+          this.fsext = require('./../tools/fsext')(this.fs, this.path);
+          this.fsext.rmkdirSync(options.storageDir);
+          BrowserFS.install(this);
+          this.installStreamHandlers();
+          resolve();
+        });
+      });
+    });
 
   }
 
   mountJar(src) {
   	const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
     const options = this.getOptions();
-    this.mountHub.push(
-      new Promise((resolve, reject) => {
-        DoppioManager.http_retrieve_buffer(src).then(data => {
-          const jarFileData = new Buffer(data);
-          const jarName = this.path.basename(src);
+    this.bfsReady.then(() => {
+      this.mountHub.push(
+        new Promise((resolve, reject) => {
+          DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
+            const jarFileData = new Buffer(data);
+            const jarName = this.path.basename(src);
 
-          const jarStorePath = this.path.join(options.storageDir, jarName);
-          // store the .jar file to $storageDir
-          this.fs.writeFile(jarStorePath, jarFileData, (err) => {
-            if (err) {
-              console.error(err.message);
-              reject();
-            } else {
-              // add .jar file path to classpath
-              this.classpath.push(jarStorePath);
-              resolve();
-            }
+            const jarStorePath = this.path.join(options.storageDir, jarName);
+            // store the .jar file to $storageDir
+            this.fs.writeFile(jarStorePath, jarFileData, (err) => {
+              if (err) {
+                console.error(err.message);
+                reject();
+              } else {
+                // add .jar file path to classpath
+                this.classpath.push(jarStorePath);
+                resolve();
+              }
+            });
           });
-        });
-      })
-    );
+        })
+      );
+    });
   }
 
   mountClass(src) {
   	const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
     const options = this.getOptions();
-    this.mountHub.push(
-      new Promise((resolve, reject) => {
-        DoppioManager.http_retrieve_buffer(src).then(data => {
-          const classFileData = new Buffer(data);
-          const classFileInfo = classfile.analyze(classFileData);
-          const className   = this.path.basename(classFileInfo.this_class);
-          const packageName = this.path.dirname(classFileInfo.this_class);
+    this.bfsReady.then(() => {
+      this.mountHub.push(
+        new Promise((resolve, reject) => {
+          DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
+            const classFileData = new Buffer(data);
+            const classFileInfo = classfile.analyze(classFileData);
+            const className   = this.path.basename(classFileInfo.this_class);
+            const packageName = this.path.dirname(classFileInfo.this_class);
 
-          this.fsext.rmkdirSync(this.path.join(options.storageDir, packageName));
+            this.fsext.rmkdirSync(this.path.join(options.storageDir, packageName));
 
-          this.fs.writeFile(this.path.join(options.storageDir, classFileInfo.this_class + '.class'),
-            classFileData, (err) => {
-              if (err) {
-                console.error(err.message);
-                reject();
-              } else {
-                resolve();
+            this.fs.writeFile(this.path.join(options.storageDir, classFileInfo.this_class + '.class'),
+              classFileData, (err) => {
+                if (err) {
+                  console.error(err.message);
+                  reject();
+                } else {
+                  resolve();
+                }
               }
-            }
-          );
-        });
-      })
-    );
+            );
+          });
+        })
+      );
+    });
   }
 
   initJVM() {
     const options = this.getOptions();
     const responsiveness = this.javapoly.isJavaPolyWorker ? 100 : 10;
-    Promise.all(this.mountHub).then(() => {
-      this.javapoly.jvm = new Doppio.VM.JVM({
-        doppioHomePath: options.doppioLibUrl,
-        bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
-        classpath: this.classpath,
-        javaHomePath: '/sys/vendor/java_home',
-        extractionPath: '/tmp',
-        nativeClasspath: ['/sys/natives', "/javapoly/natives"],
-        assertionsEnabled: options.assertionsEnabled,
-        responsiveness: responsiveness
-      }, (err, jvm) => {
-        if (err) {
-          console.log('err loading JVM:', err);
-        } else {
-          jvm.runClass('com.javapoly.Main', [this.javapoly.getId()], function(exitCode) {
-            // Control flow shouldn't reach here under normal circumstances,
-            // because Main thread keeps polling for messages.
-            console.log("JVM Exit code: ", exitCode);
-          });
-        }
+    this.bfsReady.then(() => {
+      Promise.all(this.mountHub).then(() => {
+        this.javapoly.jvm = new Doppio.VM.JVM({
+          doppioHomePath: options.doppioLibUrl,
+          bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
+          classpath: this.classpath,
+          javaHomePath: '/sys/vendor/java_home',
+          extractionPath: '/tmp',
+          nativeClasspath: ['/sys/natives', "/javapoly/natives"],
+          assertionsEnabled: options.assertionsEnabled,
+          responsiveness: responsiveness
+        }, (err, jvm) => {
+          if (err) {
+            console.log('err loading JVM:', err);
+          } else {
+            jvm.runClass('com.javapoly.Main', [this.javapoly.getId()], function(exitCode) {
+              // Control flow shouldn't reach here under normal circumstances,
+              // because Main thread keeps polling for messages.
+              console.log("JVM Exit code: ", exitCode);
+            });
+          }
+        });
       });
     });
   }
@@ -155,11 +168,11 @@ class DoppioManager {
     });
   }
 
-  static http_retrieve_buffer (url) {
+  static xhrRetrieve (url, responseType) {
     return new Promise((resolve, reject) => {
       const xmlr = new XMLHttpRequest();
       xmlr.open('GET', url, true);
-      xmlr.responseType = 'arraybuffer';
+      xmlr.responseType = responseType;
       xmlr.onreadystatechange = ()=> {
         if (xmlr.readyState === 4) {
           if (xmlr.status === 200) {
