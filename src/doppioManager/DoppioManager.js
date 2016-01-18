@@ -50,6 +50,30 @@ class DoppioManager {
     this.bfsReady = new Promise((resolve) => {
       DoppioManager.xhrRetrieve(options.doppioLibUrl + "/listings.json", "json").then(doppioListings => {
         DoppioManager.xhrRetrieve(options.javaPolyBaseUrl + "/listings.json", "json").then(javapolyListings => {
+          BrowserFS.FileSystem.XmlHttpRequest.prototype.readFile = function (fname, encoding, flag, cb) {
+            var oldCb = cb;
+            this.open(fname, flag, 0x1a4, function (err, fd) {
+              if (err) {
+                return cb(err);
+              }
+              cb = function (err, arg) {
+                fd.close(function (err2) {
+                  if (err == null) {
+                    err = err2;
+                  }
+                  return oldCb(err, arg);
+                });
+              };
+              var fdCast = fd;
+              var fdBuff = fdCast.getBuffer();
+              if (encoding === null) {
+                cb(err, fdBuff);
+              } else {
+                tryToString(fdBuff, encoding, cb);
+              }
+            });
+          };
+
           mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest(doppioListings, options.doppioLibUrl));
           mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest(javapolyListings, options.javaPolyBaseUrl));
 
