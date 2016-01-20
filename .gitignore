@@ -6,6 +6,7 @@ test/doppio
 test/browserfs
 build/javapoly.js
 test/build/javapoly.js
+/test/classes/**/*.class
 
 ### OSX ###
 .DS_Store
