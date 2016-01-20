@@ -257,6 +257,11 @@ class JavaPoly {
       type: javaType,
       "new": (name, ...args) => {
         return javaType(name).then((classWrapper) => new classWrapper(...args))
+      },
+      reflect: (jsObj) => {
+        return javaType("com.javapoly.Eval").then((Eval) => {
+          return Eval.reflectJSValue(jsObj);
+        });
       }
     };
 

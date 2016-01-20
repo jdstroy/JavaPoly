@@ -4,7 +4,13 @@ public class Eval {
 
   /** Evals the provided string and returns a wrapped result that can be introspected in Java */
   public static JSValue eval(String s) {
-    return wrapResult(evalRaw(s));
+    return wrapValue(evalRaw(s));
+  }
+
+  /** Evals the provided string and returns a wrapped result that can be introspected in Java */
+  public static JSValue reflectJSValue(final Object obj) {
+    final Object[] data = getRawType(obj);
+    return wrapValue(data);
   }
 
   /** Evals the provided string and returns the raw javascript result.
@@ -16,7 +22,7 @@ public class Eval {
    * */
   public static native Object[] evalRaw(String s);
 
-  private static JSValue wrapResult(Object[] res) {
+  private static JSValue wrapValue(Object[] res) {
     final String description = (String) res[0];
     switch (description) {
       case "object":
@@ -52,6 +58,10 @@ public class Eval {
       super(rawValue);
     }
 
+    public boolean isNull() {
+      return rawValue == null;
+    }
+
     public double asDouble() {
       return Eval.asDouble(rawValue);
     }
@@ -74,13 +84,17 @@ public class Eval {
       super(rawValue);
     }
 
+    public JSValue getProperty(String name) {
+      return wrapValue(Eval.getProperty(rawValue, name));
+    }
+
     public JSValue invoke(Object... args) {
       final Object[] unwrappedArgs = new Object[args.length];
       for (int i = 0; i < args.length; i++) {
         final Object e = args[i];
         unwrappedArgs[i] = (e instanceof JSValue) ? ((JSValue) e).rawValue : e;
       }
-      return wrapResult(Eval.invoke(rawValue, unwrappedArgs));
+      return wrapValue(Eval.invoke(rawValue, unwrappedArgs));
     }
   }
 
@@ -89,4 +103,7 @@ public class Eval {
   private static native String asString(Object obj);
   private static native int asInteger(Object obj);
   private static native long asLong(Object obj);
+  private static native Object[] getRawType(Object obj);
+
+  private static native Object[] getProperty(Object obj, String name);
 }

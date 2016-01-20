@@ -207,6 +207,27 @@
             });
           });
         });
+
+        it('should reflect js object into java', function() {
+          return Java.reflect({name1: "xyz", name2: 10}).then(function(jsObj) {
+            var name1Test = jsObj.getProperty("name1").then(function(name1Value) {
+              return name1Value.asString().then(function(name1String) {
+                expect(name1String).toEqual("xyz");
+              });
+            });
+            var name2Test = jsObj.getProperty("name2").then(function(name2Value) {
+              return name2Value.asInteger().then(function(name2Int) {
+                expect(name2Int).toEqual(10);
+              });
+            });
+            var notDefinedTest = jsObj.getProperty("somerandomkey").then(function(value) {
+              return value.isNull().then(function(result) {
+                expect(result).toBe(true);
+              });
+            });
+            return Promise.all([name1Test, name2Test, notDefinedTest]);
+          });
+        });
       });
 
       /* Disabling for now. We can re-enable after using the newer version of eval.

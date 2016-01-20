@@ -14,6 +14,14 @@ util.toPrimitiveTypeName = function(name) {
   }
 };
 
+/* This function is used to wrap and return an object and its type to Java land.
+ * It returns an array of Object[], where the first element is a string describing the JS type,
+ * and the second is the obj.
+ */
+function getRawType(thread, obj) {
+  return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', [util.initString(thread.getBsCl(), typeof obj), obj])
+}
+
 registerNatives({
   'com/javapoly/Eval': {
 
@@ -21,6 +29,15 @@ registerNatives({
       var expr = toEval.toString();
       var res = eval(expr);
       return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', [util.initString(thread.getBsCl(), typeof res), res]);
+    },
+
+    'getRawType(Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, obj) {
+      return getRawType(thread, obj);
+    },
+
+    'getProperty(Ljava/lang/Object;Ljava/lang/String;)[Ljava/lang/Object;': function(thread, obj, name) {
+      var nameStr = name.toString();
+      return getRawType(thread, obj[nameStr]);
     },
 
     'invoke(Ljava/lang/Object;[Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, toInvoke, args) {
@@ -39,7 +56,7 @@ registerNatives({
         }
       });
       var res = toInvoke.apply(null, ubArgs);
-      return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', [util.initString(thread.getBsCl(), typeof res), res]);
+      return getRawType(thread, res);
     },
 
     'asDouble(Ljava/lang/Object;)D': function(thread, arg0) {
