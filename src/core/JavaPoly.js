@@ -133,6 +133,10 @@ class JavaPoly {
   processScript(script) {
     const scriptSrc = script.src;
     switch (script.type) {
+      case "text/java":
+        // TODO: Implement.  Should automatically figure out type and load file into JVM.
+        break;
+
       case "application/java-archive":
         WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAR', 10, {src:scriptSrc});
         break;
@@ -155,6 +159,8 @@ class JavaPoly {
         break;
 
       default:
+        if(script.type.toLowerCase() === 'text/java' || script.type.toLowerCase() === 'java')
+          console.error('Found script tag with invalid type="'+script.type+'"; please use type="text/java"');
         break;
     }
   }
