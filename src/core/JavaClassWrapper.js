@@ -69,6 +69,11 @@ class JavaClassWrapper extends Wrapper {
     });
   }
 
+  // This is to prevent recursion, because reflectJSValue itself needs to be dispatched on the JVM.
+  isReflectMethod(methodName) {
+    return (methodName === "reflectJSValue") && (this.clsName == "com.javapoly.Eval");
+  }
+
   getFieldWithJavaDispatching(name) {
     return new Promise((resolve, reject) => {
       const data = [this.clsName, name];

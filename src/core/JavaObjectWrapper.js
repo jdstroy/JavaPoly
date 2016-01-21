@@ -27,12 +27,14 @@ class JavaObjectWrapper extends Wrapper {
     });
   }
 
+  isReflectMethod(methodName) {
+    return false;
+  }
+
   runMethodWithJavaDispatching(methodName, argumentsList) {
     return new Promise((resolve, reject) => {
       const data = [this._javaObj, methodName, argumentsList];
-      WrapperUtil.dispatchOnJVM(this.javapoly, 'OBJ_METHOD_INVOCATION', 0, data, (returnValue) => {
-        resolve(returnValue);
-      });
+      WrapperUtil.dispatchOnJVM(this.javapoly, 'OBJ_METHOD_INVOCATION', 0, data, resolve);
     });
   }
 

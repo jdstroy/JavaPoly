@@ -1,3 +1,5 @@
+import JavaClassWrapper from "./JavaClassWrapper";
+
 class Wrapper {
   constructor() {
     // NOP
@@ -9,7 +11,7 @@ class Wrapper {
     // Add method handlers
     for (const name of methods) {
       obj[name] = function() {
-        return wrapper.runMethodWithJavaDispatching(name, Array.prototype.slice.call(arguments))
+        return wrapper.runMethodWithJSReflection(name, Array.prototype.slice.call(arguments))
       };
     }
 
@@ -35,6 +37,42 @@ class Wrapper {
         });
       }
     }
+  }
+
+  reflect(jsObj) {
+    return JavaClassWrapper.getClassWrapperByName(this.javapoly, "com.javapoly.Eval").then((Eval) => {
+      return Eval.reflectJSValue(jsObj);
+    });
+  }
+
+  runMethodWithJSReflection(methodName, args) {
+    const wrapper = this;
+    const okToReflect = !wrapper.isReflectMethod(methodName);
+
+    const wrappedArgPromises = args.map (e => {
+      if (okToReflect && (typeof(e) === "object") && (!e._javaObj)) {
+        return wrapper.reflect(e)
+      } else {
+        return Promise.resolve(e);
+      }
+    });
+
+    return Promise.all(wrappedArgPromises).then((wrappedArgs) => {
+      const resultPromise = wrapper.runMethodWithJavaDispatching(methodName, wrappedArgs);
+      if (okToReflect) {
+        return resultPromise.then(result => {
+          if ((!!result) && (typeof(result) === "object") && (!!result._javaObj)) {
+            const className = result._javaObj.getClass().className;
+            if (className === "Lcom/javapoly/Eval$JSObject;" || className === "Lcom/javapoly/Eval$JSPrimitive;") {
+              return result._javaObj["com/javapoly/Eval$JSValue/rawValue"];
+            }
+          }
+          return result;
+        });
+      } else {
+        return resultPromise;
+      }
+    });
   }
 }
 

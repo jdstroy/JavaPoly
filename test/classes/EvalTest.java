@@ -30,4 +30,8 @@ public class EvalTest {
     return test1Pass && test2Pass && test3Pass && test4Pass && test5Pass;
   }
 
+  public static JSValue getProperty(final JSObject jsObj, final String name) {
+    return jsObj.getProperty(name);
+  }
+
 }
