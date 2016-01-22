@@ -298,22 +298,24 @@
             });
           });
 
-          it('should handle exceptions correctly', function() {
-            return Java.type('Main').then(function(Main) {
-              return new Promise(function(resolve, reject) {
-                Main.exceptionThrower().then(function() {
-                  reject(new Error("not expecting the promise to resolve"));
-                }, function(e) {
-                  e.getMessage().then(function(msg) {
-                    expect(msg).toBe("Deliberate exception for testing");
-                    resolve();
+          if (!isWorkerBased) {
+            it('should handle exceptions correctly', function() {
+              return Java.type('Main').then(function(Main) {
+                return new Promise(function(resolve, reject) {
+                  Main.exceptionThrower().then(function() {
+                    reject(new Error("not expecting the promise to resolve"));
                   }, function(e) {
-                    reject();
+                    e.getMessage().then(function(msg) {
+                      expect(msg).toBe("Deliberate exception for testing");
+                      resolve();
+                    }, function(e) {
+                      reject();
+                    });
                   });
                 });
               });
             });
-          });
+          }
 
           describe('java.lang.Integer', function() {
             it('instance method should not exist in class wrapper: byteValue', function() {
