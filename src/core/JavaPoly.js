@@ -270,7 +270,7 @@ class JavaPoly {
         if (javaType === 'jar') {
           WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAR', 10, {src:data}, (returnValue) => {resolve(returnValue);});
         } else if (javaType === 'class') {
-
+          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_CLASS', 10, {src:data}, (returnValue) => {resolve(returnValue);});
         } else if (javaType === 'java' ) {
 
         } else {

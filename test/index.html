@@ -435,6 +435,18 @@
             });
           });
         });
+
+        it('add class', function(){
+          return addClass('classes/Main2.class').then(function(addClassResult){
+            return Java.type('Main2').then(function(Main) {
+              return Main.test().then(function(result) {
+                console.log(result);
+                expect(result).toEqual('test message in Main2');
+              });
+            });
+          });
+        });
+
       });
 
     });

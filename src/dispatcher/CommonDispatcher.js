@@ -68,7 +68,11 @@ class CommonDispatcher {
       case "FS_MOUNT_CLASS":
         this.doppioManager.then(dm => dm.mountClass(data.src));
         break;
-
+      case "FS_DYNAMIC_MOUNT_CLASS":
+        this.doppioManager.then(dm => dm.writeRemoteClassFileIntoFS(data.src)).then( () => {
+          callback();
+        });
+        break;
       default:
         console.log("FS TODO", messageType);
         break;

@@ -106,32 +106,36 @@ class DoppioManager {
   }
 
   mountClass(src) {
-  	const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
-    const options = this.getOptions();
     this.bfsReady.then(() => {
       this.mountHub.push(
-        new Promise((resolve, reject) => {
-          DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
-            const classFileData = new Buffer(data);
-            const classFileInfo = classfile.analyze(classFileData);
-            const className   = this.path.basename(classFileInfo.this_class);
-            const packageName = this.path.dirname(classFileInfo.this_class);
-
-            this.fsext.rmkdirSync(this.path.join(options.storageDir, packageName));
-
-            this.fs.writeFile(this.path.join(options.storageDir, classFileInfo.this_class + '.class'),
-              classFileData, (err) => {
-                if (err) {
-                  console.error(err.message);
-                  reject();
-                } else {
-                  resolve();
-                }
-              }
-            );
-          });
-        })
+        this.writeRemoteClassFileIntoFS(src)
       );
+    });
+  }
+
+  writeRemoteClassFileIntoFS(src){
+    const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
+    const options = this.getOptions();
+    return new Promise((resolve, reject) => {
+      DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
+        const classFileData = new Buffer(data);
+        const classFileInfo = classfile.analyze(classFileData);
+        const className   = this.path.basename(classFileInfo.this_class);
+        const packageName = this.path.dirname(classFileInfo.this_class);
+
+        this.fsext.rmkdirSync(this.path.join(options.storageDir, packageName));
+
+        this.fs.writeFile(this.path.join(options.storageDir, classFileInfo.this_class + '.class'),
+          classFileData, (err) => {
+            if (err) {
+              console.error(err.message);
+              reject();
+            } else {
+              resolve();
+            }
+          }
+        );
+      });
     });
   }
 
