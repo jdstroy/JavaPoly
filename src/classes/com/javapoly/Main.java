@@ -74,15 +74,13 @@ public class Main {
 
   private static void  processAddJarPath(String messageId) {
     final Object[] data = getData(messageId);
-    String url = null;
     try{
-      url = (String) data[0];
+      final String url = (String) data[0];
       JavaPolyClassLoader urlClassLoader = (JavaPolyClassLoader) Thread.currentThread().getContextClassLoader();
       urlClassLoader.addUrl(url);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
       returnResult(messageId, "Add Jar success");
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
@@ -100,73 +98,65 @@ public class Main {
 
   private static void processClassConstructorInvokation(String messageId) {
     final Object[] data = getData(messageId);
-    Object returnValue = null;
     try {
-      returnValue = invokeClassConstructor((String) data[0], (Object[]) data[1]);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
+      final Object returnValue = invokeClassConstructor((String) data[0], (Object[]) data[1]);
       returnResult(messageId, returnValue);
+    } catch (InvocationTargetException ie) {
+      returnError(messageId, ie.getCause());
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
   private static void processObjMethodInvokation(final String messageId) {
     final Object[] data = getData(messageId);
-    Object returnValue = null;
     try {
-      returnValue = invokeObjectMethod(data[0], (String) data[1], (Object[]) data[2]);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
+      final Object returnValue = invokeObjectMethod(data[0], (String) data[1], (Object[]) data[2]);
       returnResult(messageId, returnValue);
+    } catch (InvocationTargetException ie) {
+      returnError(messageId, ie.getCause());
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
   private static void processClassFieldRead(final String messageId) {
     final Object[] data = getData(messageId);
-    Object returnValue = null;
     try {
-      returnValue = readClassField((String) data[0], (String) data[1]);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
+      final Object returnValue = readClassField((String) data[0], (String) data[1]);
       returnResult(messageId, returnValue);
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
   private static void processObjFieldRead(final String messageId) {
     final Object[] data = getData(messageId);
-    Object returnValue = null;
     try {
-      returnValue = readObjectField(data[0], (String) data[1]);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
+      final Object returnValue = readObjectField(data[0], (String) data[1]);
       returnResult(messageId, returnValue);
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
   private static void processClassFieldWrite(final String messageId) {
     final Object[] data = getData(messageId);
-    Object returnValue = null;
     try {
-      returnValue = writeClassField((String) data[0], (String) data[1], data[2]);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
+      final Object returnValue = writeClassField((String) data[0], (String) data[1], data[2]);
       returnResult(messageId, returnValue);
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
   private static void processObjFieldWrite(final String messageId) {
     final Object[] data = getData(messageId);
-    Object returnValue = null;
     try {
-      returnValue = writeObjectField(data[0], (String) data[1], data[2]);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
+      final Object returnValue = writeObjectField(data[0], (String) data[1], data[2]);
       returnResult(messageId, returnValue);
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
@@ -199,10 +189,9 @@ public class Main {
           }
         }
       }
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
       returnResult(messageId, new Object[] { methodNames.toArray(), nonFinalFieldNames.toArray(), finalFieldNames.toArray()});
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
@@ -283,8 +272,7 @@ public class Main {
         returnResult(messageId, "Compilation failed.");
       }
     } catch (final IOException e) {
-      dumpException(e);
-      returnResult(messageId, "Compilation failed.");
+      returnError(messageId, new RuntimeException("Compilation failed.", e));
     }
   }
 
