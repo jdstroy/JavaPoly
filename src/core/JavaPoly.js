@@ -157,7 +157,7 @@ class JavaPoly {
     }
   }
 
-  compileJavaSource(scriptText, callback){
+  compileJavaSource(scriptText, resolve, reject){
     const classInfo = JavaPoly.detectClassAndPackageNames(scriptText);
 
     const className = classInfo.class;
@@ -165,7 +165,7 @@ class JavaPoly {
 
     WrapperUtil.dispatchOnJVM(
       this, "FILE_COMPILE", 10,
-      [className, packageName ? packageName : "", this.options.storageDir, scriptText], callback
+      [className, packageName ? packageName : "", this.options.storageDir, scriptText], resolve, reject
     )
   }
 
@@ -273,12 +273,12 @@ class JavaPoly {
       const javaType = JavaPoly.detectJavaType(data);
       return new Promise((resolve, reject) => {
         if (javaType === 'jar') {
-          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAR', 10, {src:data}, (returnValue) => {resolve(returnValue);});
+          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAR', 10, {src:data}, resolve, reject);
         } else if (javaType === 'class') {
-          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_CLASS', 10, {src:data}, (returnValue) => {resolve(returnValue);});
+          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_CLASS', 10, {src:data}, resolve, reject);
         } else if (javaType === 'java' ) {
           CommonUtils.xhrRetrieve(data, "text").then(sourceText => {
-            this.compileJavaSource(sourceText, (returnValue) => {resolve(returnValue)});
+            this.compileJavaSource(sourceText, resolve, reject);
           });
         } else {
 

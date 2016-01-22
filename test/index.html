@@ -447,7 +447,7 @@
 
       });
 
-      describe('dynamic addClass', function(){
+      describe('dynamically addClass', function(){
         it('add jar', function(){
           return addClass('http://www.javapoly.com/commons-codec-1.10.jar').then(function(addClassResult){
             return Java.type('org.apache.commons.codec.binary.StringUtils').then(function(StringUtils) {

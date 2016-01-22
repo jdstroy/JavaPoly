@@ -94,7 +94,7 @@ class DoppioManager {
         this.fs.writeFile(jarStorePath, jarFileData, (err) => {
           if (err) {
             console.error(err.message);
-            reject();
+            reject(err.message);
           } else {
             // add .jar file path to the URL of URLClassLoader
             //this.classpath.push(jarStorePath);
@@ -131,7 +131,7 @@ class DoppioManager {
           classFileData, (err) => {
             if (err) {
               console.error(err.message);
-              reject();
+              reject(err.message);
             } else {
               resolve();
             }
