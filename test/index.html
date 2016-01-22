@@ -27,6 +27,7 @@
 
   <script type="text/javascript">
     mocha.setup('bdd');
+
     expect.extend({
       toBeGreaterThanOrEqual(limit) {
         expect.assert(this.actual >= limit, 'expected %s to be greater than or equal to ' + limit, this.actual);
@@ -38,6 +39,10 @@
       },
       toEndWith(suffix) {
         expect.assert(this.actual.endsWith(suffix), 'expected %s to end with ' + suffix, this.actual);
+        return this;
+      },
+      toNeverReachHere() {
+        expect.assert(false, 'never expected to reach here');
         return this;
       }
     });
@@ -290,6 +295,23 @@
           it('should load class', function() {
             return Java.type('java.lang.Integer').then(function(Integer) {
               expect(Integer).toExist();
+            });
+          });
+
+          it('should handle exceptions correctly', function() {
+            return Java.type('Main').then(function(Main) {
+              return new Promise(function(resolve, reject) {
+                Main.exceptionThrower().then(function() {
+                  reject(new Error("not expecting the promise to resolve"));
+                }, function(e) {
+                  e.getMessage().then(function(msg) {
+                    expect(msg).toBe("Deliberate exception for testing");
+                    resolve();
+                  }, function(e) {
+                    reject();
+                  });
+                });
+              });
             });
           });
 

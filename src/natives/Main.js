@@ -112,7 +112,11 @@ registerNatives({
     },
 
     'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
-      javapoly0.dispatcher.callbackMessage(msgId,javaObjToJS(thread, returnValue));
+      javapoly0.dispatcher.callbackMessage(msgId,{success:true, returnValue: javaObjToJS(thread, returnValue)});
+     },
+
+    'returnError(Ljava/lang/String;Ljava/lang/Throwable;)V': function(thread, msgId, cause) {
+      javapoly0.dispatcher.callbackMessage(msgId,{success:false, cause: javaObjToJS(thread, cause)});
      },
 
     'getMessageId()Ljava/lang/String;': function(thread) {
