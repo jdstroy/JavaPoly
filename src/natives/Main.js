@@ -54,14 +54,21 @@ function getPublicFields(obj) {
   return {nonFinal: Object.keys(nonFinalNamesSet), "final": Object.keys(finalNamesSet)};
 }
 
+function getPublicInstanceMethodsFromClass(cls, set) {
+  var methods = cls.getMethods();
+  for (var i in methods) {
+    var method = methods[i];
+    set[method.name] = true;
+  }
+  if (cls.superClass) {
+    getPublicInstanceMethodsFromClass(cls.superClass, set);
+  }
+}
+
 function getPublicInstanceMethods(obj) {
   // Mimicking a set, based on http://stackoverflow.com/a/18890005
   var methodNamesSet = Object.create(null);
-  var methods = obj.constructor.cls.getMethods();
-  for (var i in methods) {
-    var method = methods[i];
-    methodNamesSet[method.name] = true;
-  }
+  getPublicInstanceMethodsFromClass(obj.constructor.cls, methodNamesSet);
   return Object.keys(methodNamesSet);
 }
 
@@ -105,7 +112,11 @@ registerNatives({
     },
 
     'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
-      javapoly0.dispatcher.callbackMessage(msgId,javaObjToJS(thread, returnValue));
+      javapoly0.dispatcher.callbackMessage(msgId,{success:true, returnValue: javaObjToJS(thread, returnValue)});
+     },
+
+    'returnError(Ljava/lang/String;Ljava/lang/Throwable;)V': function(thread, msgId, cause) {
+      javapoly0.dispatcher.callbackMessage(msgId,{success:false, cause: javaObjToJS(thread, cause)});
      },
 
     'getMessageId()Ljava/lang/String;': function(thread) {

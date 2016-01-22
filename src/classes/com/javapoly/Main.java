@@ -88,13 +88,13 @@ public class Main {
 
   private static void processClassMethodInvokation(String messageId) {
     final Object[] data = getData(messageId);
-    Object returnValue = null;
     try {
-      returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
-    } catch (Exception e) {
-      dumpException(e);
-    } finally {
+      final Object returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
       returnResult(messageId, returnValue);
+    } catch (InvocationTargetException ie) {
+      returnError(messageId, ie.getCause());
+    } catch (Exception e) {
+      returnError(messageId, e);
     }
   }
 
@@ -321,6 +321,7 @@ public class Main {
   private static native String getMessageType(String messageId);
   private static native void dispatchMessage(String messageId);
   private static native void returnResult(String messageId, Object returnValue);
+  private static native void returnError(String messageId, Throwable cause);
   private static native void setJavaPolyInstanceId(String javapolyId);
 
   public static void dumpException(final Throwable e) {
