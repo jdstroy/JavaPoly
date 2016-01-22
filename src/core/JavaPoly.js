@@ -5,6 +5,7 @@ import ProxyWrapper from './ProxyWrapper';
 import BrowserDispatcher from '../dispatcher/BrowserDispatcher.js'
 import WorkerCallBackDispatcher from '../dispatcher/WorkerCallBackDispatcher.js'
 import WrapperUtil from './WrapperUtil.js';
+import CommonUtils from './CommonUtils.js';
 import JavaParser from 'jsjavaparser';
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
@@ -146,15 +147,7 @@ class JavaPoly {
 
       case "text/x-java-source":
         const scriptText = script.text;
-        const classInfo = JavaPoly.detectClassAndPackageNames(scriptText);
-
-        const className = classInfo.class;
-        const packageName = classInfo.package;
-
-        WrapperUtil.dispatchOnJVM(
-          this, "FILE_COMPILE", 10,
-          [className, packageName ? packageName : "", this.options.storageDir, scriptText]
-        )
+        this.compileJavaSource(scriptText);
         break;
 
       default:
@@ -162,6 +155,18 @@ class JavaPoly {
           console.error('Found script tag with invalid type="'+script.type+'"; please use type="text/java"');
         break;
     }
+  }
+
+  compileJavaSource(scriptText, callback){
+    const classInfo = JavaPoly.detectClassAndPackageNames(scriptText);
+
+    const className = classInfo.class;
+    const packageName = classInfo.package;
+
+    WrapperUtil.dispatchOnJVM(
+      this, "FILE_COMPILE", 10,
+      [className, packageName ? packageName : "", this.options.storageDir, scriptText], callback
+    )
   }
 
   loadJavaPolyCoreInBrowser(resolveDispatcherReady) {
@@ -272,7 +277,9 @@ class JavaPoly {
         } else if (javaType === 'class') {
           WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_CLASS', 10, {src:data}, (returnValue) => {resolve(returnValue);});
         } else if (javaType === 'java' ) {
-
+          CommonUtils.xhrRetrieve(data, "text").then(sourceText => {
+            this.compileJavaSource(sourceText, (returnValue) => {resolve(returnValue)});
+          });
         } else {
 
         }

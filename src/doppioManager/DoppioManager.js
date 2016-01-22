@@ -1,3 +1,5 @@
+import CommonUtils from '../core/CommonUtils.js';
+
 const classfile = require('./../tools/classfile.js');
 
 /**
@@ -48,8 +50,8 @@ class DoppioManager {
     const options = this.getOptions();
 
     this.bfsReady = new Promise((resolve) => {
-      DoppioManager.xhrRetrieve(options.doppioLibUrl + "/listings.json", "json").then(doppioListings => {
-        DoppioManager.xhrRetrieve(options.javaPolyBaseUrl + "/listings.json", "json").then(javapolyListings => {
+      CommonUtils.xhrRetrieve(options.doppioLibUrl + "/listings.json", "json").then(doppioListings => {
+        CommonUtils.xhrRetrieve(options.javaPolyBaseUrl + "/listings.json", "json").then(javapolyListings => {
           mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest(doppioListings, options.doppioLibUrl));
           mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest(javapolyListings, options.javaPolyBaseUrl));
 
@@ -84,7 +86,7 @@ class DoppioManager {
     const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
     const options = this.getOptions();
     return new Promise((resolve, reject) => {
-      DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
+      CommonUtils.xhrRetrieve(src, "arraybuffer").then(data => {
         const jarFileData = new Buffer(data);
         const jarName = this.path.basename(src);
         const jarStorePath = this.path.join(options.storageDir, jarName);
@@ -117,7 +119,7 @@ class DoppioManager {
     const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
     const options = this.getOptions();
     return new Promise((resolve, reject) => {
-      DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
+      CommonUtils.xhrRetrieve(src, "arraybuffer").then(data => {
         const classFileData = new Buffer(data);
         const classFileInfo = classfile.analyze(classFileData);
         const className   = this.path.basename(classFileInfo.this_class);
@@ -183,23 +185,6 @@ class DoppioManager {
     });
   }
 
-  static xhrRetrieve (url, responseType) {
-    return new Promise((resolve, reject) => {
-      const xmlr = new XMLHttpRequest();
-      xmlr.open('GET', url, true);
-      xmlr.responseType = responseType;
-      xmlr.onreadystatechange = ()=> {
-        if (xmlr.readyState === 4) {
-          if (xmlr.status === 200) {
-            resolve(xmlr.response);
-          } else {
-            reject();
-          }
-        }
-      }
-      xmlr.send(null);
-    });
-  }
 }
 
 export default DoppioManager;
