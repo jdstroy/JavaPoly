@@ -72,25 +72,36 @@ class DoppioManager {
     this.bfsReady.then(() => {
       this.mountHub.push(
         new Promise((resolve, reject) => {
-          DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
-            const jarFileData = new Buffer(data);
-            const jarName = this.path.basename(src);
-
-            const jarStorePath = this.path.join(options.storageDir, jarName);
-            // store the .jar file to $storageDir
-            this.fs.writeFile(jarStorePath, jarFileData, (err) => {
-              if (err) {
-                console.error(err.message);
-                reject();
-              } else {
-                // add .jar file path to classpath
-                this.classpath.push(jarStorePath);
-                resolve();
-              }
-            });
-          });
+          this.writeRemoteJarFileIntoFS(src).then(
+            (jarStorePath) => { this.classpath.push(jarStorePath); resolve(); },
+            reject );
         })
       );
+    });
+  }
+
+  writeRemoteJarFileIntoFS(src){
+    const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
+    const options = this.getOptions();
+    return new Promise((resolve, reject) => {
+      DoppioManager.xhrRetrieve(src, "arraybuffer").then(data => {
+        const jarFileData = new Buffer(data);
+        const jarName = this.path.basename(src);
+        const jarStorePath = this.path.join(options.storageDir, jarName);
+        // store the .jar file to $storageDir
+        this.fs.writeFile(jarStorePath, jarFileData, (err) => {
+          if (err) {
+            console.error(err.message);
+            reject();
+          } else {
+            // add .jar file path to the URL of URLClassLoader
+            //this.classpath.push(jarStorePath);
+
+            //need to pass the path, will add that path to ClassLoader of Main.java
+            resolve(jarStorePath);
+          }
+        });
+      });
     });
   }
 
@@ -140,7 +151,7 @@ class DoppioManager {
           responsiveness: responsiveness
         }, (err, jvm) => {
           if (err) {
-            console.log('err loading JVM:', err);
+            console.log('err loading JVM ' + this.javapoly.getId() + ' :', err);
           } else {
             jvm.runClass('com.javapoly.Main', [this.javapoly.getId()], function(exitCode) {
               // Control flow shouldn't reach here under normal circumstances,

@@ -57,9 +57,18 @@ class CommonDispatcher {
       case "FS_MOUNT_JAR":
         this.doppioManager.then(dm => dm.mountJar(data.src));
         break;
+      case "FS_DYNAMIC_MOUNT_JAR":
+        // download jar and write it into FS, then dynamic addURL to classloader of Main.java
+        this.doppioManager.then(dm => dm.writeRemoteJarFileIntoFS(data.src)).then((jarStorePath)=>{
+          this.postMessage('JAR_PATH_ADD', 10, ['file://'+jarStorePath], (returnValue) => {
+              callback(returnValue);
+            });
+        });
+        break;
       case "FS_MOUNT_CLASS":
         this.doppioManager.then(dm => dm.mountClass(data.src));
         break;
+
       default:
         console.log("FS TODO", messageType);
         break;

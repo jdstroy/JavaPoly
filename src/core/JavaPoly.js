@@ -56,7 +56,6 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    assertionsEnabled : false
 }
 
-
 /**
  * Main JavaPoly class that do all underliying job for initialization
  * Simple usage:
@@ -265,13 +264,39 @@ class JavaPoly {
       }
     };
 
+    api.addClass = (data) => {
+      const javaType = JavaPoly.detectJavaType(data);
+      return new Promise((resolve, reject) => {
+        if (javaType === 'jar') {
+          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAR', 10, {src:data}, (returnValue) => {resolve(returnValue);});
+        } else if (javaType === 'class') {
+
+        } else if (javaType === 'java' ) {
+
+        } else {
+
+        }
+      });
+    }
+
     if (ifBindApiToGlobalWindow) {
       global.window.Java = api.Java;
+      global.window.addClass = api.addClass;
       if (api.J)
         global.window.J = api.J;
     }
 
     return api;
+  }
+
+  // detect the java type of a url or source data.
+  static detectJavaType(data){
+
+    // TODO if it's a url string, we need to download the file data and parse the type.
+    // if it's file data, we directly parse;
+    // TEMP use the extension for test.
+    const nameArr = data.split('.');
+    return nameArr[nameArr.length-1].toLowerCase();
   }
 
   /**

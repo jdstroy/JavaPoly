@@ -12,6 +12,8 @@ public class Main {
   public static void main(final String[] args) {
     System.out.println("Java Main started");
 
+    initClassLoader();
+
     // when running multiple instances of JavaPoly, we want know which javapoly/jvm instance we are working in.
     // set the javapoly instance by id.
     setJavaPolyInstanceId(args[0]);
@@ -50,6 +52,9 @@ public class Main {
         case "FILE_COMPILE":
           processClassCompilation(messageId);
           break;
+        case "JAR_PATH_ADD":
+          processAddJarPath(messageId);
+          break;
         default:
           System.out.println("Unknown message type, callback will be executed");
           dispatchMessage(messageId);
@@ -60,6 +65,25 @@ public class Main {
     }
 
     System.out.println("Java Main ended");
+  }
+
+  private static void initClassLoader() {
+    JavaPolyClassLoader urlClassLoader = new JavaPolyClassLoader(new java.net.URL[0]);
+    Thread.currentThread().setContextClassLoader(urlClassLoader);
+  }
+
+  private static void  processAddJarPath(String messageId) {
+    final Object[] data = getData(messageId);
+    String url = null;
+    try{
+      url = (String) data[0];
+      JavaPolyClassLoader urlClassLoader = (JavaPolyClassLoader) Thread.currentThread().getContextClassLoader();
+      urlClassLoader.addUrl(url);
+    } catch (Exception e) {
+      dumpException(e);
+    } finally {
+      returnResult(messageId, "Add Jar success");
+    }
   }
 
   private static void processClassMethodInvokation(String messageId) {
