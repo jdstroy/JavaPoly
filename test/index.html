@@ -451,7 +451,7 @@
 
       describe('dynamically addClass', function(){
         it('add jar', function(){
-          return addClass('http://www.javapoly.com/commons-codec-1.10.jar').then(function(addClassResult){
+          return addClass('jars/commons-codec-1.10.jar').then(function(addClassResult){
             return Java.type('org.apache.commons.codec.binary.StringUtils').then(function(StringUtils) {
               return StringUtils.equals('a','a').then(function (result){
                 expect(result).toEqual(true);
