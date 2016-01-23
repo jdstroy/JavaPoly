@@ -27,12 +27,7 @@ class WorkerDispatcher extends CommonDispatcher{
   // Called by the worker when loading scripts
   postMessage(messageType, priority, data, callback) {
     const id = this.idCount++;
-    this.handle ({
-      messageId: "localMessage" + id,
-      messageType: messageType,
-      priority : priority,
-      data: data
-    }, callback);
+    this.handleIncomingMessage("localMessage" + id, priority, messageType, data, callback);
   }
 
   // Handle message data coming from the web-worker message bridge
