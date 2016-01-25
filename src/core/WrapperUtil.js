@@ -4,6 +4,14 @@ class WrapperUtil {
       if (response.success) {
         resolve(response.returnValue);
       } else {
+
+        /* This function is added here, because it is not possible to serialise functions across web-worker sandbox */
+        response.cause.printStackTrace = function() {
+          for (const se in response.cause.stack) {
+            console.warn(response.cause.stack[se]);
+          }
+        }
+
         reject(response.cause);
       }
     }));

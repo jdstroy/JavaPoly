@@ -100,6 +100,16 @@ function javaObjToJS(thread, obj) {
   }
 }
 
+function flatThrowableToJS(ft) {
+  var cause = ft["com/javapoly/FlatThrowable/causedBy"];
+  return {
+    name: ft["com/javapoly/FlatThrowable/name"].toString(),
+    message: ft["com/javapoly/FlatThrowable/message"].toString(),
+    stack: ft["com/javapoly/FlatThrowable/stack"].array.map(e => e.toString()),
+    causedBy: cause === null ? null : flatThrwoableToJs(cause)
+  }
+}
+
 registerNatives({
   'com/javapoly/Main': {
 
@@ -115,8 +125,8 @@ registerNatives({
       javapoly0.dispatcher.callbackMessage(msgId,{success:true, returnValue: javaObjToJS(thread, returnValue)});
      },
 
-    'returnError(Ljava/lang/String;Ljava/lang/Throwable;)V': function(thread, msgId, cause) {
-      javapoly0.dispatcher.callbackMessage(msgId,{success:false, cause: javaObjToJS(thread, cause)});
+    'returnErrorFlat(Ljava/lang/String;Lcom/javapoly/FlatThrowable;)V': function(thread, msgId, flatThrowable) {
+      javapoly0.dispatcher.callbackMessage(msgId, {success:false, cause: flatThrowableToJS(flatThrowable)});
      },
 
     'getMessageId()Ljava/lang/String;': function(thread) {

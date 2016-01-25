@@ -1,6 +1,7 @@
 package com.javapoly;
 
 import java.lang.reflect.*;
+import java.util.Arrays;
 import javax.tools.*;
 import java.nio.file.Path;
 import java.nio.file.Files;
@@ -246,7 +247,7 @@ public class Main {
 
   public static void processClassCompilation(String messageId) {
     final Object[] data = getData(messageId);
-    final String[] stringData = java.util.Arrays.copyOf(data, data.length, String[].class);
+    final String[] stringData = Arrays.copyOf(data, data.length, String[].class);
     final String className = stringData[0];
     final String pkgName = stringData[1];
     final String storageDir = stringData[2];
@@ -263,7 +264,7 @@ public class Main {
 
       final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
       final String[] compileData = {"-d", storageDir, filePath.toAbsolutePath().toString()};
-      System.out.println("Compiling: " + java.util.Arrays.toString(compileData));
+      System.out.println("Compiling: " + Arrays.toString(compileData));
 
       int result = compiler.run(null, null, null, compileData);
       if (result == 0) {
@@ -304,12 +305,27 @@ public class Main {
     return null;
   }
 
+  private static FlatThrowable flatten(final Throwable throwable) {
+    final Throwable cause = throwable.getCause();
+    final FlatThrowable flattenedCause =  cause == null ? null : flatten(cause);
+    final StackTraceElement[] stackTraceElements = throwable.getStackTrace();
+    final String[] stack = new String[stackTraceElements.length];
+    for (int i = 0; i <  stackTraceElements.length; i++) {
+      stack[i] = stackTraceElements[i].toString();
+    }
+    return new FlatThrowable(throwable.getClass().getName(), throwable.getMessage(), stack, flattenedCause);
+  }
+
+  private static void returnError(final String messageId, final Throwable throwable) {
+    returnErrorFlat(messageId, flatten(throwable));
+  }
+
   private static native String getMessageId();
   private static native Object[] getData(String messageId);
   private static native String getMessageType(String messageId);
   private static native void dispatchMessage(String messageId);
   private static native void returnResult(String messageId, Object returnValue);
-  private static native void returnError(String messageId, Throwable cause);
+  private static native void returnErrorFlat(String messageId, FlatThrowable ft);
   private static native void setJavaPolyInstanceId(String javapolyId);
 
   public static void dumpException(final Throwable e) {
