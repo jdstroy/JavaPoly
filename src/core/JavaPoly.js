@@ -269,22 +269,7 @@ class JavaPoly {
       }
     };
 
-    api.addClass = (data) => {
-      const javaType = JavaPoly.detectJavaType(data);
-      return new Promise((resolve, reject) => {
-        if (javaType === 'jar') {
-          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAR', 10, {src:data}, resolve, reject);
-        } else if (javaType === 'class') {
-          WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_CLASS', 10, {src:data}, resolve, reject);
-        } else if (javaType === 'java' ) {
-          CommonUtils.xhrRetrieve(data, "text").then(sourceText => {
-            this.compileJavaSource(sourceText, resolve, reject);
-          });
-        } else {
-
-        }
-      });
-    }
+    api.addClass = (data) => this.addClass(data);
 
     if (ifBindApiToGlobalWindow) {
       global.window.Java = api.Java;
@@ -296,14 +281,49 @@ class JavaPoly {
     return api;
   }
 
-  // detect the java type of a url or source data.
-  static detectJavaType(data){
+  // data could be text string of java source or the url of remote java class/jar/source
+  addClass(data){
+    return new Promise((resolve, reject) => {
+      const ifContainNewLine = data.indexOf('\n') >= 0;
+      // If the text data contain a new line or the length > 2048, try to parse it as java souce string
+      if (ifContainNewLine || data.length > 2048) {
+        const classInfo = JavaPoly.detectClassAndPackageNames(data) ;
+        // parse success, embedded java source code
+        if (classInfo && classInfo.class ){
+          return this.compileJavaSource(data, resolve, reject);
+        }
+      }
 
-    // TODO if it's a url string, we need to download the file data and parse the type.
-    // if it's file data, we directly parse;
-    // TEMP use the extension for test.
-    const nameArr = data.split('.');
-    return nameArr[nameArr.length-1].toLowerCase();
+      // if it's not java source code.
+      // try it as a url string, we need to download the file data of that url and parse the type.
+      CommonUtils.xhrRetrieve(data, "arraybuffer").then(fileData => {
+        const fileDataBuf = new Buffer(fileData);
+
+        // remote java class/jar file
+        if (CommonUtils.isClassFile(fileDataBuf)){
+          return WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_CLASS', 10, {src:data}, resolve, reject);
+        }else if (CommonUtils.isZipFile(fileDataBuf)){
+          return WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAR', 10, {src:data}, resolve, reject);
+        }
+
+        // remote java source code file
+        const classInfo = JavaPoly.detectClassAndPackageNames(fileDataBuf.toString()) ;
+        if (classInfo && classInfo.class ){
+          return this.compileJavaSource(fileDataBuf.toString(), resolve, reject);
+        }
+
+        reject('Unknown java file type');
+      }, () => {
+        //not url, maybe source code in one line, try to parse it.
+        const classInfo = JavaPoly.detectClassAndPackageNames(data) ;
+        // embedded java source code
+        if (classInfo && classInfo.class ){
+          return this.compileJavaSource(data, resolve, reject);
+        }else{
+          reject('URL Not Found');
+        }
+      });
+    });
   }
 
   /**
@@ -314,7 +334,12 @@ class JavaPoly {
   static detectClassAndPackageNames(source) {
     let className = null, packageName = null;
 
-    let parsedSource = JavaParser.parse(source);
+    let parsedSource;
+    try {
+      parsedSource = JavaParser.parse(source);
+    } catch (e) {
+      return null;
+    }
 
     if (parsedSource.node === 'CompilationUnit') {
       for (var i = 0; i < parsedSource.types.length; i++) {
