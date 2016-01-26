@@ -6,7 +6,6 @@ import BrowserDispatcher from '../dispatcher/BrowserDispatcher.js'
 import WorkerCallBackDispatcher from '../dispatcher/WorkerCallBackDispatcher.js'
 import WrapperUtil from './WrapperUtil.js';
 import CommonUtils from './CommonUtils.js';
-import JavaParser from 'jsjavaparser';
 
 const DEFAULT_JAVAPOLY_OPTIONS = {
   /**
@@ -131,34 +130,25 @@ class JavaPoly {
   }
 
   processScript(script) {
-    const scriptSrc = script.src;
-    switch (script.type) {
-      case "text/java":
-        // TODO: Implement.  Should automatically figure out type and load file into JVM.
-        break;
+    if(script.type.toLowerCase() !== 'text/java' && script.type.toLowerCase() !== 'application/java')
+      return;
 
-      case "application/java-archive":
-        WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAR', 10, {src:scriptSrc});
-        break;
-
-      case "application/java-vm":
-        WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_CLASS', 10, {src:scriptSrc});
-        break;
-
-      case "text/x-java-source":
-        const scriptText = script.text;
-        this.compileJavaSource(scriptText);
-        break;
-
-      default:
-        if(script.type.toLowerCase() === 'text/java' || script.type.toLowerCase() === 'java')
-          console.error('Found script tag with invalid type="'+script.type+'"; please use type="text/java"');
-        break;
+    //embedded source code
+    if (script.text){
+      //TODO handle the Proxy
+      return this.compileJavaSource(script.text);
     }
+
+    if (!script.src){
+      console.warning('please specify the text or src of text/java');
+      return;
+    }
+
+    return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAVA', 10, {src:script.src});
   }
 
   compileJavaSource(scriptText, resolve, reject){
-    const classInfo = JavaPoly.detectClassAndPackageNames(scriptText);
+    const classInfo = CommonUtils.detectClassAndPackageNames(scriptText);
 
     const className = classInfo.class;
     const packageName = classInfo.package;
@@ -207,7 +197,7 @@ class JavaPoly {
       if (script.type === 'text/x-java-source') {
         if(!script.analyzed) {
           script.analyzed = true;
-          const classInfo = JavaPoly.detectClassAndPackageNames(script.text);
+          const classInfo = CommonUtils.detectClassAndPackageNames(script.text);
           this.createProxyForClass(global.window, classInfo.class, classInfo.package);
         }
       }
@@ -287,95 +277,16 @@ class JavaPoly {
       const ifContainNewLine = data.indexOf('\n') >= 0;
       // If the text data contain a new line or the length > 2048, try to parse it as java souce string
       if (ifContainNewLine || data.length > 2048) {
-        const classInfo = JavaPoly.detectClassAndPackageNames(data) ;
+        const classInfo = CommonUtils.detectClassAndPackageNames(data) ;
         // parse success, embedded java source code
         if (classInfo && classInfo.class ){
           return this.compileJavaSource(data, resolve, reject);
         }
       }
 
-      // if it's not java source code.
-      // try it as a url string, we need to download the file data of that url and parse the type.
-      CommonUtils.xhrRetrieve(data, "arraybuffer").then(fileData => {
-        const fileDataBuf = new Buffer(fileData);
+      return WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAVA', 10, {src:data}, resolve, reject);
 
-        // remote java class/jar file
-        if (CommonUtils.isClassFile(fileDataBuf)){
-          return WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_CLASS', 10, {src:data}, resolve, reject);
-        }else if (CommonUtils.isZipFile(fileDataBuf)){
-          return WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAR', 10, {src:data}, resolve, reject);
-        }
-
-        // remote java source code file
-        const classInfo = JavaPoly.detectClassAndPackageNames(fileDataBuf.toString()) ;
-        if (classInfo && classInfo.class ){
-          return this.compileJavaSource(fileDataBuf.toString(), resolve, reject);
-        }
-
-        reject('Unknown java file type');
-      }, () => {
-        //not url, maybe source code in one line, try to parse it.
-        const classInfo = JavaPoly.detectClassAndPackageNames(data) ;
-        // embedded java source code
-        if (classInfo && classInfo.class ){
-          return this.compileJavaSource(data, resolve, reject);
-        }else{
-          reject('URL Not Found');
-        }
-      });
     });
-  }
-
-  /**
-   * This functions parse Java source file and detects its name and package
-   * @param  {String} source Java source
-   * @return {Object}        Object with fields: package and class
-   */
-  static detectClassAndPackageNames(source) {
-    let className = null, packageName = null;
-
-    let parsedSource;
-    try {
-      parsedSource = JavaParser.parse(source);
-    } catch (e) {
-      return null;
-    }
-
-    if (parsedSource.node === 'CompilationUnit') {
-      for (var i = 0; i < parsedSource.types.length; i++) {
-        if (JavaPoly.isPublic(parsedSource.types[i])) {
-          className = parsedSource.types[i].name.identifier;
-          break;
-        }
-      }
-      if (parsedSource.package) {
-        packageName = JavaPoly.getPackageName(parsedSource.package.name);
-      }
-    }
-
-    return {
-      package: packageName,
-      class:   className
-    }
-  }
-
-  static isPublic(node) {
-    if (node.modifiers) {
-      for (var i = 0; i < node.modifiers.length; i++) {
-        if (node.modifiers[i].keyword === 'public') {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  static getPackageName(node) {
-    if (node.node === 'QualifiedName') {
-      return JavaPoly.getPackageName(node.qualifier) + '.' + node.name.identifier;
-    } else {
-      return node.identifier;
-    }
   }
 
   createProxyForClass(obj, classname, packagename) {
