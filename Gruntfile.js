@@ -55,6 +55,7 @@ module.exports = function(grunt) {
       compile: {
         command: "javac",
         javaOptions: {
+          "classpath": ["src/jars/commons-lang3-3.4.jar"],
           "d": "build/classes/"
         },
         sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']
@@ -82,6 +83,11 @@ module.exports = function(grunt) {
           {expand: true, cwd: './src/natives/', src: ['*.js'], dest: './build/natives'}
         ]
       },
+      jars: {
+        files: [
+          {expand: true, cwd: './src/jars/', src: ['*.jar'], dest: './build/jars'}
+        ]
+      },
       doppio_fastdev: {
         files: [
           {expand: true, cwd: doppioPath + '/dist/fast-dev/', src: ['**'], dest: './test/doppio'},
@@ -92,7 +98,7 @@ module.exports = function(grunt) {
         files: [
           {expand: true, cwd: './node_modules/browserfs/dist/', src: ['**'], dest: './test/browserfs'},
           {expand: true, cwd: './node_modules/browserfs/', src: ['package.json'], dest: './test/browserfs'}
-        ]        
+        ]
       }
     },
     compare_version: {
@@ -119,7 +125,7 @@ module.exports = function(grunt) {
         showDir : true,
         autoIndex: true,
         runInBackground: false,
-        port: 8080,    
+        port: 8080,
         root: 'test/.'
       }
     },
@@ -153,7 +159,7 @@ module.exports = function(grunt) {
 
   grunt.loadTasks('tasks');
 
-  grunt.registerTask('build:java', ['mkdir:build', 'copy:natives', 'run_java:compile']);
+  grunt.registerTask('build:java', ['mkdir:build', 'copy:natives', 'copy:jars', 'run_java:compile']);
   grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
   grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
   grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);

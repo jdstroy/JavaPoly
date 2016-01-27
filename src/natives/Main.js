@@ -2,6 +2,7 @@ var javapoly0;
 
 function wrapObject(thread, obj) {
   var objectType = typeof obj;
+
   if (Array.isArray(obj)) {
     return wrapArray(thread, obj);
   } else if (objectType === 'string') {
@@ -31,7 +32,8 @@ function wrapArray(thread, obj) {
 }
 
 function wrapNumber(thread, obj) {
-  return util.boxPrimitiveValue(thread, 'D', obj)
+  // TODO Temporarily changed to I due to Java matching issues
+  return util.boxPrimitiveValue(thread, 'I', obj)
 }
 
 function getPublicFields(obj) {

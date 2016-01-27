@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.io.IOException;
+import org.apache.commons.lang3.reflect.MethodUtils;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 
 public class Main {
 
@@ -196,26 +198,35 @@ public class Main {
     }
   }
 
+  // public static Object invokeClassMethod(String className, String methodName, Object[] params) throws Exception {
+  //   Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+  //   Method[] methods = clazz.getMethods();
+  //   Method suitableMethod = matchMethod(methods, methodName, params);
+  //   Object returnValue = suitableMethod.invoke(null, params);
+  //   return returnValue;
+  // }
+
   public static Object invokeClassMethod(String className, String methodName, Object[] params) throws Exception {
-    Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-    Method[] methods = clazz.getMethods();
-    Method suitableMethod = matchMethod(methods, methodName, params);
-    Object returnValue = suitableMethod.invoke(null, params);
+    final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+    final Object returnValue = MethodUtils.invokeStaticMethod(clazz, methodName, params);
     return returnValue;
   }
 
+  // public static Object invokeClassConstructor(String className, Object[] params) throws Exception {
+  //   final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+  //   final Constructor suitableConstructor = matchConstructor(clazz.getConstructors(), params);
+  //   final Object returnValue = suitableConstructor.newInstance(params);
+  //   return returnValue;
+  // }
+
   public static Object invokeClassConstructor(String className, Object[] params) throws Exception {
-    final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-    final Constructor suitableConstructor = matchConstructor(clazz.getConstructors(), params);
-    final Object returnValue = suitableConstructor.newInstance(params);
+    Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+    Object returnValue = ConstructorUtils.invokeConstructor(clazz, params);
     return returnValue;
   }
 
   private static Object invokeObjectMethod(Object obj, String methodName, Object[] params) throws Exception {
-    final Class<?> clazz = obj.getClass();
-    final Method[] methods = clazz.getMethods();
-    final Method suitableMethod = matchMethod(methods, methodName, params);
-    Object returnValue = suitableMethod.invoke(obj, params);
+    Object returnValue = MethodUtils.invokeMethod(obj, methodName, params);
     return returnValue;
   }
 
