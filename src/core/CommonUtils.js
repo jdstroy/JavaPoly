@@ -1,3 +1,8 @@
+import JavaParser from 'jsjavaparser';
+
+const CLASS_MAGIC_NUMBER = 'cafebabe';
+const ZIP_MAGIC_NUMBER = '504b0304';
+
 class CommonUtils{
   static xhrRetrieve (url, responseType) {
     return new Promise((resolve, reject) => {
@@ -15,6 +20,76 @@ class CommonUtils{
       }
       xmlr.send(null);
     });
+  }
+
+  static hexFromBuffer(buffer, from, count) {
+    var str = [];
+    for(let i = 0; i < count; i++) {
+      var ss = buffer.get(from + i).toString(16);
+      if (ss.length < 2) ss = '0' + ss;
+      str.push(ss);
+    }
+    return str.join('');
+  }
+
+  static isZipFile(data){
+    return ZIP_MAGIC_NUMBER === CommonUtils.hexFromBuffer(data, 0, 4);
+  }
+
+  static isClassFile(data){
+    return CLASS_MAGIC_NUMBER === CommonUtils.hexFromBuffer(data, 0, 4);
+  }
+
+  /**
+   * This functions parse Java source file and detects its name and package
+   * @param  {String} source Java source
+   * @return {Object}        Object with fields: package and class
+   */
+  static detectClassAndPackageNames(source) {
+    let className = null, packageName = null;
+
+    let parsedSource;
+    try {
+      parsedSource = JavaParser.parse(source);
+    } catch (e) {
+      return null;
+    }
+
+    if (parsedSource.node === 'CompilationUnit') {
+      for (var i = 0; i < parsedSource.types.length; i++) {
+        if (CommonUtils.isPublic(parsedSource.types[i])) {
+          className = parsedSource.types[i].name.identifier;
+          break;
+        }
+      }
+      if (parsedSource.package) {
+        packageName = CommonUtils.getPackageName(parsedSource.package.name);
+      }
+    }
+
+    return {
+      package: packageName,
+      class:   className
+    }
+  }
+
+  static isPublic(node) {
+    if (node.modifiers) {
+      for (var i = 0; i < node.modifiers.length; i++) {
+        if (node.modifiers[i].keyword === 'public') {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  static getPackageName(node) {
+    if (node.node === 'QualifiedName') {
+      return CommonUtils.getPackageName(node.qualifier) + '.' + node.name.identifier;
+    } else {
+      return node.identifier;
+    }
   }
 }
 

@@ -2,7 +2,8 @@ class WrapperUtil {
   static dispatchOnJVM(javapoly, messageType, priority, data, resolve, reject) {
     javapoly.dispatcherReady.then(dispatcher => dispatcher.postMessage(messageType, priority, data, (response) => {
       if (response.success) {
-        resolve(response.returnValue);
+        if (resolve)
+          resolve(response.returnValue);
       } else {
 
         /* This function is added here, because it is not possible to serialise functions across web-worker sandbox */
@@ -11,8 +12,8 @@ class WrapperUtil {
             console.warn(response.cause.stack[se]);
           }
         }
-
-        reject(response.cause);
+        if (reject)
+          reject(response.cause);
       }
     }));
   }

@@ -54,24 +54,13 @@ class CommonDispatcher {
   // FS messages are processed immediately
   handleFSMessage(id, priority, messageType, data, callback) {
     switch(messageType) {
-      case "FS_MOUNT_JAR":
-        this.doppioManager.then(dm => dm.mountJar(data.src));
+      case "FS_MOUNT_JAVA":
+        this.doppioManager.then(dm => dm.mountJava(data.src));
         break;
-      case "FS_DYNAMIC_MOUNT_JAR":
-        // download jar and write it into FS, then dynamic addURL to classloader of Main.java
-        this.doppioManager.then(dm => dm.writeRemoteJarFileIntoFS(data.src)).then((jarStorePath) => {
-          this.postMessage('JAR_PATH_ADD', 10, ['file://'+jarStorePath], (returnValue) => {
-              callback(returnValue);
-            });
-        }, (cause) => callback({success:false, cause:cause}) );
-        break;
-      case "FS_MOUNT_CLASS":
-        this.doppioManager.then(dm => dm.mountClass(data.src));
-        break;
-      case "FS_DYNAMIC_MOUNT_CLASS":
-        this.doppioManager.then(dm => dm.writeRemoteClassFileIntoFS(data.src)).then( () => {
+      case "FS_DYNAMIC_MOUNT_JAVA":
+        this.doppioManager.then(dm => dm.dynamicMountJava(data.src).then(() => {
           callback({success:true, returnValue: 'Add Class success'});
-        }, (cause) => callback({success:false, cause:cause}));
+        }, (msg) => callback({success:false, cause:{stack:[msg]}})));
         break;
       default:
         console.log("FS TODO", messageType);

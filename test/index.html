@@ -6,13 +6,11 @@
   <link href="style.css" rel="stylesheet" />
 
   <script type="text/javascript" src="build/javapoly.js"></script>
-
-  <script type="application/java-vm" src="classes/Main.class"></script>
-  <script type="application/java-vm" src="classes/EvalTest.class"></script>
-  <script type="application/java-vm" src="classes/Counter.class"></script>
-  <script type="application/java-vm" src="classes/com/javapoly/MainWithPackage.class"></script>
-  <script type="application/java-archive" src="jars/javapoly-utils.jar"></script>
-
+  <script type="application/java" src="classes/Main.class"></script>
+  <script type="application/java" src="classes/EvalTest.class"></script>
+  <script type="application/java" src="classes/Counter.class"></script>
+  <script type="application/java" src="classes/com/javapoly/MainWithPackage.class"></script>
+  <script type="application/java" src="jars/javapoly-utils.jar"></script>
 </head>
 <body>
   <ul class="workerChoice">
@@ -472,6 +470,22 @@
             return Java.type('com.javapoly.test.Main3').then(function(Main3) {
               return Main3.testIt().then(function(result) {
                 expect(result).toEqual('Main3::testIt()');
+              });
+            });
+          });
+        });
+
+        it('add embedded source code', function() {
+          var mainJavaSource = `package com.javapoly.test;
+            public class Main4 {
+            public static String testIt() {
+              return "Main4:testIt()";
+            }
+          }`;
+          return addClass(mainJavaSource).then(function(addClassResult){
+            return Java.type('com.javapoly.test.Main4').then(function(Main4) {
+              return Main4.testIt().then(function(result) {
+                expect(result).toEqual('Main4:testIt()');
               });
             });
           });
