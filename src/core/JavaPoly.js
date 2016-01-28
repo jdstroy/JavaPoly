@@ -23,7 +23,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * URL where we download the doppio library.
    * @type {String}
    * 1.'doppio/', download from user owner domain(${your.domain}/doppio), eg. localhost for locally test
-   * 2. or a public url, eg. http://www.javapoly.com/doppio/
+   * 2. or a public url, eg. https://www.javapoly.com/doppio/
    */
   doppioLibUrl: '/doppio/',
 
@@ -369,7 +369,7 @@ class JavaPoly {
     }
     else {
       const self = this;
-      Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: http://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
+      Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
     }
   }
 
