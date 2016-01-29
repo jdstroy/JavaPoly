@@ -120,22 +120,31 @@ class JavaPoly {
     }
 
     global.document.addEventListener('DOMContentLoaded', e => {
-      _.each(global.document.scripts, script => {
-        this.processScript(script);
-      });
 
+      this.processScripts();
       WrapperUtil.dispatchOnJVM(this,'META_START_JVM', 0, null);
 
     }, false);
+  }
+
+  processScripts() {
+    _.each(global.document.scripts, script => {
+      this.processScript(script);
+    });
   }
 
   processScript(script) {
     if(script.type.toLowerCase() !== 'text/java' && script.type.toLowerCase() !== 'application/java')
       return;
 
+    if(script.analyzed) return;
+    
+    script.analyzed = true;
+
     //embedded source code
     if (script.text){
-      //TODO handle the Proxy
+      const classInfo = CommonUtils.detectClassAndPackageNames(script.text);
+      this.createProxyForClass(global.window, classInfo.class, classInfo.package);
       return this.compileJavaSource(script.text);
     }
 
@@ -192,18 +201,6 @@ class JavaPoly {
     }
   }
 
-  analyzeScripts() {
-    _.each(document.scripts, script => {
-      if (script.type === 'text/x-java-source') {
-        if(!script.analyzed) {
-          script.analyzed = true;
-          const classInfo = CommonUtils.detectClassAndPackageNames(script.text);
-          this.createProxyForClass(global.window, classInfo.class, classInfo.package);
-        }
-      }
-    });
-  }
-
   /**
    * init the api objects of JavaPoly.
    * @param ifBindApiToGlobalWindow
@@ -234,7 +231,7 @@ class JavaPoly {
       const proxyHandler = {
         has: function(target, name) {
           if(target.hasOwnProperty(name)) return true;
-          self.analyzeScripts();
+          self.processScripts();
           if(target.hasOwnProperty(name) || mywin(name)) return true;
           if(!self.warnedAccessedGlobals) self.warnedAccessedGlobals = {};
           if(!self.warnedAccessedGlobals[name]) self.warnedAccessedGlobals[name] = false;
@@ -245,7 +242,7 @@ class JavaPoly {
 
       api.J = ProxyWrapper.createRootEntity(this, null);
     }
-    this.analyzeScripts();
+    this.processScripts();
     const javaType = (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName);
     api.Java = {
       type: javaType,
