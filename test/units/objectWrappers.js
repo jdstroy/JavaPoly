@@ -65,7 +65,6 @@ function testObjectWrappers() {
                 checkProperty("java.io.tmpdir", "/tmp"),
                 checkProperty("java.vm.vendor", "PLASMA@UMass"),
                 checkProperty("java.vm.name", "DoppioJVM 32-bit VM"),
-                checkProperty("java.awt.headless", "true")
               ]);
             });
           });
