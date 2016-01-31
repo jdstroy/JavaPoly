@@ -4,6 +4,17 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     browserify: {
+      node: {
+        files:{
+          'build/javapoly-node.js':['src/node.js']
+        },
+        options: {
+          node: [],
+          transform: [
+             ["babelify", { "presets": ["es2015"] }]
+          ]
+        }
+      },
       production: {
         files:{
           'build/javapoly.js':['src/main.js'],
@@ -155,7 +166,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build:java', ['mkdir:build', 'copy:natives', 'run_java:compile']);
   grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
-  grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
+  grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'browserify:node', 'listings:javapoly']);
+  grunt.registerTask('build:node', ['mkdir:build', 'build:java', 'browserify:node']);
   grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
 
   grunt.registerTask('default', ['build']);

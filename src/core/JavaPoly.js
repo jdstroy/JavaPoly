@@ -1,7 +1,5 @@
 import * as _ from 'underscore';
-import JavaClassWrapper from './JavaClassWrapper';
-import JavaObjectWrapper from './JavaObjectWrapper';
-import ProxyWrapper from './ProxyWrapper';
+import JavaPolyBase from './JavaPolyBase';
 import BrowserDispatcher from '../dispatcher/BrowserDispatcher.js'
 import WorkerCallBackDispatcher from '../dispatcher/WorkerCallBackDispatcher.js'
 import WrapperUtil from './WrapperUtil.js';
@@ -65,50 +63,18 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
  * (new JavaPoly());
  * Java.type(....).then(() => {  } );
  */
-class JavaPoly {
+class JavaPoly extends JavaPolyBase {
   constructor(_options) {
     const options = _.extend(DEFAULT_JAVAPOLY_OPTIONS, _options);
-
-    /**
-     * Object with options of JavaPoly
-     * @type {Object}
-     */
-    this.options = options;
-
-    /**
-     * The dispatcher for handle jvm command message
-     * @Type {Object}
-     */
-    this.dispatcher = null;
-
-    if (!this.options.javaPolyBaseUrl) {
-      this.options.javaPolyBaseUrl = this.getScriptBase();
+    if (!options.javaPolyBaseUrl) {
+      options.javaPolyBaseUrl = JavaPoly.getScriptBase();
     }
 
-    const dispatcherDeferred = new JavaPoly.deferred();
-    this.dispatcherReady = dispatcherDeferred.promise;
-    this.initJavaPoly(dispatcherDeferred.resolve, dispatcherDeferred.reject);
-
-    const id = (++JavaPoly.idCount)+'';
-    JavaPoly.instances[id] = this;
-    this.getId = () => id;
+    super(options);
 
     // Init objects for user to make possible start to work with JavaPoly instantly
     // only bind this api to global.window for the default javapoly instance (the 1th instance, created in main.js).
-    const api = this.initApiObjects(JavaPoly.idCount==1);
-    return api;
-  }
-
-  static getInstance(javapolyId){
-    return JavaPoly.instances[javapolyId];
-  }
-
-  initJavaPoly(resolve, reject) {
-    if (this.options.initOnStart === true) {
-      return this.beginLoading(resolve);
-    } else {
-      return reject('not initialised');
-    }
+    return this.initApiObjects(JavaPolyBase.idCount === 1 ? global.window : undefined);
   }
 
   beginLoading(resolveDispatcherReady) {
@@ -138,7 +104,7 @@ class JavaPoly {
       return;
 
     if(script.analyzed) return;
-    
+
     script.analyzed = true;
 
     //embedded source code
@@ -156,18 +122,6 @@ class JavaPoly {
     return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAVA', 10, {src:script.src});
   }
 
-  compileJavaSource(scriptText, resolve, reject){
-    const classInfo = CommonUtils.detectClassAndPackageNames(scriptText);
-
-    const className = classInfo.class;
-    const packageName = classInfo.package;
-
-    WrapperUtil.dispatchOnJVM(
-      this, "FILE_COMPILE", 10,
-      [className, packageName ? packageName : "", this.options.storageDir, scriptText], resolve, reject
-    )
-  }
-
   loadJavaPolyCoreInBrowser(resolveDispatcherReady) {
     this.dispatcher = new BrowserDispatcher(this);
     resolveDispatcherReady(this.dispatcher);
@@ -181,12 +135,12 @@ class JavaPoly {
   }
 
   /* This should be called outside of Promise, or any such async call */
-  getScriptBase() {
-    var scriptSrc = this.getScriptSrc();
+  static getScriptBase() {
+    var scriptSrc = JavaPoly.getScriptSrc();
     return scriptSrc.slice(0, scriptSrc.lastIndexOf("/") + 1);
   }
 
-  getScriptSrc() {
+  static getScriptSrc() {
     if (document.currentScript) {
       return document.currentScript.src;
     } else {
@@ -201,138 +155,8 @@ class JavaPoly {
     }
   }
 
-  /**
-   * init the api objects of JavaPoly.
-   * @param ifBindApiToGlobalWindow
-   *   boolean, if we want access this java poly instance by global window.
-   */
-  initApiObjects(ifBindApiToGlobalWindow) {
-    let api = {};
-    api.id = this.getId();
-    api.options = this.options;
-
-    // Initialize proxies for the most common/built-in packages.
-    // This will make built-in jvm packages available, since the built-ins won't have their source code in the script tags (and thus wouldn't be analyzed at parse time).
-    // Most importantly, it will setup warnings when Proxy is not defined in legacy browsers (warn upon access of one of these super common packages)
-    this.createProxyForClass(api, null, 'com');
-    this.createProxyForClass(api, null, 'org');
-    this.createProxyForClass(api, null, 'net');
-    this.createProxyForClass(api, null, 'sun');
-    this.createProxyForClass(api, null, 'java');
-    this.createProxyForClass(api, null, 'javax');
-
-    if (typeof Proxy !== 'undefined') {
-      const self = this;
-
-      // Setup a global Proxy(window) that keeps track of accesses to global properties.
-      // Attempt to analyze any (previously unparsed) scripts, and return the Java class if it is now defined.
-      // Keep track of undefined accesses, and if they become defined asynchronously by the JVM later we can warn.
-      var mywin = {}.hasOwnProperty.bind(window);
-      const proxyHandler = {
-        has: function(target, name) {
-          if(target.hasOwnProperty(name)) return true;
-          self.processScripts();
-          if(target.hasOwnProperty(name) || mywin(name)) return true;
-          if(!self.warnedAccessedGlobals) self.warnedAccessedGlobals = {};
-          if(!self.warnedAccessedGlobals[name]) self.warnedAccessedGlobals[name] = false;
-          return false;
-        }
-      };
-      window.__proto__.__proto__.__proto__ = new Proxy(window.__proto__.__proto__.__proto__, proxyHandler);
-
-      api.J = ProxyWrapper.createRootEntity(this, null);
-    }
-    this.processScripts();
-    const javaType = (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName);
-    api.Java = {
-      type: javaType,
-      "new": (name, ...args) => {
-        return javaType(name).then((classWrapper) => new classWrapper(...args))
-      },
-      reflect: (jsObj) => {
-        return javaType("com.javapoly.Eval").then((Eval) => {
-          return Eval.reflectJSValue(jsObj);
-        });
-      }
-    };
-
-    api.addClass = (data) => this.addClass(data);
-
-    if (ifBindApiToGlobalWindow) {
-      global.window.Java = api.Java;
-      global.window.addClass = api.addClass;
-      if (api.J)
-        global.window.J = api.J;
-    }
-
-    return api;
-  }
-
-  // data could be text string of java source or the url of remote java class/jar/source
-  addClass(data){
-    return new Promise((resolve, reject) => {
-      const ifContainNewLine = data.indexOf('\n') >= 0;
-      // If the text data contain a new line or the length > 2048, try to parse it as java souce string
-      if (ifContainNewLine || data.length > 2048) {
-        const classInfo = CommonUtils.detectClassAndPackageNames(data) ;
-        // parse success, embedded java source code
-        if (classInfo && classInfo.class ){
-          return this.compileJavaSource(data, resolve, reject);
-        }
-      }
-
-      return WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAVA', 10, {src:data}, resolve, reject);
-
-    });
-  }
-
-  createProxyForClass(obj, classname, packagename) {
-    let name = null;
-    let type = null;
-    if (packagename != null) {
-      name = packagename.split('.')[0];
-      type = 'package';
-    } else {
-      name = classname;
-      type = 'class';
-    }
-
-    if (typeof Proxy !== 'undefined') {
-      obj[name] = ProxyWrapper.createRootEntity(this, name);
-    }
-    else {
-      const self = this;
-      Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
-    }
-  }
-
-  wrapJavaObject(obj, methods, nonFinalFields, finalFields) {
-    return new JavaObjectWrapper(this, obj, methods, nonFinalFields, finalFields);
-  }
-
-  unwrapJavaObject(obj) {
-    // TODO: is a better check possible using prototypes
-    if (obj._javaObj) {
-      return obj._javaObj;
-    } else {
-      return null;
-    }
-  }
-
-  // Utility function to create a deferred promise
-  static deferred() {
-    this.promise = new Promise(function(resolve, reject) {
-      this.resolve = resolve;
-      this.reject = reject;
-    }.bind(this));
-    Object.freeze(this);
-    return this;
-  }
-
 }
 
-JavaPoly.idCount = 0;
-JavaPoly.instances = {};
 global.window.JavaPoly = JavaPoly;
 
 export default JavaPoly;
