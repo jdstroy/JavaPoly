@@ -77,24 +77,6 @@ export default class JavaPolyBase {
     this.createProxyForClass(api, null, 'javax');
 
     if (typeof Proxy !== 'undefined') {
-      const self = this;
-
-      // Setup a global Proxy(window) that keeps track of accesses to global properties.
-      // Attempt to analyze any (previously unparsed) scripts, and return the Java class if it is now defined.
-      // Keep track of undefined accesses, and if they become defined asynchronously by the JVM later we can warn.
-      var mywin = {}.hasOwnProperty.bind(window);
-      const proxyHandler = {
-        has: function(target, name) {
-          if(target.hasOwnProperty(name)) return true;
-          self.processScripts();
-          if(target.hasOwnProperty(name) || mywin(name)) return true;
-          if(!self.warnedAccessedGlobals) self.warnedAccessedGlobals = {};
-          if(!self.warnedAccessedGlobals[name]) self.warnedAccessedGlobals[name] = false;
-          return false;
-        }
-      };
-      window.__proto__.__proto__.__proto__ = new Proxy(window.__proto__.__proto__.__proto__, proxyHandler);
-
       api.J = ProxyWrapper.createRootEntity(this, null);
     }
     this.processScripts();
