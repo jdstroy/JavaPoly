@@ -9,21 +9,24 @@ import java.nio.file.FileSystems;
 import java.io.IOException;
 
 public class Main {
+  private static Bridge bridge;
 
   public static void main(final String[] args) {
     System.out.println("Java Main started");
 
     initClassLoader();
 
+    bridge = new SystemBridge(Integer.parseInt(args[2]));
     // when running multiple instances of JavaPoly, we want know which javapoly/jvm instance we are working in.
     // set the javapoly instance by id.
-    setJavaPolyInstanceId(args[0]);
+    bridge.setJavaPolyInstanceId(args[0]);
+
 
     try {
       boolean done = false;
       while (!done) {
-        final String messageId = getMessageId();
-        final String messageType = getMessageType(messageId);
+        final String messageId = bridge.getMessageId();
+        final String messageType = bridge.getMessageType(messageId);
         // TODO: Create enum
         switch (messageType) {
         case "CLASS_METHOD_INVOCATION":
@@ -58,7 +61,7 @@ public class Main {
           break;
         default:
           System.out.println("Unknown message type, callback will be executed");
-          dispatchMessage(messageId);
+          bridge.dispatchMessage(messageId);
         }
       }
     } catch (Exception e) {
@@ -74,22 +77,22 @@ public class Main {
   }
 
   private static void  processAddJarPath(String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try{
       final String url = (String) data[0];
       JavaPolyClassLoader urlClassLoader = (JavaPolyClassLoader) Thread.currentThread().getContextClassLoader();
       urlClassLoader.addUrl(url);
-      returnResult(messageId, "Add Jar success");
+      bridge.returnResult(messageId, "Add Jar success");
     } catch (Exception e) {
       returnError(messageId, e);
     }
   }
 
   private static void processClassMethodInvokation(String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try {
       final Object returnValue = invokeClassMethod((String) data[0], (String) data[1], (Object[]) data[2]);
-      returnResult(messageId, returnValue);
+      bridge.returnResult(messageId, returnValue);
     } catch (InvocationTargetException ie) {
       returnError(messageId, ie.getCause());
     } catch (Exception e) {
@@ -98,10 +101,10 @@ public class Main {
   }
 
   private static void processClassConstructorInvokation(String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try {
       final Object returnValue = invokeClassConstructor((String) data[0], (Object[]) data[1]);
-      returnResult(messageId, returnValue);
+      bridge.returnResult(messageId, returnValue);
     } catch (InvocationTargetException ie) {
       returnError(messageId, ie.getCause());
     } catch (Exception e) {
@@ -110,10 +113,10 @@ public class Main {
   }
 
   private static void processObjMethodInvokation(final String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try {
       final Object returnValue = invokeObjectMethod(data[0], (String) data[1], (Object[]) data[2]);
-      returnResult(messageId, returnValue);
+      bridge.returnResult(messageId, returnValue);
     } catch (InvocationTargetException ie) {
       returnError(messageId, ie.getCause());
     } catch (Exception e) {
@@ -122,47 +125,47 @@ public class Main {
   }
 
   private static void processClassFieldRead(final String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try {
       final Object returnValue = readClassField((String) data[0], (String) data[1]);
-      returnResult(messageId, returnValue);
+      bridge.returnResult(messageId, returnValue);
     } catch (Exception e) {
       returnError(messageId, e);
     }
   }
 
   private static void processObjFieldRead(final String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try {
       final Object returnValue = readObjectField(data[0], (String) data[1]);
-      returnResult(messageId, returnValue);
+      bridge.returnResult(messageId, returnValue);
     } catch (Exception e) {
       returnError(messageId, e);
     }
   }
 
   private static void processClassFieldWrite(final String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try {
       final Object returnValue = writeClassField((String) data[0], (String) data[1], data[2]);
-      returnResult(messageId, returnValue);
+      bridge.returnResult(messageId, returnValue);
     } catch (Exception e) {
       returnError(messageId, e);
     }
   }
 
   private static void processObjFieldWrite(final String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     try {
       final Object returnValue = writeObjectField(data[0], (String) data[1], data[2]);
-      returnResult(messageId, returnValue);
+      bridge.returnResult(messageId, returnValue);
     } catch (Exception e) {
       returnError(messageId, e);
     }
   }
 
   public static void processClassLoading(String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     final java.util.Set<String> methodNames = new java.util.TreeSet<>();
     final java.util.Set<String> nonFinalFieldNames = new java.util.TreeSet<>();
     final java.util.Set<String> finalFieldNames = new java.util.TreeSet<>();
@@ -190,7 +193,7 @@ public class Main {
           }
         }
       }
-      returnResult(messageId, new Object[] { methodNames.toArray(), nonFinalFieldNames.toArray(), finalFieldNames.toArray()});
+      bridge.returnResult(messageId, new Object[] { methodNames.toArray(), nonFinalFieldNames.toArray(), finalFieldNames.toArray()});
     } catch (Exception e) {
       returnError(messageId, e);
     }
@@ -246,7 +249,7 @@ public class Main {
   }
 
   public static void processClassCompilation(String messageId) {
-    final Object[] data = getData(messageId);
+    final Object[] data = bridge.getData(messageId);
     final String[] stringData = Arrays.copyOf(data, data.length, String[].class);
     final String className = stringData[0];
     final String pkgName = stringData[1];
@@ -268,9 +271,9 @@ public class Main {
 
       int result = compiler.run(null, null, null, compileData);
       if (result == 0) {
-        returnResult(messageId, "Normal compilation.");
+        bridge.returnResult(messageId, "Normal compilation.");
       } else {
-        returnResult(messageId, "Compilation failed.");
+        bridge.returnResult(messageId, "Compilation failed.");
       }
     } catch (final IOException e) {
       returnError(messageId, new RuntimeException("Compilation failed.", e));
@@ -317,16 +320,18 @@ public class Main {
   }
 
   private static void returnError(final String messageId, final Throwable throwable) {
-    returnErrorFlat(messageId, flatten(throwable));
+    bridge.returnErrorFlat(messageId, flatten(throwable));
   }
 
-  private static native String getMessageId();
-  private static native Object[] getData(String messageId);
-  private static native String getMessageType(String messageId);
-  private static native void dispatchMessage(String messageId);
-  private static native void returnResult(String messageId, Object returnValue);
-  private static native void returnErrorFlat(String messageId, FlatThrowable ft);
-  private static native void setJavaPolyInstanceId(String javapolyId);
+  private static class DoppioBridge implements Bridge {
+    public native String getMessageId();
+    public native Object[] getData(String messageId);
+    public native String getMessageType(String messageId);
+    public native void dispatchMessage(String messageId);
+    public native void returnResult(String messageId, Object returnValue);
+    public native void returnErrorFlat(String messageId, FlatThrowable ft);
+    public native void setJavaPolyInstanceId(String javapolyId);
+  }
 
   public static void dumpException(final Throwable e) {
     e.printStackTrace();

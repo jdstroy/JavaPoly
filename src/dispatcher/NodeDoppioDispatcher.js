@@ -1,8 +1,8 @@
 import CommonDispatcher from './CommonDispatcher.js'
-import NodeDoppioManager from '../doppioManager/NodeDoppioManager.js'
+import NodeDoppioManager from '../jvmManager/NodeDoppioManager.js'
 
-/* Used for the case when javaploy is running in Browser */
-export default class NodeDispatcher extends CommonDispatcher {
+/* Used for the case when javaploy is running in node with doppio */
+export default class NodeDoppioDispatcher extends CommonDispatcher {
 
   constructor(javapoly) {
     super(javapoly);

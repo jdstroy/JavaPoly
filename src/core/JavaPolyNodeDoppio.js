@@ -1,11 +1,11 @@
 import * as _ from 'underscore';
 import JavaPolyBase from './JavaPolyBase';
 import ProxyWrapper from './ProxyWrapper';
-import NodeDispatcher from '../dispatcher/NodeDispatcher.js'
+import NodeDoppioDispatcher from '../dispatcher/NodeDoppioDispatcher.js'
 import WrapperUtil from './WrapperUtil.js';
 import CommonUtils from './CommonUtils.js';
 
-const DEFAULT_JAVAPOLY_STANDALONE_OPTIONS = {
+const DEFAULT_JAVAPOLY_NODE_DOPPIO_OPTIONS = {
   doppioBase: '',
   javapolyBase: '',
 
@@ -40,7 +40,7 @@ const DEFAULT_JAVAPOLY_STANDALONE_OPTIONS = {
  */
 export default class JavaPoly extends JavaPolyBase {
   constructor(_options) {
-    const options = _.extend(DEFAULT_JAVAPOLY_STANDALONE_OPTIONS, _options);
+    const options = _.extend(DEFAULT_JAVAPOLY_NODE_DOPPIO_OPTIONS, _options);
     super(options);
 
     // Init objects for user to make possible start to work with JavaPoly instantly
@@ -49,7 +49,7 @@ export default class JavaPoly extends JavaPolyBase {
   }
 
   beginLoading(resolveDispatcherReady) {
-    this.dispatcher = new NodeDispatcher(this);
+    this.dispatcher = new NodeDoppioDispatcher(this);
     resolveDispatcherReady(this.dispatcher);
 
     WrapperUtil.dispatchOnJVM(this,'META_START_JVM', 0, null);

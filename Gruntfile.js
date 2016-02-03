@@ -6,14 +6,72 @@ const babelTransforms = [
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+/*
+    webpack: {
+      options: {},
+      build: {
+        target: "node",
+        entry: "./src/node-system.js",
+        output: {
+          path: 'build/',
+          filename: 'javapoly-node-system.js'
+        },
+        module: {
+          loaders: [
+            {
+              test: /\.js$/,
+              exclude: /node_modules/,
+              loader: 'babel', // 'babel-loader' is also a legal name to reference
+              query: {
+                presets: ['es2015']
+              }
+            }
+          ]
+        }
+      }
+    },
+    babel: {
+     // "node-system": {
+      options: {
+        presets: ['es2015'],
+        plugins: ['transform-es2015-modules-commonjs']
+      },
+      dist: {
+        files: {
+          'build/javapoly-node-system.js':['src/node-system.js']
+        }
+      }
+     // }
+    },
+*/
     browserify: {
-      node: {
+      "node-doppio": {
         files:{
-          'build/javapoly-node.js':['src/node.js']
+          'build/javapoly-node-doppio.js':['src/node-doppio.js']
         },
         options: {
           node: [],
           transform: babelTransforms
+        }
+      },
+      "node-system": {
+        files:{
+          'build/javapoly-node-system.js':['src/node-system.js']
+        },
+        options: {
+          browserifyOptions : {
+            "ignoreMissing": true,
+            "builtins": false,
+            "bare": true,
+            insertGlobalVars: {
+              process: function() {
+                return;
+              },
+            }
+          },
+          transform: [
+             ["babelify", { "presets": ["es2015"] }]
+          ]
         }
       },
       production: {
@@ -67,6 +125,14 @@ module.exports = function(grunt) {
         },
         sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']
       },
+      "compile-system": {
+        command: "javac",
+        javaOptions: {
+          "d": "build/classes/",
+          "cp": "build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar"
+        },
+        sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']
+      },
       "compile-test": {
         command: "javac",
         javaOptions: {
@@ -85,6 +151,11 @@ module.exports = function(grunt) {
       }
     },
     copy: {
+      jars: {
+        files: [
+          {expand: true, cwd: './src/jars/', src: ['*.jar'], dest: './build/jars'}
+        ]
+      },
       natives: {
         files: [
           {expand: true, cwd: './src/natives/', src: ['*.js'], dest: './build/natives'}
@@ -135,7 +206,7 @@ module.exports = function(grunt) {
       build: {
         options: {
           mode: 0700,
-          create: ['build/classes/com/javapoly', 'build/natives']
+          create: ['build/classes/com/javapoly', 'build/natives', 'build/jars']
         },
       },
     },
@@ -158,13 +229,18 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-run-java');
   grunt.loadNpmTasks('grunt-http-server');
   grunt.loadNpmTasks('grunt-mkdir');
+  grunt.loadNpmTasks('grunt-babel');
+  // grunt.loadNpmTasks('grunt-webpack');
 
   grunt.loadTasks('tasks');
 
   grunt.registerTask('build:java', ['mkdir:build', 'copy:natives', 'run_java:compile']);
+  grunt.registerTask('build:java-system', ['mkdir:build', 'copy:jars', 'run_java:compile-system']);
   grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
   grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'browserify:node', 'listings:javapoly']);
-  grunt.registerTask('build:node', ['mkdir:build', 'build:java', 'browserify:node']);
+  grunt.registerTask('build:node-doppio', ['mkdir:build', 'build:java', 'browserify:node-doppio']);
+  // grunt.registerTask('build:node-system', ['mkdir:build', 'build:java-system', 'webpack:build']);
+  grunt.registerTask('build:node-system', ['mkdir:build', 'build:java-system', 'browserify:node-system']);
   grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
 
   grunt.registerTask('default', ['build']);

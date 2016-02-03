@@ -1,25 +1,21 @@
 // `npm install source-map-support` and uncomment to get mapped sources in stack traces
 // require('source-map-support').install();
 
-// Not sure how to require these in src/*.js; browserify doesn't find them.
-// Hence adding them here to global scope
-global.NodeFS = require("fs");
-global.NodeProcess = require("process");
+const NodeFS = require("fs");
 
 const path = require('path');
 
 global.expect = require("expect/umd/expect.min.js");
 
 function initJavaPoly() {
-  require('../build/javapoly-node-doppio.js');
+  require('../build/javapoly-node-system.js');
+  // require('../src/node-system.js');
 
   global.isWorkerBased = false;
 
-  const doppioBase = path.resolve("node_modules/@hrj/doppiojvm-snapshot/dist/release-cli/")
   const javapolyBase = path.resolve("build/");
 
-  global.Doppio = require(doppioBase + "/src/doppiojvm.js");
-  const jp = new JavaPoly({doppioBase: doppioBase, javapolyBase: javapolyBase});
+  const jp = new JavaPoly({javapolyBase: javapolyBase});
 }
 
 function runScript(fileName) {
@@ -49,15 +45,27 @@ describe('javapoly test', function() {
   runScript("test/units/proxy.js");
   testProxy();
 
-  describe('Object wrapper Tests', function() {
-    before(() => {
-      return addClass(path.resolve('test/classes/Counter.class'));
+  it('should handle exceptions correctly', function() {
+    return addClass(path.resolve('test/classes/Main.class')).then(function(addClassResult){
+      return Java.type('Main').then(function(Main) {
+        return new Promise(function(resolve, reject) {
+          Main.exceptionThrower().then(function() {
+            reject(new Error("not expecting the promise to resolve"));
+          }, function(e) {
+            expect(e.name).toBe("java.lang.RuntimeException");
+            expect(e.message).toBe("Deliberate exception for testing");
+            expect(e.causedBy).toNotExist();
+            expect(e.printStackTrace).toExist();
+            resolve();
+          });
+        });
+      });
+    }, function(error) {
+      console.log(error.printStackTrace());
     });
-
-    runScript("test/units/objectWrappers.js");
-    testObjectWrappers();
   });
 
+  /*
   describe('Eval Tests', function() {
     before(() => {
       return addClass(path.resolve('test/classes/EvalTest.class'));
@@ -67,5 +75,6 @@ describe('javapoly test', function() {
     testEval();
 
   });
+  */
 
 });

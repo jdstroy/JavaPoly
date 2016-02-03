@@ -22,7 +22,7 @@ export default class JavaPolyBase {
      */
     this.dispatcher = null;
 
-    const dispatcherDeferred = new JavaPoly.deferred();
+    const dispatcherDeferred = new CommonUtils.deferred();
     this.dispatcherReady = dispatcherDeferred.promise;
     this.initJavaPoly(dispatcherDeferred.resolve, dispatcherDeferred.reject);
 
@@ -154,16 +154,6 @@ export default class JavaPolyBase {
     } else {
       return null;
     }
-  }
-
-  // Utility function to create a deferred promise
-  static deferred() {
-    this.promise = new Promise(function(resolve, reject) {
-      this.resolve = resolve;
-      this.reject = reject;
-    }.bind(this));
-    Object.freeze(this);
-    return this;
   }
 
 }

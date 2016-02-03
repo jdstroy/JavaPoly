@@ -1,5 +1,5 @@
 import CommonDispatcher from './CommonDispatcher.js'
-import DoppioManager from '../doppioManager/DoppioManager.js'
+import DoppioManager from '../jvmManager/DoppioManager.js'
 
 /**
  * The WorkerDispatcher is executed in web workers side.
