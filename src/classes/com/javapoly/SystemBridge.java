@@ -49,10 +49,6 @@ class SystemBridge implements Bridge {
      throw new IllegalStateException("Unexpected exception", use);
    }
 
-    /*
-    final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-    container.conntectToServer(MyClientEndpoint.class, new URI("ws://localhost:8080/tictactoeserver/endpoint"));
-    */
   }
 
   private boolean verify(String saltedToken, String secret) {
