@@ -69,16 +69,23 @@ export default class JavaPolyBase {
     // Initialize proxies for the most common/built-in packages.
     // This will make built-in jvm packages available, since the built-ins won't have their source code in the script tags (and thus wouldn't be analyzed at parse time).
     // Most importantly, it will setup warnings when Proxy is not defined in legacy browsers (warn upon access of one of these super common packages)
-    this.createProxyForClass(api, null, 'com');
-    this.createProxyForClass(api, null, 'org');
-    this.createProxyForClass(api, null, 'net');
-    this.createProxyForClass(api, null, 'sun');
-    this.createProxyForClass(api, null, 'java');
-    this.createProxyForClass(api, null, 'javax');
+    if(globalObject) {
+      this.createProxyForClass(globalObject, null, 'com');
+      this.createProxyForClass(globalObject, null, 'org');
+      this.createProxyForClass(globalObject, null, 'net');
+      this.createProxyForClass(globalObject, null, 'sun');
+      this.createProxyForClass(globalObject, null, 'java');
+      this.createProxyForClass(globalObject, null, 'javax');
+    }
 
     if (typeof Proxy !== 'undefined') {
       api.J = ProxyWrapper.createRootEntity(this, null);
+      if(globalObject) globalObject.J = api.J;
+    } else {
+      this.defineProxyWarning(api, 'J', 'accessor');
+      if(globalObject) this.defineProxyWarning(globalObject, 'J', 'accessor');
     }
+
     this.processScripts();
     const javaType = (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName);
     api.Java = {
@@ -98,8 +105,6 @@ export default class JavaPolyBase {
     if (globalObject) {
       globalObject.Java = api.Java;
       globalObject.addClass = api.addClass;
-      if (api.J)
-        globalObject.J = api.J;
     }
 
     return api;
@@ -138,9 +143,13 @@ export default class JavaPolyBase {
       obj[name] = ProxyWrapper.createRootEntity(this, name);
     }
     else {
-      const self = this;
-      Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.warn('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
+      this.defineProxyWarning(obj, name, type);
     }
+  }
+
+  defineProxyWarning(obj, name, type) {
+    var self = this;
+    Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.error('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
   }
 
   wrapJavaObject(obj, methods, nonFinalFields, finalFields) {
