@@ -7,13 +7,16 @@ import org.java_websocket.client.*;
 import javax.json.*;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Base64;
+import java.security.MessageDigest;
 
 class SystemBridge implements Bridge {
   private final WebSocketClient client;
+  private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
   private final java.util.Hashtable<String, JsonObject> msgTable = new java.util.Hashtable<>();
 
-  SystemBridge(final int port) {
+  SystemBridge(final int port, final String secret) {
     // System.out.println("Starting system bridge on port: " + port);
     try {
       this.client = new WebSocketClient(new URI("ws://localhost:" + port + "/")) {
@@ -23,7 +26,12 @@ class SystemBridge implements Bridge {
 
         public void onMessage( String message ) {
           final JsonObject jsonObj = Json.createReader(new StringReader(message)).readObject();
-          msgQueue.add(jsonObj);
+
+          if (verify(jsonObj.getString("token"), secret)) {
+            msgQueue.add(jsonObj);
+          } else {
+            System.err.println("Invalid token, ignoring message");
+          }
         }
 
         public void onClose( int code, String reason, boolean remote ) {
@@ -31,7 +39,8 @@ class SystemBridge implements Bridge {
         }
 
         public void onError( Exception ex ) {
-          System.out.println("On error");
+          System.out.println("Error in WS client: ");
+          ex.printStackTrace();
         }
 
       };
@@ -44,6 +53,27 @@ class SystemBridge implements Bridge {
     final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
     container.conntectToServer(MyClientEndpoint.class, new URI("ws://localhost:8080/tictactoeserver/endpoint"));
     */
+  }
+
+  private boolean verify(String saltedToken, String secret) {
+    final int separatorPos = saltedToken.indexOf('-');
+    final String salt = saltedToken.substring(0, separatorPos);
+    final String token = saltedToken.substring(separatorPos+1);
+
+    try {
+      final MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+      crypt.reset();
+      crypt.update((salt + '-' + secret).getBytes());
+      final String expected = encoder.encodeToString(crypt.digest());
+      final int indexOfPadStart = expected.indexOf('=');
+      final String expectedTrimmed = indexOfPadStart >= 0 ? expected.substring(0, indexOfPadStart) : expected;
+
+      return expectedTrimmed.equals(token);
+    } catch(java.security.NoSuchAlgorithmException e) {
+      e.printStackTrace();
+      return false;
+    }
+
   }
 
   public String getMessageId() {

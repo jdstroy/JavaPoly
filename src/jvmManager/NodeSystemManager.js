@@ -5,9 +5,10 @@ import WrapperUtil from '../core/WrapperUtil.js';
  * The NodeDoppioManager manages the Doppio JVM on Node
  */
 export default class NodeSystemManager {
-  constructor(javapoly, wsPort) {
+  constructor(javapoly, wsPort, secret) {
     this.javapoly = javapoly;
     this.wsPort = wsPort;
+    this.secret = secret;
 
     /**
      * Array that contains classpath, include the root path of class files , jar file path.
@@ -88,7 +89,7 @@ export default class NodeSystemManager {
     const childProcess = require('child_process');
     const spawn = childProcess.spawn;
     const classPath = 'build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
-    const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.wsPort];
+    const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.wsPort, this.secret];
     const child = spawn('java', args);
     child.stdout.on('data', (data) => {
         console.log(`stdout: ${data}`);

@@ -1,6 +1,7 @@
 import CommonUtils from '../core/CommonUtils.js';
 import CommonDispatcher from './CommonDispatcher.js'
 import NodeSystemManager from '../jvmManager/NodeSystemManager.js'
+import Tokens from 'csrf';
 
 /* Used for the case when javaploy is running in node with system JVM */
 export default class NodeSystemDispatcher extends CommonDispatcher {
@@ -8,9 +9,11 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
   constructor(javapoly) {
     super(javapoly);
     this.wscPromise = new CommonUtils.deferred();
+    this.tokens = new Tokens();
+    this.secret = this.tokens.secretSync()
   }
 
-  initWSServer(andThen) {
+  initWSServer() {
     const thisDispatcher = this;
     return new Promise((resolve) => {
       const http = require('http');
@@ -39,7 +42,7 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
 
   initDoppioManager(javapoly) {
     return this.initWSServer().then(address => {
-      return new NodeSystemManager(javapoly, address.port);
+      return new NodeSystemManager(javapoly, address.port, this.secret);
     });
   }
 
@@ -51,9 +54,10 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
 
   // JVM messages are added to a queue and dequed from the JVM main thread.
   handleJVMMessage(id, priority, messageType, data, callback) {
+    const token = this.tokens.create(this.secret)
     this.javaPolyCallbacks[id] = callback;
     this.wscPromise.promise.then((wsc) => {
-      const msgObj = {id: ""+id, priority: priority, messageType: messageType, data: data};
+      const msgObj = {id: ""+id, priority: priority, messageType: messageType, data: data, token: token};
       const msg = JSON.stringify(msgObj);
       wsc.send(msg);
     });
