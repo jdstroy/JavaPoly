@@ -22,14 +22,16 @@ $ grunt build:browser
 This creates `build/javapoly.js` file.
 The javapoly.js will auto-load the js library needed(browserjs.js, doppio lib and so on) from external site(eg, www.javapoly.com)
 
-For building JavaPoly-Node:
+For building JavaPoly-Node-Doppio and testing it:
 ```sh
-$ grunt build:node
+$ grunt build:node-doppio
+$ ./node_modules/mocha/bin/mocha test/TestJavaPolyNodeDoppio.js
 ```
 
-This creates `build/javapoly-node.js`. It can be tested with
+For building JavaPoly-Node-SystemJVM and testing it:
 ```sh
-$ ./node_modules/mocha/bin/mocha test/TestJavaPolyNodeDoppio.js
+$ grunt build:node-system
+$ ./node_modules/mocha/bin/mocha test/TestJavaPolyNodeSystem.js
 ```
 
 
