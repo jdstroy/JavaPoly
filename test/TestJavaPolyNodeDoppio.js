@@ -1,10 +1,7 @@
 // `npm install source-map-support` and uncomment to get mapped sources in stack traces
 // require('source-map-support').install();
 
-// Not sure how to require these in src/*.js; browserify doesn't find them.
-// Hence adding them here to global scope
 const NodeFS = require("fs");
-// global.NodeProcess = require("process");
 
 const path = require('path');
 

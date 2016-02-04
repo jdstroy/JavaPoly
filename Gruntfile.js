@@ -3,45 +3,31 @@ const babelTransforms = [
    ["babelify", { "presets": ["es2015"], "plugins": ["transform-runtime"] }]
 ];
 
+const gruntBrowserifyOptionsForNode = {
+  browserifyOptions : {
+    "ignoreMissing": true,
+    "builtins": false,
+    "bare": true,
+    insertGlobalVars: {
+      process: function() {
+        return;
+      },
+    }
+  },
+  transform: babelTransforms
+}
+
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     browserify: {
       "node-doppio": {
-        files:{
-          'build/javapoly-node-doppio.js':['src/node-doppio.js']
-        },
-        options: {
-          browserifyOptions : {
-            "ignoreMissing": true,
-            "builtins": false,
-            "bare": true,
-            insertGlobalVars: {
-              process: function() {
-                return;
-              },
-            }
-          },
-          transform: babelTransforms
-        }
+        files: { 'build/javapoly-node-doppio.js':['src/node-doppio.js'] },
+        options: gruntBrowserifyOptionsForNode
       },
       "node-system": {
-        files:{
-          'build/javapoly-node-system.js':['src/node-system.js']
-        },
-        options: {
-          browserifyOptions : {
-            "ignoreMissing": true,
-            "builtins": false,
-            "bare": true,
-            insertGlobalVars: {
-              process: function() {
-                return;
-              },
-            }
-          },
-          transform: babelTransforms
-        }
+        files: { 'build/javapoly-node-system.js':['src/node-system.js'] },
+        options: gruntBrowserifyOptionsForNode
       },
       production: {
         files:{
@@ -192,7 +178,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-http-server');
   grunt.loadNpmTasks('grunt-mkdir');
   grunt.loadNpmTasks('grunt-babel');
-  // grunt.loadNpmTasks('grunt-webpack');
 
   grunt.loadTasks('tasks');
 
