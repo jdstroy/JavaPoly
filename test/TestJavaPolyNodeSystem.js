@@ -42,6 +42,16 @@ describe('javapoly test', function() {
     });
   });
 
+  it('compile java source', function(){
+    return addClass(path.resolve('test/classes/Main3.java')).then(function(addClassResult){
+      return Java.type('com.javapoly.test.Main3').then(function(Main3) {
+        return Main3.testIt().then(function (result){
+          expect(result).toEqual("Main3::testIt()");
+        });
+      });
+    });
+  });
+
   runScript("test/units/proxy.js");
   testProxy();
 
