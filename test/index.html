@@ -33,19 +33,19 @@
     mocha.setup('bdd');
 
     expect.extend({
-      toBeGreaterThanOrEqual(limit) {
+      toBeGreaterThanOrEqual: function(limit) {
         expect.assert(this.actual >= limit, 'expected %s to be greater than or equal to ' + limit, this.actual);
         return this;
       },
-      toStartWith(prefix) {
+      toStartWith : function(prefix) {
         expect.assert(this.actual.startsWith(prefix), 'expected %s to start with ' + prefix, this.actual);
         return this;
       },
-      toEndWith(suffix) {
+      toEndWith : function(suffix) {
         expect.assert(this.actual.endsWith(suffix), 'expected %s to end with ' + suffix, this.actual);
         return this;
       },
-      toNeverReachHere() {
+      toNeverReachHere : function() {
         expect.assert(false, 'never expected to reach here');
         return this;
       }
@@ -57,7 +57,7 @@
     var titleSuffix = isWorkerBased ? " Web Worker" : " Browser";
 
     describe('JavaPoly' + titleSuffix, function() {
-      this.timeout(100000); // Let jvm to start and do not interrupt promises
+      this.timeout(150000); // Let jvm to start and do not interrupt promises
 
       testProxy();
 

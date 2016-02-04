@@ -32,12 +32,12 @@ function testDynamicAdd() {
     });
 
     it('add embedded source code', function() {
-      var mainJavaSource = `package com.javapoly.test;
-        public class Main4 {
-        public static String testIt() {
-          return "Main4:testIt()";
-        }
-      }`;
+      var mainJavaSource = 'package com.javapoly.test; \n' +
+        'public class Main4 { \n' +
+        'public static String testIt() { \n' +
+        '  return "Main4:testIt()"; \n' +
+        '} \n' +
+      '}';
       return addClass(mainJavaSource).then(function(addClassResult){
         return Java.type('com.javapoly.test.Main4').then(function(Main4) {
           return Main4.testIt().then(function(result) {
@@ -75,12 +75,12 @@ function testDynamicAdd() {
         });
 
         it('add embedded source code', function() {
-          var mainJavaSource = `package com.javapoly.test;
-            public class Main4 {
-            public static String testIt() {
-              return "Main4:testIt()";
-            }
-          }`;
+          var mainJavaSource = 'package com.javapoly.test;\n' +
+            'public class Main4 {\n' +
+            'public static String testIt() {\n' +
+              'return "Main4:testIt()";\n' +
+            '}\n' +
+          '}';
           return addClass(mainJavaSource).then(function(addClassResult){
             return J.com.javapoly.test.Main4.testIt().then(function(result) {
               expect(result).toEqual('Main4:testIt()');

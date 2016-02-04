@@ -1,4 +1,7 @@
 const doppioPath = "./node_modules/@hrj/doppiojvm-snapshot/"
+const babelTransforms = [
+   ["babelify", { "presets": ["es2015"], "plugins": ["transform-runtime"] }]
+];
 
 module.exports = function(grunt) {
   grunt.initConfig({
@@ -10,9 +13,7 @@ module.exports = function(grunt) {
         },
         options: {
           node: [],
-          transform: [
-             ["babelify", { "presets": ["es2015"] }]
-          ]
+          transform: babelTransforms
         }
       },
       production: {
@@ -21,9 +22,7 @@ module.exports = function(grunt) {
           'build/javapoly_worker.js':['src/webworkers/JavaPolyWorker.js']
         },
         options: {
-          transform: [
-             ["babelify", { "presets": ["es2015"] }]
-          ]
+          transform: babelTransforms
         }
       },
       development:{
@@ -32,9 +31,7 @@ module.exports = function(grunt) {
           'build/javapoly_worker.js':['src/webworkers/JavaPolyWorker.js']
         },
         options: {
-          transform: [
-             ["babelify", { "presets": ["es2015"] }]
-          ],
+          transform: babelTransforms,
           browserifyOptions: {
             debug: true
           }
