@@ -9,14 +9,17 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Base64;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 class SystemBridge implements Bridge {
   private final WebSocketClient client;
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
   private final java.util.Hashtable<String, JsonObject> msgTable = new java.util.Hashtable<>();
+  private final String secret;
 
   SystemBridge(final int port, final String secret) {
+    this.secret = secret;
     // System.out.println("Starting system bridge on port: " + port);
     try {
       this.client = new WebSocketClient(new URI("ws://localhost:" + port + "/")) {
@@ -51,25 +54,37 @@ class SystemBridge implements Bridge {
 
   }
 
-  private boolean verify(String saltedToken, String secret) {
+  private String tokenize(final String salt, final String secret) throws NoSuchAlgorithmException{
+    final MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+    crypt.reset();
+    crypt.update((salt + '-' + secret).getBytes());
+    final String expected = encoder.encodeToString(crypt.digest());
+    final int indexOfPadStart = expected.indexOf('=');
+    final String expectedTrimmed = indexOfPadStart >= 0 ? expected.substring(0, indexOfPadStart) : expected;
+    return expectedTrimmed;
+  }
+
+  private String makeToken() {
+    final String salt = ""+Math.random();
+    try {
+      return salt + "-" + tokenize(salt, secret);
+    } catch(java.security.NoSuchAlgorithmException e) {
+      e.printStackTrace();
+      return "failedToken";
+    }
+  }
+
+  private boolean verify(final String saltedToken, final String secret) {
     final int separatorPos = saltedToken.indexOf('-');
     final String salt = saltedToken.substring(0, separatorPos);
     final String token = saltedToken.substring(separatorPos+1);
 
     try {
-      final MessageDigest crypt = MessageDigest.getInstance("SHA-1");
-      crypt.reset();
-      crypt.update((salt + '-' + secret).getBytes());
-      final String expected = encoder.encodeToString(crypt.digest());
-      final int indexOfPadStart = expected.indexOf('=');
-      final String expectedTrimmed = indexOfPadStart >= 0 ? expected.substring(0, indexOfPadStart) : expected;
-
-      return expectedTrimmed.equals(token);
+      return tokenize(salt, secret).equals(token);
     } catch(java.security.NoSuchAlgorithmException e) {
       e.printStackTrace();
       return false;
     }
-
   }
 
   public String getMessageId() {
@@ -138,7 +153,10 @@ class SystemBridge implements Bridge {
   public void returnResult(String messageId, Object returnValue) {
     final JsonValue returnObj = toJsonObj(returnValue);
     final JsonObject resultObj = Json.createObjectBuilder().add("success", true).add("returnValue", returnObj).build();
-    final JsonObject msgObj = Json.createObjectBuilder().add("id", messageId).add("result", resultObj).build();
+    final JsonObject msgObj = Json.createObjectBuilder()
+      .add("id", messageId)
+      .add("token", makeToken())
+      .add("result", resultObj).build();
     final String msg = toString(msgObj);
     this.client.send(msg);
   }
@@ -171,7 +189,10 @@ class SystemBridge implements Bridge {
   public void returnErrorFlat(String messageId, FlatThrowable ft) {
     final JsonValue causeObj = toJsonObj(ft);
     final JsonObject resultObj = Json.createObjectBuilder().add("success", false).add("cause", causeObj).build();
-    final JsonObject msgObj = Json.createObjectBuilder().add("id", messageId).add("result", resultObj).build();
+    final JsonObject msgObj = Json.createObjectBuilder()
+      .add("id", messageId)
+      .add("token", makeToken())
+      .add("result", resultObj).build();
     final String msg = toString(msgObj);
     this.client.send(msg);
   }

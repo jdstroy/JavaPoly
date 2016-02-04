@@ -28,7 +28,11 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
         wss.on('connection', (wsc) => {
           wsc.on('message', function incoming(message) {
             const msg = JSON.parse(message);
-            thisDispatcher.callbackMessage(msg.id, msg.result);
+            if (thisDispatcher.tokens.verify(thisDispatcher.secret, msg.token)) {
+              thisDispatcher.callbackMessage(msg.id, msg.result);
+            } else {
+              console.log("Invalid CSRF token, ignoring message");
+            }
           });
           thisDispatcher.wscPromise.resolve(wsc);
 
