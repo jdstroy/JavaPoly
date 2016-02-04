@@ -6,51 +6,22 @@ const babelTransforms = [
 module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-/*
-    webpack: {
-      options: {},
-      build: {
-        target: "node",
-        entry: "./src/node-system.js",
-        output: {
-          path: 'build/',
-          filename: 'javapoly-node-system.js'
-        },
-        module: {
-          loaders: [
-            {
-              test: /\.js$/,
-              exclude: /node_modules/,
-              loader: 'babel', // 'babel-loader' is also a legal name to reference
-              query: {
-                presets: ['es2015']
-              }
-            }
-          ]
-        }
-      }
-    },
-    babel: {
-     // "node-system": {
-      options: {
-        presets: ['es2015'],
-        plugins: ['transform-es2015-modules-commonjs']
-      },
-      dist: {
-        files: {
-          'build/javapoly-node-system.js':['src/node-system.js']
-        }
-      }
-     // }
-    },
-*/
     browserify: {
       "node-doppio": {
         files:{
           'build/javapoly-node-doppio.js':['src/node-doppio.js']
         },
         options: {
-          node: [],
+          browserifyOptions : {
+            "ignoreMissing": true,
+            "builtins": false,
+            "bare": true,
+            insertGlobalVars: {
+              process: function() {
+                return;
+              },
+            }
+          },
           transform: babelTransforms
         }
       },
@@ -69,9 +40,7 @@ module.exports = function(grunt) {
               },
             }
           },
-          transform: [
-             ["babelify", { "presets": ["es2015"] }]
-          ]
+          transform: babelTransforms
         }
       },
       production: {
@@ -119,13 +88,6 @@ module.exports = function(grunt) {
         failOnError: true
       },
       compile: {
-        command: "javac",
-        javaOptions: {
-          "d": "build/classes/"
-        },
-        sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']
-      },
-      "compile-system": {
         command: "javac",
         javaOptions: {
           "d": "build/classes/",
@@ -235,12 +197,10 @@ module.exports = function(grunt) {
   grunt.loadTasks('tasks');
 
   grunt.registerTask('build:java', ['mkdir:build', 'copy:natives', 'run_java:compile']);
-  grunt.registerTask('build:java-system', ['mkdir:build', 'copy:jars', 'run_java:compile-system']);
   grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
   grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'browserify:node', 'listings:javapoly']);
   grunt.registerTask('build:node-doppio', ['mkdir:build', 'build:java', 'browserify:node-doppio']);
-  // grunt.registerTask('build:node-system', ['mkdir:build', 'build:java-system', 'webpack:build']);
-  grunt.registerTask('build:node-system', ['mkdir:build', 'build:java-system', 'browserify:node-system']);
+  grunt.registerTask('build:node-system', ['mkdir:build', 'build:java', 'browserify:node-system']);
   grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
 
   grunt.registerTask('default', ['build']);

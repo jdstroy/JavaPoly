@@ -111,9 +111,9 @@ function flatThrowableToJS(ft) {
 }
 
 registerNatives({
-  'com/javapoly/Main': {
+  'com/javapoly/DoppioBridge': {
 
-    'dispatchMessage(Ljava/lang/String;)V': function(thread, msgId) {
+    'dispatchMessage(Ljava/lang/String;)V': function(thread, obj, msgId) {
       var callback = javapoly0.dispatcher.getMessageCallback(msgId);
       thread.setStatus(6); // ASYNC_WAITING
       callback(thread, function() {
@@ -121,15 +121,15 @@ registerNatives({
       });
     },
 
-    'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, msgId, returnValue) {
+    'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, obj, msgId, returnValue) {
       javapoly0.dispatcher.callbackMessage(msgId,{success:true, returnValue: javaObjToJS(thread, returnValue)});
      },
 
-    'returnErrorFlat(Ljava/lang/String;Lcom/javapoly/FlatThrowable;)V': function(thread, msgId, flatThrowable) {
+    'returnErrorFlat(Ljava/lang/String;Lcom/javapoly/FlatThrowable;)V': function(thread, obj, msgId, flatThrowable) {
       javapoly0.dispatcher.callbackMessage(msgId, {success:false, cause: flatThrowableToJS(flatThrowable)});
      },
 
-    'getMessageId()Ljava/lang/String;': function(thread) {
+    'getMessageId()Ljava/lang/String;': function(thread, obj) {
       var id = javapoly0.dispatcher.getMessageId();
       if (id) {
         return wrapObject(thread, id);
@@ -142,7 +142,7 @@ registerNatives({
       }
     },
 
-    'getMessageType(Ljava/lang/String;)Ljava/lang/String;': function(thread, msgId) {
+    'getMessageType(Ljava/lang/String;)Ljava/lang/String;': function(thread, obj, msgId) {
       var unwrappedData = javapoly0.dispatcher.getMessageType(msgId);
       if (typeof unwrappedData !== 'undefined') {
         return wrapObject(thread, unwrappedData);
@@ -151,7 +151,7 @@ registerNatives({
       }
     },
 
-    'getData(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, msgId) {
+    'getData(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, obj, msgId) {
       var unwrappedData = javapoly0.dispatcher.getMessageData(msgId);
       if (typeof unwrappedData !== 'undefined') {
         return wrapObject(thread, unwrappedData);
@@ -160,7 +160,7 @@ registerNatives({
       }
     },
 
-    'setJavaPolyInstanceId(Ljava/lang/String;)V': function(thread, javapolyId){
+    'setJavaPolyInstanceId(Ljava/lang/String;)V': function(thread, obj, javapolyId){
       javapoly0 = JavaPoly.getInstance(javapolyId);
     }
   }

@@ -22,7 +22,7 @@ export default class NodeDoppioManager {
   }
 
   dynamicMountJava(src) {
-    const fs = NodeFS;
+    const fs = require("fs");;
     const options = this.getOptions();
     return new Promise((resolve, reject) => {
       // remote file, we need to download the file data of that url and parse the type.
@@ -58,7 +58,7 @@ export default class NodeDoppioManager {
 
   writeRemoteClassFileIntoFS(src, classFileData){
     const path = require('path');
-    const fs = NodeFS;
+    const fs = require('fs');;
     const options = this.getOptions();
     const classfile = require('./../tools/classfile.js');
     const fsext = require('./../tools/fsext')(fs, path);

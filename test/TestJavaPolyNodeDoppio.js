@@ -3,8 +3,8 @@
 
 // Not sure how to require these in src/*.js; browserify doesn't find them.
 // Hence adding them here to global scope
-global.NodeFS = require("fs");
-global.NodeProcess = require("process");
+const NodeFS = require("fs");
+// global.NodeProcess = require("process");
 
 const path = require('path');
 

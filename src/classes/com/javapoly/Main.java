@@ -16,7 +16,12 @@ public class Main {
 
     initClassLoader();
 
-    bridge = new SystemBridge(Integer.parseInt(args[2]));
+    if (args.length > 1 && "system".equals(args[1])) {
+      bridge = new SystemBridge(Integer.parseInt(args[2]));
+    } else {
+      bridge = new DoppioBridge();
+    }
+
     // when running multiple instances of JavaPoly, we want know which javapoly/jvm instance we are working in.
     // set the javapoly instance by id.
     bridge.setJavaPolyInstanceId(args[0]);
@@ -321,16 +326,6 @@ public class Main {
 
   private static void returnError(final String messageId, final Throwable throwable) {
     bridge.returnErrorFlat(messageId, flatten(throwable));
-  }
-
-  private static class DoppioBridge implements Bridge {
-    public native String getMessageId();
-    public native Object[] getData(String messageId);
-    public native String getMessageType(String messageId);
-    public native void dispatchMessage(String messageId);
-    public native void returnResult(String messageId, Object returnValue);
-    public native void returnErrorFlat(String messageId, FlatThrowable ft);
-    public native void setJavaPolyInstanceId(String javapolyId);
   }
 
   public static void dumpException(final Throwable e) {
