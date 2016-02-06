@@ -113,16 +113,14 @@ export default class JavaPolyBase {
   // data could be text string of java source or the url of remote java class/jar/source
   addClass(data){
     return new Promise((resolve, reject) => {
-      const ifContainNewLine = data.indexOf('\n') >= 0;
-      // If the text data contain a new line or the length > 2048, try to parse it as java souce string
-      if (ifContainNewLine || data.length > 2048) {
-        const classInfo = CommonUtils.detectClassAndPackageNames(data) ;
-        // parse success, embedded java source code
-        if (classInfo && classInfo.class ){
-          return this.compileJavaSource(data, resolve, reject);
-        }
+      // try to parse it as java souce string
+      const classInfo = CommonUtils.detectClassAndPackageNames(data) ;
+      // parse success, embedded java source code
+      if (classInfo && classInfo.class ){
+        return this.compileJavaSource(data, resolve, reject);
       }
 
+      // try add remote java/class/jar file
       return WrapperUtil.dispatchOnJVM(this, 'FS_DYNAMIC_MOUNT_JAVA', 10, {src:data}, resolve, reject);
 
     });

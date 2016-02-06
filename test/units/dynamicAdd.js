@@ -32,11 +32,11 @@ function testDynamicAdd() {
     });
 
     it('add embedded source code', function() {
-      var mainJavaSource = 'package com.javapoly.test; \n' +
-        'public class Main4 { \n' +
-        'public static String testIt() { \n' +
-        '  return "Main4:testIt()"; \n' +
-        '} \n' +
+      var mainJavaSource = 'package com.javapoly.test; ' +
+        'public class Main4 { ' +
+        'public static String testIt() { ' +
+        '  return "Main4:testIt()"; ' +
+        '} ' +
       '}';
       return addClass(mainJavaSource).then(function(addClassResult){
         return Java.type('com.javapoly.test.Main4').then(function(Main4) {
