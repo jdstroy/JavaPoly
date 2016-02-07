@@ -227,10 +227,10 @@ function testStringIdAccess() {
         });
       });
 
-      it('should call Long constructor', function() {
-        return Java.new('Overload', 1000000000000001).then(function(obj) {
+      it('should call long constructor', function() {
+        return Java.new('Overload', 100000000000001).then(function(obj) {
           return obj.getText().then(function(result) {
-            expect(result).toEqual('Long:1000000000000001');
+            expect(result).toEqual('long:100000000000001');
           });
         });
       });

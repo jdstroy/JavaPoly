@@ -12,8 +12,8 @@ public class Overload {
     this.text = "Character:" + c;
   }
 
-  public Overload(Long l) {
-    this.text = "Long:" + l;
+  public Overload(long l) {
+    this.text = "long:" + l;
   }
 
   public Overload(Float f) {
