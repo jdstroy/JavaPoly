@@ -9,12 +9,16 @@ public class Overload {
     this.text = "empty";
   }
 
-  public Overload(String name) {
-    this.text = "string:" + name;
+  public Overload(Character c) {
+    this.text = "Character:" + c;
   }
 
-  public Overload(int number) {
-    this.text = "number:" + number;
+  public Overload(Long l) {
+    this.text = "Long:" + l;
+  }
+
+  public Overload(Float f) {
+    this.text = "Float:" + f;
   }
 
   public static String staticMethod(char ch) {

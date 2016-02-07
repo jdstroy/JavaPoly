@@ -205,17 +205,10 @@ public class Main {
   }
 
   public static Object invokeClassConstructor(String className, Object[] params) throws Exception {
-    final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-    final Constructor suitableConstructor = matchConstructor(clazz.getConstructors(), params);
-    final Object returnValue = suitableConstructor.newInstance(params);
+    Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
+    Object returnValue = ConstructorUtils.invokeConstructorFuzzy(clazz, params);
     return returnValue;
   }
-
-  // public static Object invokeClassConstructor(String className, Object[] params) throws Exception {
-  //   Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-  //   Object returnValue = ConstructorUtils.invokeConstructor(clazz, params);
-  //   return returnValue;
-  // }
 
   private static Object invokeObjectMethod(Object obj, String methodName, Object[] params) throws Exception {
     Object returnValue = MethodUtils.invokeMethodFuzzy(obj, methodName, params);

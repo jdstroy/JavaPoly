@@ -496,21 +496,29 @@
             });
           });
 
-          // it('should call string constructor', function() {
-          //   return Java.new('Overload', 'name').then(function(result) {
-          //     return result.getText().then(function(result) {
-          //       expect(result).toEqual('string:name');
-          //     });
-          //   });
-          // });
-          //
-          // it('should call integer constructor', function() {
-          //   return Java.new('Overload', 42).then(function(result) {
-          //     return result.getText().then(function(result) {
-          //       expect(result).toEqual('number:42');
-          //     });
-          //   });
-          // });
+          it('should call Character constructor', function() {
+            return Java.new('Overload', 'a').then(function(obj) {
+              return obj.getText().then(function(result) {
+                expect(result).toEqual('Character:a');
+              });
+            });
+          });
+
+          it('should call Long constructor', function() {
+            return Java.new('Overload', 1000000000000001).then(function(obj) {
+              return obj.getText().then(function(result) {
+                expect(result).toEqual('Long:1000000000000001');
+              });
+            });
+          });
+
+          it('should call Float constructor', function() {
+            return Java.new('Overload', 1.5).then(function(obj) {
+              return obj.getText().then(function(result) {
+                expect(result).toEqual('Float:1.5');
+              });
+            });
+          });
         });
 
       });
