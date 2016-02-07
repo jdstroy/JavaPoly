@@ -203,7 +203,7 @@ class DoppioManager {
       Promise.all(this.mountHub).then(() => {
         this.javapoly.jvm = new Doppio.VM.JVM({
           doppioHomePath: options.doppioLibUrl,
-          bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
+          bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes", "/javapoly/jars/commons-lang3-3.5-SNAPSHOT.jar"],
           classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',

@@ -77,7 +77,7 @@ module.exports = function(grunt) {
         command: "javac",
         javaOptions: {
           "d": "build/classes/",
-          "cp": "build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar"
+          "cp": ["build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar", "src/jars/commons-lang3-3.5-SNAPSHOT.jar"]
         },
         sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']
       },
@@ -109,6 +109,11 @@ module.exports = function(grunt) {
           {expand: true, cwd: './src/natives/', src: ['*.js'], dest: './build/natives'}
         ]
       },
+      jars: {
+        files: [
+          {expand: true, cwd: './src/jars/', src: ['*.jar'], dest: './build/jars'}
+        ]
+      },
       doppio_fastdev: {
         files: [
           {expand: true, cwd: doppioPath + '/dist/fast-dev/', src: ['**'], dest: './test/doppio'},
@@ -119,7 +124,7 @@ module.exports = function(grunt) {
         files: [
           {expand: true, cwd: './node_modules/browserfs/dist/', src: ['**'], dest: './test/browserfs'},
           {expand: true, cwd: './node_modules/browserfs/', src: ['package.json'], dest: './test/browserfs'}
-        ]        
+        ]
       }
     },
     compare_version: {
@@ -146,7 +151,7 @@ module.exports = function(grunt) {
         showDir : true,
         autoIndex: true,
         runInBackground: false,
-        port: 8080,    
+        port: 8080,
         root: 'test/.'
       }
     },

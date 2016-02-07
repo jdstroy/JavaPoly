@@ -169,5 +169,79 @@ function testStringIdAccess() {
 
     });
 
+
+    describe('method signature matching logic', function() {
+      it('should print string', function() {
+        return Java.type('java.lang.System').then(function(System) {
+          return System.out.then(function(out) {
+            out.println("hello javapoly");
+          });
+        });
+      });
+
+      it('should call char static method', function() {
+        return Java.type('Overload').then(function(Overload) {
+          return Overload.staticMethod('a').then(function(result) {
+            expect(result).toEqual('char:a');
+          });
+        });
+      });
+
+      it('should call byte static method', function() {
+        return Java.type('Overload').then(function(Overload) {
+          return Overload.staticMethod(42).then(function(result) {
+            expect(result).toEqual('byte:42');
+          });
+        });
+      });
+
+      it('should call Float static method', function() {
+        return Java.type('Overload').then(function(Overload) {
+          return Overload.staticMethod(42.5).then(function(result) {
+            expect(result).toEqual('Float:42.5');
+          });
+        });
+      });
+
+      it('should call String method', function() {
+        return Java.new('Overload').then(function(obj) {
+          return obj.method('a').then(function(result) {
+            expect(result).toEqual('String:a');
+          });
+        });
+      });
+
+      it('should call Short method', function() {
+        return Java.new('Overload').then(function(obj) {
+          return obj.method(142).then(function(result) {
+            expect(result).toEqual('Short:142');
+          });
+        });
+      });
+
+      it('should call Character constructor', function() {
+        return Java.new('Overload', 'a').then(function(obj) {
+          return obj.getText().then(function(result) {
+            expect(result).toEqual('Character:a');
+          });
+        });
+      });
+
+      it('should call Long constructor', function() {
+        return Java.new('Overload', 1000000000000001).then(function(obj) {
+          return obj.getText().then(function(result) {
+            expect(result).toEqual('Long:1000000000000001');
+          });
+        });
+      });
+
+      it('should call Float constructor', function() {
+        return Java.new('Overload', 1.5).then(function(obj) {
+          return obj.getText().then(function(result) {
+            expect(result).toEqual('Float:1.5');
+          });
+        });
+      });
+    });
   });
 }
