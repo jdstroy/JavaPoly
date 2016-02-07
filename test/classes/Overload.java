@@ -5,7 +5,6 @@ public class Overload {
   private String text;
 
   public Overload() {
-    System.out.println("Overload()");
     this.text = "empty";
   }
 
