@@ -55,7 +55,7 @@ module.exports = function(grunt) {
       compile: {
         command: "javac",
         javaOptions: {
-          "classpath": ["src/jars/commons-lang3-3.4.jar"],
+          "classpath": ["src/jars/commons-lang3-3.5-SNAPSHOT.jar"],
           "d": "build/classes/"
         },
         sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']

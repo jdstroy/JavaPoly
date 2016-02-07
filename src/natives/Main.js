@@ -32,8 +32,7 @@ function wrapArray(thread, obj) {
 }
 
 function wrapNumber(thread, obj) {
-  // TODO Temporarily changed to I due to Java matching issues
-  return util.boxPrimitiveValue(thread, 'I', obj)
+  return util.boxPrimitiveValue(thread, 'D', obj)
 }
 
 function getPublicFields(obj) {
