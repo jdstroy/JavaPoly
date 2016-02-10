@@ -33,7 +33,7 @@ function testObjectWrappers() {
       it('should automatically handle conversion of 64 bit integers', function() {
         return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
           return myclass.test().then(function(result) {
-            expect(Object.prototype.toString.call(result)).toBe('[object Number]');
+            expect(typeof result).toBe('number');
           });
         });
       });
