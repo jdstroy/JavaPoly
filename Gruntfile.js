@@ -87,7 +87,7 @@ module.exports = function(grunt) {
           "d": "test/classes",
           "cp": "build/classes"
         },
-        sourceFiles: ['test/classes/**.java']
+        sourceFiles: ['test/classes/**.java', 'test/classes/com/javapoly/test/*.java']
       }
     },
     clean: {
