@@ -30,6 +30,14 @@ function testObjectWrappers() {
         });
       });
 
+      it('should automatically handle conversion of 64 bit integers', function() {
+        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+          return myclass.test().then(function(result) {
+            expect(Object.prototype.toString.call(result)).toBe('[object Number]');
+          });
+        });
+      });
+
       it('should be used for new objects defined with convenience function', function() {
         return Java.new('java.io.File', "/sys/someunlikelyfilenamethatwontexist").then(function(file) {
           return file.exists().then(function(itExists) {
