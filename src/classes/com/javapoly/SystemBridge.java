@@ -2,56 +2,71 @@ package com.javapoly;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import org.java_websocket.handshake.ServerHandshake;
-import org.java_websocket.client.*;
 import javax.json.*;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Base64;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 class SystemBridge implements Bridge {
-  private final WebSocketClient client;
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
+  private final java.util.concurrent.LinkedBlockingQueue<JsonObject> responseQueue = new java.util.concurrent.LinkedBlockingQueue<>();
   private final java.util.Hashtable<String, JsonObject> msgTable = new java.util.Hashtable<>();
   private final String secret;
 
-  SystemBridge(final int port, final String secret) {
+  SystemBridge(final String secret) {
     this.secret = secret;
     // System.out.println("Starting system bridge on port: " + port);
     try {
-      this.client = new WebSocketClient(new URI("ws://localhost:" + port + "/")) {
-        public void onOpen( ServerHandshake handshakedata ) {
-          // System.out.println("On open");
+      final SimpleHttpServer srv = new SimpleHttpServer(4000);
+      System.out.println(String.format("::bridgePort=%d::", srv.getPort()));
+      new Thread(() -> {
+        while(processRequest(srv));
+      }).start();
+
+    } catch (IOException e) {
+      System.out.println("Exception: " + e.getMessage());
+      e.printStackTrace();
+    }
+
+  }
+
+  private boolean processRequest(final SimpleHttpServer srv) {
+    srv.process((headers, requestMethod, requestUrl, body, connection) -> {
+      try {
+        System.out.println("Linger: " + connection.getSoLinger());
+        System.out.println("Keep alive: " + connection.getKeepAlive());
+      } catch (java.net.SocketException e) {
+        System.out.println("Exception: " + e.getMessage());
+        e.printStackTrace();
+      }
+      try {
+        final JsonObject jsonObj = Json.createReader(new StringReader(body)).readObject();
+        if (verify(jsonObj.getString("token"), secret)) {
+          msgQueue.add(jsonObj);
+        } else {
+          System.err.println("Invalid token, ignoring message");
         }
-
-        public void onMessage( String message ) {
-          final JsonObject jsonObj = Json.createReader(new StringReader(message)).readObject();
-
-          if (verify(jsonObj.getString("token"), secret)) {
-            msgQueue.add(jsonObj);
-          } else {
-            System.err.println("Invalid token, ignoring message");
-          }
-        }
-
-        public void onClose( int code, String reason, boolean remote ) {
-          System.out.println("On close");
-        }
-
-        public void onError( Exception ex ) {
-          System.out.println("Error in WS client: ");
-          ex.printStackTrace();
-        }
-
-      };
-      new Thread(client).start();
-   } catch (final URISyntaxException use) {
-     throw new IllegalStateException("Unexpected exception", use);
-   }
-
+        final PrintWriter out = new PrintWriter(connection.getOutputStream(), true);
+        out.println("HTTP/1.0 200");
+        final JsonObject msgObj = responseQueue.take();
+        final String msg = toString(msgObj);
+        out.println("Content-Length: " + msg.length());
+        out.println("Connection: close");
+        out.println("");
+        out.println(msg);
+        out.flush();
+        out.close();
+      } catch (InterruptedException | IOException e) {
+        System.out.println("Exception: " + e.getMessage());
+        e.printStackTrace();
+      }
+    });
+    return true;
   }
 
   private String tokenize(final String salt, final String secret) throws NoSuchAlgorithmException{
@@ -121,8 +136,10 @@ class SystemBridge implements Bridge {
   }
 
   public void dispatchMessage(String messageId) {
+    /*
     // TODO
     this.client.send(messageId);
+    */
   }
 
   private JsonValue toJsonObj(Object obj) {
@@ -157,8 +174,7 @@ class SystemBridge implements Bridge {
       .add("id", messageId)
       .add("token", makeToken())
       .add("result", resultObj).build();
-    final String msg = toString(msgObj);
-    this.client.send(msg);
+    responseQueue.add(msgObj);
   }
 
   private JsonValue toJsonObj(FlatThrowable ft) {
@@ -193,8 +209,7 @@ class SystemBridge implements Bridge {
       .add("id", messageId)
       .add("token", makeToken())
       .add("result", resultObj).build();
-    final String msg = toString(msgObj);
-    this.client.send(msg);
+    responseQueue.add(msgObj);
   }
 
   public void setJavaPolyInstanceId(String javapolyId) {

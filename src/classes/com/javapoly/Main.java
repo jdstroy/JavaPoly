@@ -18,8 +18,8 @@ public class Main {
 
     initClassLoader();
 
-    if (args.length > 3 && "system".equals(args[1])) {
-      bridge = new SystemBridge(Integer.parseInt(args[2]), args[3]);
+    if (args.length > 2 && "system".equals(args[1])) {
+      bridge = new SystemBridge(args[2]);
     } else {
       bridge = new DoppioBridge();
     }
@@ -28,12 +28,12 @@ public class Main {
     // set the javapoly instance by id.
     bridge.setJavaPolyInstanceId(args[0]);
 
-
     try {
       boolean done = false;
       while (!done) {
         final String messageId = bridge.getMessageId();
         final String messageType = bridge.getMessageType(messageId);
+        // System.out.println("Handling message:" + messageType);
         // TODO: Create enum
         switch (messageType) {
         case "CLASS_METHOD_INVOCATION":

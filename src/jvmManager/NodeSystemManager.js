@@ -5,9 +5,10 @@ import WrapperUtil from '../core/WrapperUtil.js';
  * The NodeDoppioManager manages the Doppio JVM on Node
  */
 export default class NodeSystemManager {
-  constructor(javapoly, wsPort, secret) {
+  constructor(javapoly, secret, httpPortDeffered) {
     this.javapoly = javapoly;
-    this.wsPort = wsPort;
+    // this.wsPort = wsPort;
+    this.httpPortDeffered = httpPortDeffered;
     this.secret = secret;
 
     /**
@@ -86,21 +87,44 @@ export default class NodeSystemManager {
   }
 
   initJVM() {
+    const _this = this;
     const childProcess = require('child_process');
     const spawn = childProcess.spawn;
     const classPath = CommonUtils.getCommonsPath()+':build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
-    const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.wsPort, this.secret];
-    const child = spawn('java', args);
-    child.stdout.on('data', (data) => {
+    const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.secret];
+    const child = spawn('java', args, {detached: true, stdio: ['ignore', 'ignore', 'ignore']});
+    _this.httpPortDeffered.resolve(4000);
+    /*
+    child.stdout.on('data', function cb (data) {
+      const match = data.toString().match(/::bridgePort=(\d+)::/);
+      if (match) {
+        console.log("Port: " + match[1]);
+        _this.httpPortDeffered.resolve(Number.parseInt(match[1]));
+        child.stdout.removeListener("data", cb);
+        child.disconnect();
+      } else {
         console.log(`stdout: ${data}`);
+      }
     });
+    */
+    child.unref();
 
+/*
     child.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
+      console.error(`stderr: ${data}`);
     });
+*/
 
+/*
     child.on('close', (code) => {
         console.log(`child process exited with code ${code}`);
     });
+*/
+
+    /*
+    process.on("shutdown", () => {
+      console.log("Shutting down");
+    });
+    */
   }
 }
