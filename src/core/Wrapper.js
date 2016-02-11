@@ -57,27 +57,6 @@ class Wrapper {
       }
     });
 
-    function checkValue(value) {
-      if (!value) return value;
-      function pad(str) {
-        return ('0000000000000000' + str).slice(-16);
-      }
-      // Check if what we're getting is doppio's representation of a long (gLong)
-      // I know this is a little bit hacky, but I don't think there's any other way.
-      if (value.hasOwnProperty('high_') &&
-          value.hasOwnProperty('low_')) {
-        // If it is a gLong, see if it's small enough to fit into a JavaScript Number.
-        // This is tricky because we can't use number comparisons (since it will round)
-        if (pad((value.isNegative() ? value.negate() : value).toString()).localeCompare('9007199254740991') <= 0) {
-          return value.toNumber();
-        } else {
-          throw new RangeError('Unfortunately, JavaScript doesn\'t yet support 64 bit integers.');
-        }
-      } else {
-        return value;
-      }
-    }
-
     return Promise.all(wrappedArgPromises).then((wrappedArgs) => {
       const resultPromise = wrapper.runMethodWithJavaDispatching(methodName, wrappedArgs);
       if (okToReflect) {
@@ -88,7 +67,7 @@ class Wrapper {
               return result._javaObj["com/javapoly/Eval$JSValue/rawValue"];
             }
           }
-          return checkValue(result);
+          return result;
         });
       } else {
         return resultPromise;
