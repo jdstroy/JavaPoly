@@ -89,14 +89,14 @@ function javaObjToJS(thread, obj) {
       return obj.toString();
     } else if (cls.className === 'Ljava/lang/Boolean;') {
       return obj['java/lang/Boolean/value'] == 1;
-    } else if (cls.className === 'Ljava/lang/Long;') {
-      var gLong = obj.unbox();
-      if (isValidNumber(gLong)) {
-        return gLong.toNumber();
-      } else {
-        throw new RangeError("Unfortunately, JavaScript does not yet support 64 bit integers.");
-      }
-    } else if (cls.className.charAt(0) === '[') {
+    // } else if (cls.className === 'Ljava/lang/Long;') {
+    //   var gLong = obj.unbox();
+    //   if (isValidNumber(gLong)) {
+    //     return gLong.toNumber();
+    //   } else {
+    //     throw new RangeError();
+    //   }
+     } else if (cls.className.charAt(0) === '[') {
       var nativeArray = [];
       for (var i = 0; i < obj.array.length; i++) {
         nativeArray.push(javaObjToJS(thread, obj.array[i]));
@@ -135,7 +135,11 @@ registerNatives({
     },
 
     'returnResult(Ljava/lang/String;Ljava/lang/Object;)V': function(thread, obj, msgId, returnValue) {
-      javapoly0.dispatcher.callbackMessage(msgId,{success:true, returnValue: javaObjToJS(thread, returnValue)});
+      try {
+        javapoly0.dispatcher.callbackMessage(msgId,{success:true, returnValue: javaObjToJS(thread, returnValue)});
+      } catch (e) {
+        javapoly0.dispatcher.callbackMessage(msgId, {success:false, cause: e});
+      }
      },
 
     'returnErrorFlat(Ljava/lang/String;Lcom/javapoly/FlatThrowable;)V': function(thread, obj, msgId, flatThrowable) {
