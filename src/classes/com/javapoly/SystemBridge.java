@@ -2,9 +2,14 @@ package com.javapoly;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.HttpURLConnection;
 import javax.json.*;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.OutputStreamWriter;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.util.Base64;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -17,13 +22,15 @@ class SystemBridge implements Bridge {
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> responseQueue = new java.util.concurrent.LinkedBlockingQueue<>();
   private final java.util.Hashtable<String, JsonObject> msgTable = new java.util.Hashtable<>();
   private final String secret;
+  private final int nodeServerPort;
 
-  SystemBridge(final String secret) {
+  SystemBridge(final String secret, final int nodeServerPort) {
     this.secret = secret;
-    // System.out.println("Starting system bridge on port: " + port);
+    this.nodeServerPort = nodeServerPort;
+
     try {
-      final SimpleHttpServer srv = new SimpleHttpServer(4000);
-      System.out.println(String.format("::bridgePort=%d::", srv.getPort()));
+      final SimpleHttpServer srv = new SimpleHttpServer(0);
+      informPort(srv.getPort());
       new Thread(() -> {
         while(processRequest(srv));
       }).start();
@@ -35,15 +42,30 @@ class SystemBridge implements Bridge {
 
   }
 
+  private void informPort(int port) {
+    // System.out.println(String.format("::bridgePort=%d::", srv.getPort()));
+    try {
+      final URL url = new URL("http://localhost:"+nodeServerPort+"/");
+      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("POST");
+      connection.setRequestProperty("JVM-PORT", "" + port);
+      connection.setRequestProperty("TOKEN", makeToken());
+      connection.setUseCaches(false);
+
+      final BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream()));
+      String decodedString;
+      while ((decodedString = in.readLine()) != null) {
+        System.out.println(decodedString);
+      }
+      in.close();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   private boolean processRequest(final SimpleHttpServer srv) {
     srv.process((headers, requestMethod, requestUrl, body, connection) -> {
-      try {
-        System.out.println("Linger: " + connection.getSoLinger());
-        System.out.println("Keep alive: " + connection.getKeepAlive());
-      } catch (java.net.SocketException e) {
-        System.out.println("Exception: " + e.getMessage());
-        e.printStackTrace();
-      }
       try {
         final JsonObject jsonObj = Json.createReader(new StringReader(body)).readObject();
         if (verify(jsonObj.getString("token"), secret)) {

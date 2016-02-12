@@ -19,7 +19,7 @@ public class Main {
     initClassLoader();
 
     if (args.length > 2 && "system".equals(args[1])) {
-      bridge = new SystemBridge(args[2]);
+      bridge = new SystemBridge(args[2], Integer.parseInt(args[3]));
     } else {
       bridge = new DoppioBridge();
     }

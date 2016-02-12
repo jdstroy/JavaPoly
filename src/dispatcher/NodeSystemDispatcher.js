@@ -64,8 +64,12 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
     this.httpPortDeffered = new CommonUtils.deferred();
     this.tokens = new Tokens();
     this.secret = this.tokens.secretSync()
-    const mgr = new NodeSystemManager(javapoly, this.secret, this.httpPortDeffered);
+    const mgr = new NodeSystemManager(javapoly, this.secret, this.httpPortDeffered, this);
     return Promise.resolve(mgr);
+  }
+
+  verifyToken(token) {
+    return this.tokens.verify(this.secret, token);
   }
 
   postMessage(messageType, priority, data, callback) {
@@ -94,15 +98,17 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
         res.setEncoding('utf8');
         res.on('data', (chunk) => {
           const msg = JSON.parse(chunk);
-          if (thisDispatcher.tokens.verify(thisDispatcher.secret, msg.token)) {
+          if (thisDispatcher.verifyToken(msg.token)) {
             thisDispatcher.callbackMessage(msg.id, msg.result);
           } else {
             console.log("Invalid CSRF token, ignoring message");
           }
         });
+/*
         res.on('end', () => {
           console.log("result end");
         });
+*/
       });
       req.write(msg);
       req.end();
