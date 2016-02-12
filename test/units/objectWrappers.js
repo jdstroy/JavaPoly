@@ -30,10 +30,46 @@ function testObjectWrappers() {
         });
       });
 
-      it('should automatically handle conversion of 64 bit integers', function() {
+      it('should return positive 64 bit integers that JS can handle', function() {
         return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
-          return myclass.test().then(function(result) {
-            expect(typeof result).toBe('number');
+          return myclass.testPassingPos().then(function(result) {
+            expect(result).toEqual(9007199254740991);
+          });
+        });
+      });
+
+      it('should not return positive 64 bit integers too big for JS', function() {
+        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+          return myclass.testFailingPos().then(function() {
+            Error('Not expecting promise to resolve')
+          },
+          function(e) {
+            expect(e.name).toBe("RangeError");
+            expect(e.message).toBe("Unfortunately, JavaScript does not yet support 64 bit integers");
+            expect(e.causedBy).toNotExist();
+            expect(e.printStackTrace).toExist();
+          });
+        });
+      });
+
+      it('should return negative 64 bit integers that JS can handle', function() {
+        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+          return myclass.testPassingNeg().then(function(result) {
+            expect(result).toEqual(-9007199254740991);
+          });
+        });
+      });
+
+      it('should not return negative 64 bit integers too big for JS', function() {
+        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+          return myclass.testFailingNeg().then(function() {
+            Error('Not expecting promise to resolve')
+          },
+          function(e) {
+            expect(e.name).toBe("RangeError");
+            expect(e.message).toBe("Unfortunately, JavaScript does not yet support 64 bit integers");
+            expect(e.causedBy).toNotExist();
+            expect(e.printStackTrace).toExist();
           });
         });
       });
