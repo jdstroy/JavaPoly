@@ -13,7 +13,7 @@ export default class NodeDoppioManager {
      * @type {Array}
      */
     const options = this.getOptions();
-    this.classpath = [options.javapolyBase + "/classes", options.storageDir];
+    this.classpath = [CommonUtils.getCommonsPath(), options.javapolyBase + "/classes", options.storageDir];
 
   }
 
