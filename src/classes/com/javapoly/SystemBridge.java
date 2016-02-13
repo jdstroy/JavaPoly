@@ -48,6 +48,7 @@ class SystemBridge implements Bridge {
       final URL url = new URL("http://localhost:"+nodeServerPort+"/");
       final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("POST");
+      connection.setRequestProperty("Connection", "close");
       connection.setRequestProperty("JVM-PORT", "" + port);
       connection.setRequestProperty("TOKEN", makeToken());
       connection.setUseCaches(false);
@@ -58,6 +59,7 @@ class SystemBridge implements Bridge {
         System.out.println(decodedString);
       }
       in.close();
+      connection.disconnect();
 
     } catch (IOException e) {
       e.printStackTrace();
