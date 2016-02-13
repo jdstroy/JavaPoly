@@ -12,6 +12,7 @@ import org.apache.commons.lang3.reflect.ConstructorUtils;
 
 public class Main {
   private static Bridge bridge;
+  private static int initialActiveCount = 0;
 
   public static void main(final String[] args) {
     System.out.println("Java Main started");
@@ -22,6 +23,13 @@ public class Main {
       bridge = new SystemBridge(args[2], Integer.parseInt(args[3]));
     } else {
       bridge = new DoppioBridge();
+    }
+
+    // Get the initial thread count
+    {
+      final int activeCount = getActiveThreadCount();
+      System.out.println("after bridge Active count:" + activeCount);
+      initialActiveCount = activeCount;
     }
 
     // when running multiple instances of JavaPoly, we want know which javapoly/jvm instance we are working in.
@@ -86,11 +94,24 @@ public class Main {
     Thread.currentThread().setContextClassLoader(urlClassLoader);
   }
 
-  // A dummy count for testing, to hold back termination for a while
-  private static int count = 0;
-  private static void  processTerminate(final String messageId) {
-    // TODO
-    bridge.returnResult(messageId, count++ > 3);
+  private static ThreadGroup getRootThreadGroup(final ThreadGroup tg) {
+    final ThreadGroup parent = tg.getParent();
+    return (parent == null) ? tg : getRootThreadGroup(parent);
+  }
+
+  private static int getActiveThreadCount() {
+    final ThreadGroup rootThreadGroup = getRootThreadGroup(Thread.currentThread().getThreadGroup());
+    return rootThreadGroup.activeCount();
+  }
+
+  private static void processTerminate(final String messageId) {
+    final int activeCount = getActiveThreadCount();
+    System.out.println("Active count:" + activeCount);
+    final boolean willEnd = activeCount <= initialActiveCount;
+    bridge.returnResult(messageId, willEnd);
+    if (willEnd) {
+      System.exit(0);
+    }
   }
 
   private static void  processAddJarPath(String messageId) {
