@@ -1,6 +1,7 @@
 import CommonUtils from '../core/CommonUtils.js';
 import CommonDispatcher from './CommonDispatcher.js'
 import NodeSystemManager from '../jvmManager/NodeSystemManager.js'
+import WrapperUtil from '../core/WrapperUtil.js';
 // import ShutdownHandler from '../shutdownHandler.js';
 import Tokens from 'csrf';
 import http from 'http';
@@ -10,6 +11,21 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
 
   constructor(javapoly) {
     super(javapoly);
+    const _this = this;
+    this.count = 0;
+    this.terminating = false;
+    require('process').on('beforeExit', () => {
+      console.log("before exit: ", _this.count);
+      if (!_this.terminating) {
+        WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE', 0, [], (willTerminate) => {
+          _this.count++;
+          _this.terminating = willTerminate;
+          if (!willTerminate) {
+            setTimeout(() => { }, 500);    // breathing space to avoid busy polling. TODO: Exponential backoff with ceiling
+          }
+        });
+      }
+    });
     // this.wscPromise = new CommonUtils.deferred();
     // new ShutdownHandler({});
   }

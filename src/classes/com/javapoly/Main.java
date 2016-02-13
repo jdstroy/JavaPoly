@@ -66,6 +66,9 @@ public class Main {
         case "JAR_PATH_ADD":
           processAddJarPath(messageId);
           break;
+        case "TERMINATE":
+          processTerminate(messageId);
+          break;
         default:
           System.out.println("Unknown message type, callback will be executed");
           bridge.dispatchMessage(messageId);
@@ -81,6 +84,13 @@ public class Main {
   private static void initClassLoader() {
     JavaPolyClassLoader urlClassLoader = new JavaPolyClassLoader(new java.net.URL[0]);
     Thread.currentThread().setContextClassLoader(urlClassLoader);
+  }
+
+  // A dummy count for testing, to hold back termination for a while
+  private static int count = 0;
+  private static void  processTerminate(final String messageId) {
+    // TODO
+    bridge.returnResult(messageId, count++ > 3);
   }
 
   private static void  processAddJarPath(String messageId) {
