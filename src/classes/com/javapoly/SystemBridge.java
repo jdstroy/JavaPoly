@@ -15,6 +15,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class SystemBridge implements Bridge {
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
@@ -24,6 +25,8 @@ class SystemBridge implements Bridge {
   private final String secret;
   private final int nodeServerPort;
 
+  private final AtomicBoolean inFlight = new AtomicBoolean(false);
+
   SystemBridge(final String secret, final int nodeServerPort) {
     this.secret = secret;
     this.nodeServerPort = nodeServerPort;
@@ -32,7 +35,11 @@ class SystemBridge implements Bridge {
       final SimpleHttpServer srv = new SimpleHttpServer(0);
       informPort(srv.getPort());
       new Thread(() -> {
-        while(processRequest(srv));
+        while(true) {
+          inFlight.set(true);
+          processRequest(srv);
+          inFlight.set(false);
+        }
       }).start();
 
     } catch (IOException e) {
@@ -191,6 +198,7 @@ class SystemBridge implements Bridge {
       }
     }
   }
+
   public void returnResult(String messageId, Object returnValue) {
     final JsonValue returnObj = toJsonObj(returnValue);
     final JsonObject resultObj = Json.createObjectBuilder().add("success", true).add("returnValue", returnObj).build();
@@ -240,5 +248,11 @@ class SystemBridge implements Bridge {
     // TODO
   }
 
+  public void flushAllResponses() {
+    // TODO: avoid busy loop
+    while(inFlight.get()) {
+      // Busy Loop
+    }
+  }
 }
 

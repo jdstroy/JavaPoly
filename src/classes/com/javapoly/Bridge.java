@@ -8,5 +8,7 @@ interface Bridge {
   void returnResult(String messageId, Object returnValue);
   void returnErrorFlat(String messageId, FlatThrowable ft);
   void setJavaPolyInstanceId(String javapolyId);
+
+  void flushAllResponses();
 }
 

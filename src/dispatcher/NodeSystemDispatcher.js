@@ -11,10 +11,12 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
 
   constructor(javapoly) {
     super(javapoly);
+
     const _this = this;
     this.count = 0;
     this.terminating = false;
-    require('process').on('beforeExit', () => {
+    const process = require('process');
+    process.on('beforeExit', () => {
       console.log("before exit: ", _this.count);
       if (!_this.terminating) {
         WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE', 0, [], (willTerminate) => {
@@ -26,6 +28,12 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
         });
       }
     });
+    process.on('SIGINT', () => {
+      WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => {
+        _this.terminating = true;
+      });
+    });
+
     // this.wscPromise = new CommonUtils.deferred();
     // new ShutdownHandler({});
   }

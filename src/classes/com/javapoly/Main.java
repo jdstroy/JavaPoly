@@ -77,6 +77,9 @@ public class Main {
         case "TERMINATE":
           processTerminate(messageId);
           break;
+        case "TERMINATE_NOW":
+          processTerminateNow(messageId);
+          break;
         default:
           System.out.println("Unknown message type, callback will be executed");
           bridge.dispatchMessage(messageId);
@@ -112,6 +115,12 @@ public class Main {
     if (willEnd) {
       System.exit(0);
     }
+  }
+
+  private static void processTerminateNow(final String messageId) {
+    bridge.returnResult(messageId, 0);
+    bridge.flushAllResponses();
+    System.exit(0);
   }
 
   private static void  processAddJarPath(String messageId) {
