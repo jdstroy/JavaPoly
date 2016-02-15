@@ -25,8 +25,6 @@ class SystemBridge implements Bridge {
   private final String secret;
   private final int nodeServerPort;
 
-  private final AtomicBoolean inFlight = new AtomicBoolean(false);
-
   SystemBridge(final String secret, final int nodeServerPort) {
     this.secret = secret;
     this.nodeServerPort = nodeServerPort;
@@ -35,10 +33,8 @@ class SystemBridge implements Bridge {
       final SimpleHttpServer srv = new SimpleHttpServer(0);
       informPort(srv.getPort());
       new Thread(() -> {
-        while(true) {
-          inFlight.set(true);
-          processRequest(srv);
-          inFlight.set(false);
+        while(processRequest(srv)) {
+          ; // NOP
         }
       }).start();
 
@@ -78,20 +74,25 @@ class SystemBridge implements Bridge {
       try {
         final JsonObject jsonObj = Json.createReader(new StringReader(body)).readObject();
         if (verify(jsonObj.getString("token"), secret)) {
-          msgQueue.add(jsonObj);
+          final String msgType = jsonObj.getString("messageType");
+          if ("TERMINATE_NOW".equals(msgType)) {
+            System.exit(0);
+          } else {
+            msgQueue.add(jsonObj);
+            final PrintWriter out = new PrintWriter(connection.getOutputStream(), true);
+            out.println("HTTP/1.0 200");
+            final JsonObject msgObj = responseQueue.take();
+            final String msg = toString(msgObj);
+            out.println("Content-Length: " + msg.length());
+            out.println("Connection: close");
+            out.println("");
+            out.println(msg);
+            out.flush();
+            out.close();
+          }
         } else {
           System.err.println("Invalid token, ignoring message");
         }
-        final PrintWriter out = new PrintWriter(connection.getOutputStream(), true);
-        out.println("HTTP/1.0 200");
-        final JsonObject msgObj = responseQueue.take();
-        final String msg = toString(msgObj);
-        out.println("Content-Length: " + msg.length());
-        out.println("Connection: close");
-        out.println("");
-        out.println(msg);
-        out.flush();
-        out.close();
       } catch (InterruptedException | IOException e) {
         System.out.println("Exception: " + e.getMessage());
         e.printStackTrace();
@@ -246,13 +247,6 @@ class SystemBridge implements Bridge {
 
   public void setJavaPolyInstanceId(String javapolyId) {
     // TODO
-  }
-
-  public void flushAllResponses() {
-    // TODO: avoid busy loop
-    while(inFlight.get()) {
-      // Busy Loop
-    }
   }
 }
 

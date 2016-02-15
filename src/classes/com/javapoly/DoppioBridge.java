@@ -8,8 +8,4 @@ class DoppioBridge implements Bridge {
   public native void returnResult(String messageId, Object returnValue);
   public native void returnErrorFlat(String messageId, FlatThrowable ft);
   public native void setJavaPolyInstanceId(String javapolyId);
-
-  public void flushAllResponses() {
-    // NOP
-  }
 }

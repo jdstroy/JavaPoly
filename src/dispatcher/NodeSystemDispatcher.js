@@ -29,8 +29,8 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
       }
     });
     process.on('SIGINT', () => {
+      _this.terminating = true;
       WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => {
-        _this.terminating = true;
       });
     });
 
@@ -103,6 +103,7 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
   }
 
   handleJVMMessage(id, priority, messageType, data, callback) {
+    const _this = this;
     const thisDispatcher = this;
     const token = this.tokens.create(this.secret)
     this.javaPolyCallbacks[id] = callback;
@@ -128,11 +129,18 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
             console.log("Invalid CSRF token, ignoring message");
           }
         });
-/*
+        /*
         res.on('end', () => {
           console.log("result end");
         });
-*/
+        */
+      });
+      req.on('error', () => {
+        if (_this.terminating) {
+          // Expected
+        } else {
+          throw new Error("Unexpected error in request");
+        }
       });
       req.write(msg);
       req.end();
