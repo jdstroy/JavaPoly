@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.HttpURLConnection;
+import java.net.Socket;
 import javax.json.*;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -15,15 +16,21 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
 
 class SystemBridge implements Bridge {
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> responseQueue = new java.util.concurrent.LinkedBlockingQueue<>();
+  private final ConcurrentHashMap<String, Socket> connections = new ConcurrentHashMap<>();
   private final java.util.Hashtable<String, JsonObject> msgTable = new java.util.Hashtable<>();
   private final String secret;
   private final int nodeServerPort;
+  private final AtomicLong lastPingTime = new AtomicLong(System.currentTimeMillis());
+
+  // This has to match the hear beat period in NodeSystemDispatcher. TODO: Pass it as a command line argument
+  private static long HEARTBEAT_PERIOD_MILLIS = 1000;
 
   SystemBridge(final String secret, final int nodeServerPort) {
     this.secret = secret;
@@ -32,12 +39,41 @@ class SystemBridge implements Bridge {
     try {
       final SimpleHttpServer srv = new SimpleHttpServer(0);
       informPort(srv.getPort());
+
+      new Thread(() -> {
+        try {
+          while ((System.currentTimeMillis() - lastPingTime.get()) < (HEARTBEAT_PERIOD_MILLIS * 2)) {
+            Thread.sleep(HEARTBEAT_PERIOD_MILLIS);
+          }
+        } catch (final InterruptedException ie) {
+          ie.printStackTrace();
+        } finally {
+          System.out.println("Didn't get heartbeat; quitting");
+          System.exit(1);
+        }
+      }).start();
+
       new Thread(() -> {
         while(processRequest(srv)) {
           ; // NOP
         }
       }).start();
 
+      new Thread(() -> {
+        while (true) {
+          try {
+            final JsonObject msgObj = responseQueue.take();
+            final String msgId = msgObj.getString("id");
+            final Socket connection = connections.get(msgId);
+            connections.remove(msgId);
+            sendResponse(connection, msgObj);
+            connection.close();
+          } catch (InterruptedException | IOException e) {
+            System.out.println("Exception: " + e.getMessage());
+            e.printStackTrace();
+          }
+        }
+      }).start();
     } catch (IOException e) {
       System.out.println("Exception: " + e.getMessage());
       e.printStackTrace();
@@ -69,31 +105,41 @@ class SystemBridge implements Bridge {
     }
   }
 
+  private void sendResponse(final Socket connection, final JsonObject msgObj) throws IOException {
+    final PrintWriter out = new PrintWriter(connection.getOutputStream(), true);
+    final String msg = toString(msgObj);
+    out.println("HTTP/1.0 200");
+    out.println("Content-Length: " + msg.length());
+    out.println("Connection: close");
+    out.println("");
+    out.println(msg);
+    out.flush();
+    out.close();
+  }
+
   private boolean processRequest(final SimpleHttpServer srv) {
     srv.process((headers, requestMethod, requestUrl, body, connection) -> {
       try {
         final JsonObject jsonObj = Json.createReader(new StringReader(body)).readObject();
         if (verify(jsonObj.getString("token"), secret)) {
+          lastPingTime.set(System.currentTimeMillis());
           final String msgType = jsonObj.getString("messageType");
-          if ("TERMINATE_NOW".equals(msgType)) {
+          final String msgId = jsonObj.getString("id");
+          if ("HEARTBEAT".equals(msgType)) {
+            final JsonObject msgObj = makeReturnObj(msgId, "OK");
+            sendResponse(connection, msgObj);
+            connection.close();
+          } else if ("TERMINATE_NOW".equals(msgType)) {
+            connection.close();
             System.exit(0);
           } else {
+            connections.put(msgId, connection);
             msgQueue.add(jsonObj);
-            final PrintWriter out = new PrintWriter(connection.getOutputStream(), true);
-            out.println("HTTP/1.0 200");
-            final JsonObject msgObj = responseQueue.take();
-            final String msg = toString(msgObj);
-            out.println("Content-Length: " + msg.length());
-            out.println("Connection: close");
-            out.println("");
-            out.println(msg);
-            out.flush();
-            out.close();
           }
         } else {
           System.err.println("Invalid token, ignoring message");
         }
-      } catch (InterruptedException | IOException e) {
+      } catch (IOException e) {
         System.out.println("Exception: " + e.getMessage());
         e.printStackTrace();
       }
@@ -200,14 +246,18 @@ class SystemBridge implements Bridge {
     }
   }
 
-  public void returnResult(String messageId, Object returnValue) {
+  private JsonObject makeReturnObj(String messageId, Object returnValue) {
     final JsonValue returnObj = toJsonObj(returnValue);
     final JsonObject resultObj = Json.createObjectBuilder().add("success", true).add("returnValue", returnObj).build();
     final JsonObject msgObj = Json.createObjectBuilder()
       .add("id", messageId)
       .add("token", makeToken())
       .add("result", resultObj).build();
-    responseQueue.add(msgObj);
+    return msgObj;
+  }
+
+  public void returnResult(String messageId, Object returnValue) {
+    responseQueue.add(makeReturnObj(messageId, returnValue));
   }
 
   private JsonValue toJsonObj(FlatThrowable ft) {

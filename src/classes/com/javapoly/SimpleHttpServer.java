@@ -31,6 +31,7 @@ final class SimpleHttpServer {
     void handle(Map<String, String> headers, final String requestMethod, final String requestUrl, final String body, final Socket connection);
   }
 
+  // Note: The handler is expected to close the connection eventually.
   private static void handleConnection(final Socket connection, final ConnectionHandler handler) {
     try {
       final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -68,7 +69,6 @@ final class SimpleHttpServer {
       final String[] requestFields = request.split("\\s+");
       handler.handle(headers, requestFields[0], requestFields[1], bodySb.toString(), connection);
 
-      connection.close();
     } catch (IOException e) {
       System.out.println("Exception: " + e.getMessage());
       e.printStackTrace();

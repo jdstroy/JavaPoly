@@ -106,12 +106,9 @@ public class Main {
 
   private static void processTerminate(final String messageId) {
     final int activeCount = getActiveThreadCount();
-    System.out.println("Active count:" + activeCount);
+    // System.out.println("Active count:" + activeCount + " of " + initialActiveCount);
     final boolean willEnd = activeCount <= initialActiveCount;
     bridge.returnResult(messageId, willEnd);
-    if (willEnd) {
-      System.exit(0);
-    }
   }
 
   private static void  processAddJarPath(String messageId) {

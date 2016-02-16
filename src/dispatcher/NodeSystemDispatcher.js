@@ -12,6 +12,8 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
   constructor(javapoly) {
     super(javapoly);
 
+    this.heartBeatPeriodMillis = 1000;
+
     const _this = this;
     this.count = 0;
     this.terminating = false;
@@ -24,15 +26,36 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
           _this.terminating = willTerminate;
           if (!willTerminate) {
             setTimeout(() => { }, 500);    // breathing space to avoid busy polling. TODO: Exponential backoff with ceiling
+          } else {
+            WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => { });
           }
         });
       }
     });
-    process.on('SIGINT', () => {
+
+    process.on('exit', () => {
+      console.log("node process Exit");
       _this.terminating = true;
+      /*
       WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => {
       });
+      */
     });
+
+    process.on('SIGINT', () => {
+      _this.terminating = true;
+      WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => { });
+    });
+
+    const timer = setInterval(() => {
+      if (!_this.terminating) {
+        WrapperUtil.dispatchOnJVM(javapoly, 'HEARTBEAT', 0, [], (willTerminate) => { });
+      } else {
+        clearInterval(timer);
+      }
+    }, this.heartBeatPeriodMillis);
+
+    timer.unref();
 
     // this.wscPromise = new CommonUtils.deferred();
     // new ShutdownHandler({});
