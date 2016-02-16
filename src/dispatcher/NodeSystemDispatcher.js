@@ -2,7 +2,6 @@ import CommonUtils from '../core/CommonUtils.js';
 import CommonDispatcher from './CommonDispatcher.js'
 import NodeSystemManager from '../jvmManager/NodeSystemManager.js'
 import WrapperUtil from '../core/WrapperUtil.js';
-// import ShutdownHandler from '../shutdownHandler.js';
 import Tokens from 'csrf';
 import http from 'http';
 
@@ -19,7 +18,7 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
     this.terminating = false;
     const process = require('process');
     process.on('beforeExit', () => {
-      console.log("before exit: ", _this.count);
+      // console.log("before exit: ", _this.count);
       if (!_this.terminating) {
         WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE', 0, [], (willTerminate) => {
           _this.count++;
@@ -34,12 +33,8 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
     });
 
     process.on('exit', () => {
-      console.log("node process Exit");
+      // console.log("node process Exit");
       _this.terminating = true;
-      /*
-      WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => {
-      });
-      */
     });
 
     process.on('SIGINT', () => {
@@ -64,57 +59,9 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
 
     timer.unref();
 
-    // this.wscPromise = new CommonUtils.deferred();
-    // new ShutdownHandler({});
   }
-
-  /*
-  initWSServer() {
-    const thisDispatcher = this;
-    return new Promise((resolve) => {
-      const http = require('http');
-
-      // Create an HTTP server
-      const srv = http.createServer();
-      srv.listen(0, "localhost", () => {
-        const address = srv.address();
-        const WebSocketServer = require('ws').Server;
-        const wss = new WebSocketServer({ server: srv });
-        process.on("shutdown", () => {
-          wss.close();
-          console.log("WSS closed");
-        });
-
-        wss.on('connection', (wsc) => {
-          process.on("shutdown", () => {
-            wsc.close();
-            console.log("WSC closed");
-          });
-          wsc.on('message', function incoming(message) {
-            const msg = JSON.parse(message);
-            if (thisDispatcher.tokens.verify(thisDispatcher.secret, msg.token)) {
-              thisDispatcher.callbackMessage(msg.id, msg.result);
-            } else {
-              console.log("Invalid CSRF token, ignoring message");
-            }
-          });
-          thisDispatcher.wscPromise.resolve(wsc);
-
-          // wsc.send(JSON.stringify({id:""+10, msg:'something'}));
-        });
-        resolve(address);
-      });
-    });
-
-  }
-  */
 
   initDoppioManager(javapoly) {
-    /*
-    return this.initWSServer().then(address => {
-      return new NodeSystemManager(javapoly, address.port, this.secret);
-    });
-    */
     this.httpPortDeffered = new CommonUtils.deferred();
     this.tokens = new Tokens();
     this.secret = this.tokens.secretSync()
@@ -148,8 +95,6 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
         agent: false
       };
       const req = http.request(requestOptions, (res) => {
-        // console.log(`STATUS: ${res.statusCode}`);
-        // console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
         res.setEncoding('utf8');
         res.on('data', (chunk) => {
           const msg = JSON.parse(chunk);
@@ -159,11 +104,6 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
             console.log("Invalid CSRF token, ignoring message");
           }
         });
-        /*
-        res.on('end', () => {
-          console.log("result end");
-        });
-        */
       });
       req.on('error', () => {
         if (_this.terminating) {
