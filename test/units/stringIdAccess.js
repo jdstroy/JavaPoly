@@ -104,21 +104,17 @@ function testStringIdAccess() {
       })
     });
 
-    if (!isWorkerBased) {
-      // Long type not supported in web worker
-
-      describe('System', function() {
-        it('currentTimeMillis() should return a timestamp', function() {
-          return Java.type('java.lang.System').then(function(System) {
-            return System.currentTimeMillis().then(function(result) {
-              expect(result)
-                .toExist()
-                .toBeGreaterThanOrEqual(0);
-            });
+    describe('System', function() {
+      it('currentTimeMillis() should return a timestamp', function() {
+        return Java.type('java.lang.System').then(function(System) {
+          return System.currentTimeMillis().then(function(result) {
+            expect(result)
+              .toExist()
+              .toBeGreaterThanOrEqual(0);
           });
         });
       });
-    }
+    });
 
     describe('classes/Main.class', function() {
       it('instance and private methods should not exist in class wrapper', function() {
@@ -168,17 +164,17 @@ function testStringIdAccess() {
       });
 
     });
-
-
     describe('method signature matching logic', function() {
-      it('should print string', function() {
-        return Java.type('java.lang.System').then(function(System) {
-          return System.out.then(function(out) {
-            out.println("hello javapoly");
+      if (!isWorkerBased) {
+        it('should print string', function() {
+          return Java.type('java.lang.System').then(function(System) {
+            return System.out.then(function(out) {
+              out.println("hello javapoly");
+            });
           });
         });
-      });
-
+      }
+      
       it('should call char static method', function() {
         return Java.type('Overload').then(function(Overload) {
           return Overload.staticMethod('a').then(function(result) {
@@ -202,46 +198,47 @@ function testStringIdAccess() {
           });
         });
       });
-
-      it('should call String method', function() {
-        return Java.new('Overload').then(function(obj) {
-          return obj.method('a').then(function(result) {
-            expect(result).toEqual('String:a');
+      if (!isWorkerBased) {
+        it('should call String method', function() {
+          return Java.new('Overload').then(function(obj) {
+            return obj.method('a').then(function(result) {
+              expect(result).toEqual('String:a');
+            });
           });
         });
-      });
 
-      it('should call Short method', function() {
-        return Java.new('Overload').then(function(obj) {
-          return obj.method(142).then(function(result) {
-            expect(result).toEqual('Short:142');
+        it('should call Short method', function() {
+          return Java.new('Overload').then(function(obj) {
+            return obj.method(142).then(function(result) {
+              expect(result).toEqual('Short:142');
+            });
           });
         });
-      });
 
-      it('should call Character constructor', function() {
-        return Java.new('Overload', 'a').then(function(obj) {
-          return obj.getText().then(function(result) {
-            expect(result).toEqual('Character:a');
+        it('should call Character constructor', function() {
+          return Java.new('Overload', 'a').then(function(obj) {
+            return obj.getText().then(function(result) {
+              expect(result).toEqual('Character:a');
+            });
           });
         });
-      });
 
-      it('should call long constructor', function() {
-        return Java.new('Overload', 100000000000001).then(function(obj) {
-          return obj.getText().then(function(result) {
-            expect(result).toEqual('long:100000000000001');
+        it('should call long constructor', function() {
+          return Java.new('Overload', 100000000000001).then(function(obj) {
+            return obj.getText().then(function(result) {
+              expect(result).toEqual('long:100000000000001');
+            });
           });
         });
-      });
 
-      it('should call Float constructor', function() {
-        return Java.new('Overload', 1.5).then(function(obj) {
-          return obj.getText().then(function(result) {
-            expect(result).toEqual('Float:1.5');
+        it('should call Float constructor', function() {
+          return Java.new('Overload', 1.5).then(function(obj) {
+            return obj.getText().then(function(result) {
+              expect(result).toEqual('Float:1.5');
+            });
           });
         });
-      });
+      }
     });
   });
 }
