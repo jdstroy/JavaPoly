@@ -47,6 +47,13 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
       WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => { });
     });
 
+    process.on('uncaughtException', (e) => {
+      console.log("Uncaught exception: " + e);
+      _this.terminating = true;
+      WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => { });
+    });
+
+
     const timer = setInterval(() => {
       if (!_this.terminating) {
         WrapperUtil.dispatchOnJVM(javapoly, 'HEARTBEAT', 0, [], (willTerminate) => { });
