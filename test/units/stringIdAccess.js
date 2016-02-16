@@ -104,21 +104,17 @@ function testStringIdAccess() {
       })
     });
 
-    if (!isWorkerBased) {
-      // Long type not supported in web worker
-
-      describe('System', function() {
-        it('currentTimeMillis() should return a timestamp', function() {
-          return Java.type('java.lang.System').then(function(System) {
-            return System.currentTimeMillis().then(function(result) {
-              expect(result)
-                .toExist()
-                .toBeGreaterThanOrEqual(0);
-            });
+    describe('System', function() {
+      it('currentTimeMillis() should return a timestamp', function() {
+        return Java.type('java.lang.System').then(function(System) {
+          return System.currentTimeMillis().then(function(result) {
+            expect(result)
+              .toExist()
+              .toBeGreaterThanOrEqual(0);
           });
         });
       });
-    }
+    });
 
     describe('classes/Main.class', function() {
       it('instance and private methods should not exist in class wrapper', function() {
@@ -168,8 +164,8 @@ function testStringIdAccess() {
       });
 
     });
-    if(!isWorkerBased) {
-      describe('method signature matching logic', function() {
+    describe('method signature matching logic', function() {
+      if (!isWorkerBased) {
         it('should print string', function() {
           return Java.type('java.lang.System').then(function(System) {
             return System.out.then(function(out) {
@@ -177,31 +173,32 @@ function testStringIdAccess() {
             });
           });
         });
-
-        it('should call char static method', function() {
-          return Java.type('Overload').then(function(Overload) {
-            return Overload.staticMethod('a').then(function(result) {
-              expect(result).toEqual('char:a');
-            });
+      }
+      
+      it('should call char static method', function() {
+        return Java.type('Overload').then(function(Overload) {
+          return Overload.staticMethod('a').then(function(result) {
+            expect(result).toEqual('char:a');
           });
         });
+      });
 
-        it('should call byte static method', function() {
-          return Java.type('Overload').then(function(Overload) {
-            return Overload.staticMethod(42).then(function(result) {
-              expect(result).toEqual('byte:42');
-            });
+      it('should call byte static method', function() {
+        return Java.type('Overload').then(function(Overload) {
+          return Overload.staticMethod(42).then(function(result) {
+            expect(result).toEqual('byte:42');
           });
         });
+      });
 
-        it('should call Float static method', function() {
-          return Java.type('Overload').then(function(Overload) {
-            return Overload.staticMethod(42.5).then(function(result) {
-              expect(result).toEqual('Float:42.5');
-            });
+      it('should call Float static method', function() {
+        return Java.type('Overload').then(function(Overload) {
+          return Overload.staticMethod(42.5).then(function(result) {
+            expect(result).toEqual('Float:42.5');
           });
         });
-
+      });
+      if (!isWorkerBased) {
         it('should call String method', function() {
           return Java.new('Overload').then(function(obj) {
             return obj.method('a').then(function(result) {
@@ -241,7 +238,7 @@ function testStringIdAccess() {
             });
           });
         });
-      });
-    }
+      }
+    });
   });
 }
