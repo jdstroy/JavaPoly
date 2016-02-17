@@ -2,56 +2,149 @@ package com.javapoly;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import org.java_websocket.handshake.ServerHandshake;
-import org.java_websocket.client.*;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.net.Socket;
 import javax.json.*;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.OutputStreamWriter;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.util.Base64;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
 
 class SystemBridge implements Bridge {
-  private final WebSocketClient client;
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
+  private final java.util.concurrent.LinkedBlockingQueue<JsonObject> responseQueue = new java.util.concurrent.LinkedBlockingQueue<>();
+  private final ConcurrentHashMap<String, Socket> connections = new ConcurrentHashMap<>();
   private final java.util.Hashtable<String, JsonObject> msgTable = new java.util.Hashtable<>();
   private final String secret;
+  private final int nodeServerPort;
+  private final AtomicLong lastPingTime = new AtomicLong(System.currentTimeMillis());
 
-  SystemBridge(final int port, final String secret) {
+  // This has to match the hear beat period in NodeSystemDispatcher. TODO: Pass it as a command line argument
+  private static long HEARTBEAT_PERIOD_MILLIS = 1000;
+
+  SystemBridge(final String secret, final int nodeServerPort) {
     this.secret = secret;
-    // System.out.println("Starting system bridge on port: " + port);
+    this.nodeServerPort = nodeServerPort;
+
     try {
-      this.client = new WebSocketClient(new URI("ws://localhost:" + port + "/")) {
-        public void onOpen( ServerHandshake handshakedata ) {
-          // System.out.println("On open");
+      final SimpleHttpServer srv = new SimpleHttpServer(0);
+      informPort(srv.getPort());
+
+      new Thread(() -> {
+        try {
+          while ((System.currentTimeMillis() - lastPingTime.get()) < (HEARTBEAT_PERIOD_MILLIS * 2)) {
+            Thread.sleep(HEARTBEAT_PERIOD_MILLIS);
+          }
+        } catch (final InterruptedException ie) {
+          ie.printStackTrace();
+        } finally {
+          System.out.println("Didn't get heartbeat; quitting");
+          System.exit(1);
         }
+      }).start();
 
-        public void onMessage( String message ) {
-          final JsonObject jsonObj = Json.createReader(new StringReader(message)).readObject();
+      new Thread(() -> {
+        while(processRequest(srv)) {
+          ; // NOP
+        }
+      }).start();
 
-          if (verify(jsonObj.getString("token"), secret)) {
-            msgQueue.add(jsonObj);
-          } else {
-            System.err.println("Invalid token, ignoring message");
+      new Thread(() -> {
+        while (true) {
+          try {
+            final JsonObject msgObj = responseQueue.take();
+            final String msgId = msgObj.getString("id");
+            final Socket connection = connections.get(msgId);
+            connections.remove(msgId);
+            sendResponse(connection, msgObj);
+            connection.close();
+          } catch (InterruptedException | IOException e) {
+            System.out.println("Exception: " + e.getMessage());
+            e.printStackTrace();
           }
         }
+      }).start();
+    } catch (IOException e) {
+      System.out.println("Exception: " + e.getMessage());
+      e.printStackTrace();
+    }
 
-        public void onClose( int code, String reason, boolean remote ) {
-          System.out.println("On close");
+  }
+
+  private void informPort(int port) {
+    // System.out.println(String.format("::bridgePort=%d::", srv.getPort()));
+    try {
+      final URL url = new URL("http://localhost:"+nodeServerPort+"/");
+      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("POST");
+      connection.setRequestProperty("Connection", "close");
+      connection.setRequestProperty("JVM-PORT", "" + port);
+      connection.setRequestProperty("TOKEN", makeToken());
+      connection.setUseCaches(false);
+
+      final BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream()));
+      String decodedString;
+      while ((decodedString = in.readLine()) != null) {
+        System.out.println(decodedString);
+      }
+      in.close();
+      connection.disconnect();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void sendResponse(final Socket connection, final JsonObject msgObj) throws IOException {
+    final PrintWriter out = new PrintWriter(connection.getOutputStream(), true);
+    final String msg = toString(msgObj);
+    out.println("HTTP/1.0 200");
+    out.println("Content-Length: " + msg.length());
+    out.println("Connection: close");
+    out.println("");
+    out.println(msg);
+    out.flush();
+    out.close();
+  }
+
+  private boolean processRequest(final SimpleHttpServer srv) {
+    srv.process((headers, requestMethod, requestUrl, body, connection) -> {
+      try {
+        final JsonObject jsonObj = Json.createReader(new StringReader(body)).readObject();
+        if (verify(jsonObj.getString("token"), secret)) {
+          lastPingTime.set(System.currentTimeMillis());
+          final String msgType = jsonObj.getString("messageType");
+          final String msgId = jsonObj.getString("id");
+          if ("HEARTBEAT".equals(msgType)) {
+            final JsonObject msgObj = makeReturnObj(msgId, "OK");
+            sendResponse(connection, msgObj);
+            connection.close();
+          } else if ("TERMINATE_NOW".equals(msgType)) {
+            connection.close();
+            System.exit(0);
+          } else {
+            connections.put(msgId, connection);
+            msgQueue.add(jsonObj);
+          }
+        } else {
+          System.err.println("Invalid token, ignoring message");
         }
-
-        public void onError( Exception ex ) {
-          System.out.println("Error in WS client: ");
-          ex.printStackTrace();
-        }
-
-      };
-      new Thread(client).start();
-   } catch (final URISyntaxException use) {
-     throw new IllegalStateException("Unexpected exception", use);
-   }
-
+      } catch (IOException e) {
+        System.out.println("Exception: " + e.getMessage());
+        e.printStackTrace();
+      }
+    });
+    return true;
   }
 
   private String tokenize(final String salt, final String secret) throws NoSuchAlgorithmException{
@@ -121,8 +214,10 @@ class SystemBridge implements Bridge {
   }
 
   public void dispatchMessage(String messageId) {
+    /*
     // TODO
     this.client.send(messageId);
+    */
   }
 
   private JsonValue toJsonObj(Object obj) {
@@ -150,15 +245,19 @@ class SystemBridge implements Bridge {
       }
     }
   }
-  public void returnResult(String messageId, Object returnValue) {
+
+  private JsonObject makeReturnObj(String messageId, Object returnValue) {
     final JsonValue returnObj = toJsonObj(returnValue);
     final JsonObject resultObj = Json.createObjectBuilder().add("success", true).add("returnValue", returnObj).build();
     final JsonObject msgObj = Json.createObjectBuilder()
       .add("id", messageId)
       .add("token", makeToken())
       .add("result", resultObj).build();
-    final String msg = toString(msgObj);
-    this.client.send(msg);
+    return msgObj;
+  }
+
+  public void returnResult(String messageId, Object returnValue) {
+    responseQueue.add(makeReturnObj(messageId, returnValue));
   }
 
   private JsonValue toJsonObj(FlatThrowable ft) {
@@ -193,13 +292,11 @@ class SystemBridge implements Bridge {
       .add("id", messageId)
       .add("token", makeToken())
       .add("result", resultObj).build();
-    final String msg = toString(msgObj);
-    this.client.send(msg);
+    responseQueue.add(msgObj);
   }
 
   public void setJavaPolyInstanceId(String javapolyId) {
     // TODO
   }
-
 }
 

@@ -1,14 +1,18 @@
 import CommonUtils from '../core/CommonUtils.js';
 import WrapperUtil from '../core/WrapperUtil.js';
 
+import http from 'http';
+
 /**
  * The NodeDoppioManager manages the Doppio JVM on Node
  */
 export default class NodeSystemManager {
-  constructor(javapoly, wsPort, secret) {
+  constructor(javapoly, secret, httpPortDeffered, dispatcher) {
     this.javapoly = javapoly;
-    this.wsPort = wsPort;
+    // this.wsPort = wsPort;
+    this.httpPortDeffered = httpPortDeffered;
     this.secret = secret;
+    this.dispatcher = dispatcher;
 
     /**
      * Array that contains classpath, include the root path of class files , jar file path.
@@ -85,22 +89,35 @@ export default class NodeSystemManager {
     });
   }
 
+  startTempServer() {
+    const _this = this;
+
+    return new Promise((resolve, reject) => {
+      const srv = http.createServer((incoming, response) => {
+        if (_this.dispatcher.verifyToken(incoming.headers["token"])) {
+          _this.httpPortDeffered.resolve(incoming.headers["jvm-port"]);
+          response.writeHead(200, {'Content-Type': 'text/plain' });
+        } else {
+          response.writeHead(404, {'Content-Type': 'text/plain' });
+        }
+        response.end();
+        srv.close();
+      });
+      srv.listen(0, 'localhost', () => {
+        resolve(srv.address().port);
+      });
+    });
+  }
+
   initJVM() {
-    const childProcess = require('child_process');
-    const spawn = childProcess.spawn;
-    const classPath = CommonUtils.getCommonsPath()+':build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
-    const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.wsPort, this.secret];
-    const child = spawn('java', args);
-    child.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-    });
-
-    child.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
-    });
-
-    child.on('close', (code) => {
-        console.log(`child process exited with code ${code}`);
+    this.startTempServer().then((serverPort) => {
+      const childProcess = require('child_process');
+      const spawn = childProcess.spawn;
+      const classPath = CommonUtils.getCommonsPath()+':build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
+      const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.secret, serverPort];
+      // const child = spawn('java', args, {detached: true, stdio: ['ignore', 'ignore', 'ignore']});
+      const child = spawn('java', args, {detached: true, stdio: 'inherit'});
+      child.unref();
     });
   }
 }

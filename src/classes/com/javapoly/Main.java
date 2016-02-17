@@ -12,28 +12,36 @@ import org.apache.commons.lang3.reflect.ConstructorUtils;
 
 public class Main {
   private static Bridge bridge;
+  private static int initialActiveCount = 0;
 
   public static void main(final String[] args) {
     System.out.println("Java Main started");
 
     initClassLoader();
 
-    if (args.length > 3 && "system".equals(args[1])) {
-      bridge = new SystemBridge(Integer.parseInt(args[2]), args[3]);
+    if (args.length > 2 && "system".equals(args[1])) {
+      bridge = new SystemBridge(args[2], Integer.parseInt(args[3]));
     } else {
       bridge = new DoppioBridge();
+    }
+
+    // Get the initial thread count
+    {
+      final int activeCount = getActiveThreadCount();
+      System.out.println("after bridge Active count:" + activeCount);
+      initialActiveCount = activeCount;
     }
 
     // when running multiple instances of JavaPoly, we want know which javapoly/jvm instance we are working in.
     // set the javapoly instance by id.
     bridge.setJavaPolyInstanceId(args[0]);
 
-
     try {
       boolean done = false;
       while (!done) {
         final String messageId = bridge.getMessageId();
         final String messageType = bridge.getMessageType(messageId);
+        // System.out.println("Handling message:" + messageType);
         // TODO: Create enum
         switch (messageType) {
         case "CLASS_METHOD_INVOCATION":
@@ -66,6 +74,9 @@ public class Main {
         case "JAR_PATH_ADD":
           processAddJarPath(messageId);
           break;
+        case "TERMINATE":
+          processTerminate(messageId);
+          break;
         default:
           System.out.println("Unknown message type, callback will be executed");
           bridge.dispatchMessage(messageId);
@@ -81,6 +92,23 @@ public class Main {
   private static void initClassLoader() {
     JavaPolyClassLoader urlClassLoader = new JavaPolyClassLoader(new java.net.URL[0]);
     Thread.currentThread().setContextClassLoader(urlClassLoader);
+  }
+
+  private static ThreadGroup getRootThreadGroup(final ThreadGroup tg) {
+    final ThreadGroup parent = tg.getParent();
+    return (parent == null) ? tg : getRootThreadGroup(parent);
+  }
+
+  private static int getActiveThreadCount() {
+    final ThreadGroup rootThreadGroup = getRootThreadGroup(Thread.currentThread().getThreadGroup());
+    return rootThreadGroup.activeCount();
+  }
+
+  private static void processTerminate(final String messageId) {
+    final int activeCount = getActiveThreadCount();
+    // System.out.println("Active count:" + activeCount + " of " + initialActiveCount);
+    final boolean willEnd = activeCount <= initialActiveCount;
+    bridge.returnResult(messageId, willEnd);
   }
 
   private static void  processAddJarPath(String messageId) {
