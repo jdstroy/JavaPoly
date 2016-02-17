@@ -11,6 +11,11 @@ public class Main {
     throw new RuntimeException("Deliberate exception for testing");
   }
 
+  // Can be used to throw a divide-by-zero exception
+  public static int exceptionThrower2(int x) {
+    return 100 / x;
+  }
+
   /* A function that checks the length of a string. The idea is to return some boolean, to test the wrapping of
    * primitive boolean values */
   public static boolean checkLength(final String str, final int n) {

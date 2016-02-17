@@ -75,6 +75,16 @@ describe('javapoly test', function() {
     });
   });
 
+  describe('Exception Tests', function() {
+    before(() => {
+      return addClass(path.resolve('test/classes/Main.class'));
+    });
+
+    runScript("test/units/exceptions.js");
+    testExceptions();
+
+  });
+
   /*
   describe('Eval Tests', function() {
     before(() => {

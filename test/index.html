@@ -31,6 +31,7 @@
   <script src="units/eval.js"></script>
   <script src="units/stringIdAccess.js"></script>
   <script src="units/dynamicAdd.js"></script>
+  <script src="units/exceptions.js"></script>
 
   <script type="text/javascript">
     mocha.setup('bdd');
@@ -71,8 +72,9 @@
 
       testStringIdAccess();
 
-      testDynamicAdd();
+      testExceptions();
 
+      testDynamicAdd();
     });
 
     // TODO: akadeev: checkLeaks() does not work for such complex promises tests

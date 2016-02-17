@@ -23,22 +23,6 @@ function testStringIdAccess() {
         });
       });
 
-      it('should handle exceptions correctly', function() {
-        return Java.type('Main').then(function(Main) {
-          return new Promise(function(resolve, reject) {
-            Main.exceptionThrower().then(function() {
-              reject(new Error("not expecting the promise to resolve"));
-            }, function(e) {
-              expect(e.name).toBe("java.lang.RuntimeException");
-              expect(e.message).toBe("Deliberate exception for testing");
-              expect(e.causedBy).toNotExist();
-              expect(e.printStackTrace).toExist();
-              resolve();
-            });
-          });
-        });
-      });
-
       describe('java.lang.Integer', function() {
         it('instance method should not exist in class wrapper: byteValue', function() {
           return Java.type('java.lang.Integer').then(function(Integer) {
