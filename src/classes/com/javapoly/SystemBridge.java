@@ -197,6 +197,17 @@ class SystemBridge implements Bridge {
     } else if (val instanceof JsonArray) {
       final JsonArray jsArray = (JsonArray) val;
       return jsArray.stream().map(e -> toJavaObj(e)).toArray();
+    } else if (val instanceof JsonNumber) {
+      final JsonNumber jsNumber = (JsonNumber) val;
+      try {
+        return jsNumber.intValueExact();
+      } catch (final ArithmeticException ae) {
+        try {
+          return jsNumber.longValueExact();
+        } catch (final ArithmeticException ae2) {
+          return jsNumber.doubleValue();
+        }
+      }
     } else {
       System.out.println("  TODO val: " + val);
       return "TODO";
