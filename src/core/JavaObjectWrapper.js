@@ -3,7 +3,7 @@ import WrapperUtil from "./WrapperUtil";
 
 class JavaObjectWrapper extends Wrapper {
   constructor(javapoly, javaObj, methods, nonFinalFields, finalFields) {
-    super();
+    super(javapoly.dispatcher);
     this.javapoly = javapoly;
     this._javaObj = javaObj;
     this.init(this, methods, nonFinalFields, finalFields);

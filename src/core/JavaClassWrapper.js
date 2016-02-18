@@ -36,7 +36,7 @@ class JavaClassWrapper extends Wrapper {
   }
 
   constructor(javapoly, methods, nonFinalFields, finalFields, clsName) {
-    super();
+    super(javapoly.dispatcher);
     this.clsName = clsName;
     this.javapoly = javapoly;
 

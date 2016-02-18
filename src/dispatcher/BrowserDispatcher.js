@@ -1,11 +1,13 @@
 import CommonDispatcher from './CommonDispatcher.js'
 import DoppioManager from '../jvmManager/DoppioManager.js'
+import WrapperUtil from "../core/WrapperUtil";
 
 /* Used for the case when javaploy is running in Browser */
 class BrowserDispatcher extends CommonDispatcher {
 
   constructor(javapoly) {
     super(javapoly);
+    this.javapoly = javapoly;
   }
 
   initDoppioManager(javapoly) {
@@ -53,6 +55,11 @@ class BrowserDispatcher extends CommonDispatcher {
   	});
   };
 
+  reflect(jsObj) {
+    return new Promise((resolve, reject) => {
+      WrapperUtil.dispatchOnJVM(this.javapoly, 'REFLECT_JS_OBJECT', 0, [jsObj], resolve, reject);
+    });
+  }
 }
 
 export default BrowserDispatcher;

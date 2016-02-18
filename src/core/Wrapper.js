@@ -2,8 +2,8 @@ import JavaClassWrapper from "./JavaClassWrapper";
 import WrapperUtil from "./WrapperUtil";
 
 class Wrapper {
-  constructor() {
-    // NOP
+  constructor(dispatcher) {
+    this.dispatcher = dispatcher;
   }
 
   init(obj, methods, nonFinalFields, finalFields) {
@@ -41,9 +41,7 @@ class Wrapper {
   }
 
   reflect(jsObj) {
-    return new Promise((resolve, reject) => {
-      WrapperUtil.dispatchOnJVM(this.javapoly, 'REFLECT_JS_OBJECT', 0, [jsObj], resolve, reject);
-    });
+    return this.dispatcher.reflect(jsObj);
   }
 
   runMethodWithJSReflection(methodName, args) {
