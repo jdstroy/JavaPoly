@@ -23,12 +23,12 @@ public class Eval {
     switch (description) {
       case "object":
       case "function":
-        return new JSObject(res[1]);
+        return new DoppioJSObject(res[1]);
       case "undefined":
       case "boolean":
       case "number":
       case "string":
-        return new JSPrimitive(res[1]);
+        return new DoppioJSPrimitive(res[1]);
       default:
         // TODO
         return null;

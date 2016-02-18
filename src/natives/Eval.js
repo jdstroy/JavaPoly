@@ -36,7 +36,7 @@ registerNatives({
     }
   },
 
-  'com/javapoly/reflect/JSObject': {
+  'com/javapoly/reflect/DoppioJSObject': {
     'getProperty(Ljava/lang/Object;Ljava/lang/String;)[Ljava/lang/Object;': function(thread, obj, name) {
       var nameStr = name.toString();
       return getRawType(thread, obj[nameStr]);
@@ -62,7 +62,7 @@ registerNatives({
     }
   },
 
-  'com/javapoly/reflect/JSPrimitive': {
+  'com/javapoly/reflect/DoppioJSPrimitive': {
     'asDouble(Ljava/lang/Object;)D': function(thread, arg0) {
       return arg0;
     },
