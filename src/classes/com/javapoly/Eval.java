@@ -1,5 +1,7 @@
 package com.javapoly;
 
+import com.javapoly.reflect.*;
+
 public class Eval {
 
   /** Evals the provided string and returns a wrapped result that can be introspected in Java */
@@ -16,7 +18,7 @@ public class Eval {
    * */
   public static native Object[] evalRaw(String s);
 
-  private static JSValue wrapValue(Object[] res) {
+  public static JSValue wrapValue(Object[] res) {
     final String description = (String) res[0];
     switch (description) {
       case "object":
@@ -33,77 +35,11 @@ public class Eval {
     }
   }
 
-  public abstract static class JSValue {
-    final Object rawValue;
-    JSValue(final Object rawValue) {
-      this.rawValue = rawValue;
-    }
-
-    /* Although this works, doppio dev build has an assertion that prevents a java function from returning pure JS objects */
-    /*
-    public Object getRawValue() {
-      return rawValue;
-    }
-    */
-  };
-
-  public static class JSPrimitive extends JSValue {
-    public JSPrimitive(final Object rawValue) {
-      super(rawValue);
-    }
-
-    public boolean isNull() {
-      return rawValue == null;
-    }
-
-    public double asDouble() {
-      return Eval.asDouble(rawValue);
-    }
-
-    public int asInteger() {
-      return Eval.asInteger(rawValue);
-    }
-
-    public long asLong() {
-      return Eval.asLong(rawValue);
-    }
-
-    public String asString() {
-      return Eval.asString(rawValue);
-    }
-  }
-
-  public static class JSObject extends JSValue {
-    public JSObject(final Object rawValue) {
-      super(rawValue);
-    }
-
-    public JSValue getProperty(String name) {
-      return wrapValue(Eval.getProperty(rawValue, name));
-    }
-
-    public JSValue invoke(Object... args) {
-      final Object[] unwrappedArgs = new Object[args.length];
-      for (int i = 0; i < args.length; i++) {
-        final Object e = args[i];
-        unwrappedArgs[i] = (e instanceof JSValue) ? ((JSValue) e).rawValue : e;
-      }
-      return wrapValue(Eval.invoke(rawValue, unwrappedArgs));
-    }
-  }
-
   /** Wraps the provided JS object so that it can be introspected in Java */
   static JSValue reflectJSValue(final Object obj) {
     final Object[] data = getRawType(obj);
     return wrapValue(data);
   }
 
-  private static native Object[] invoke(Object functionObj, Object... args);
-  private static native double asDouble(Object obj);
-  private static native String asString(Object obj);
-  private static native int asInteger(Object obj);
-  private static native long asLong(Object obj);
   private static native Object[] getRawType(Object obj);
-
-  private static native Object[] getProperty(Object obj, String name);
 }

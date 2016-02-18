@@ -1,8 +1,8 @@
 package com.javapoly.dom;
 
 import com.javapoly.Eval;
-import com.javapoly.Eval.JSObject;
-import com.javapoly.Eval.JSPrimitive;
+import com.javapoly.reflect.JSObject;
+import com.javapoly.reflect.JSPrimitive;
 
 public class Math {
 

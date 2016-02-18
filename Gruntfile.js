@@ -79,7 +79,7 @@ module.exports = function(grunt) {
           "d": "build/classes/",
           "cp": ["build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar", "src/jars/commons-lang3-3.5-SNAPSHOT.jar"]
         },
-        sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/dom/*.java']
+        sourceFiles: ['src/classes/com/javapoly/*.java', 'src/classes/com/javapoly/reflect/*.java', 'src/classes/com/javapoly/dom/*.java']
       },
       "compile-test": {
         command: "javac",

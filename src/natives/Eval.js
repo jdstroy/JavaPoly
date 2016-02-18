@@ -33,8 +33,10 @@ registerNatives({
 
     'getRawType(Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, obj) {
       return getRawType(thread, obj);
-    },
+    }
+  },
 
+  'com/javapoly/reflect/JSObject': {
     'getProperty(Ljava/lang/Object;Ljava/lang/String;)[Ljava/lang/Object;': function(thread, obj, name) {
       var nameStr = name.toString();
       return getRawType(thread, obj[nameStr]);
@@ -57,8 +59,10 @@ registerNatives({
       });
       var res = toInvoke.apply(null, ubArgs);
       return getRawType(thread, res);
-    },
+    }
+  },
 
+  'com/javapoly/reflect/JSPrimitive': {
     'asDouble(Ljava/lang/Object;)D': function(thread, arg0) {
       return arg0;
     },
@@ -74,6 +78,5 @@ registerNatives({
     'asString(Ljava/lang/Object;)Ljava/lang/String;': function(thread, arg0) {
       return util.initString(thread.getBsCl(), arg0);
     }
-
   }
 });

@@ -1,7 +1,7 @@
 package com.javapoly.dom;
 
 import com.javapoly.Eval;
-import com.javapoly.Eval.JSObject;
+import com.javapoly.reflect.JSObject;
 
 public class Window {
 

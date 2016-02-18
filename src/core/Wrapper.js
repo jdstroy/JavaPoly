@@ -64,8 +64,8 @@ class Wrapper {
         return resultPromise.then(result => {
           if ((!!result) && (typeof(result) === "object") && (!!result._javaObj)) {
             const className = result._javaObj.getClass().className;
-            if (className === "Lcom/javapoly/Eval$JSObject;" || className === "Lcom/javapoly/Eval$JSPrimitive;") {
-              return result._javaObj["com/javapoly/Eval$JSValue/rawValue"];
+            if (className === "Lcom/javapoly/reflect/JSObject;" || className === "Lcom/javapoly/reflect/JSPrimitive;") {
+              return result._javaObj["com/javapoly/reflect/JSValue/rawValue"];
             }
           }
           return result;
