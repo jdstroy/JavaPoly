@@ -11,7 +11,7 @@ public class Eval {
    *
    *  Mostly used internally. In general, use the above `eval` method which is more convenient.
    *
-   *  In the returned array, the first element is of type `String`, containging the result of JS `typeof`.
+   *  In the returned array, the first element is of type `String`, containing the result of JS `typeof`.
    *  and the second element is the actual result of eval.
    * */
   public static native Object[] evalRaw(String s);
