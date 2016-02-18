@@ -7,12 +7,6 @@ public class Eval {
     return wrapValue(evalRaw(s));
   }
 
-  /** Evals the provided string and returns a wrapped result that can be introspected in Java */
-  public static JSValue reflectJSValue(final Object obj) {
-    final Object[] data = getRawType(obj);
-    return wrapValue(data);
-  }
-
   /** Evals the provided string and returns the raw javascript result.
    *
    *  Mostly used internally. In general, use the above `eval` method which is more convenient.
@@ -96,6 +90,12 @@ public class Eval {
       }
       return wrapValue(Eval.invoke(rawValue, unwrappedArgs));
     }
+  }
+
+  /** Wraps the provided JS object so that it can be introspected in Java */
+  static JSValue reflectJSValue(final Object obj) {
+    final Object[] data = getRawType(obj);
+    return wrapValue(data);
   }
 
   private static native Object[] invoke(Object functionObj, Object... args);
