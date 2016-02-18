@@ -1,4 +1,5 @@
 import JavaClassWrapper from "./JavaClassWrapper";
+import WrapperUtil from "./WrapperUtil";
 
 class Wrapper {
   constructor() {
@@ -40,8 +41,8 @@ class Wrapper {
   }
 
   reflect(jsObj) {
-    return JavaClassWrapper.getClassWrapperByName(this.javapoly, "com.javapoly.Eval").then((Eval) => {
-      return Eval.reflectJSValue(jsObj);
+    return new Promise((resolve, reject) => {
+      WrapperUtil.dispatchOnJVM(this.javapoly, 'REFLECT_JS_OBJECT', 0, [jsObj], resolve, reject);
     });
   }
 
