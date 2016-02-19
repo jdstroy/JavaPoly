@@ -68,6 +68,13 @@ class WorkerCallBackDispatcher {
     this.worker.postMessage({javapoly:{messageId:""+id, messageType:messageType, priority: priority, data:data}});
   }
 
+  reflect(jsObj) {
+    return jsObj;
+  }
+
+  unreflect(result) {
+    return result;
+  }
 }
 
 export default WorkerCallBackDispatcher;

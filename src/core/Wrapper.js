@@ -47,16 +47,9 @@ class Wrapper {
     const reflectedArgs = args.map((e) => wrapper.dispatcher.reflect(e));
 
     const resultPromise = wrapper.runMethodWithJavaDispatching(methodName, reflectedArgs);
+
     if (okToReflect) {
-      return resultPromise.then(result => {
-        if ((!!result) && (typeof(result) === "object") && (!!result._javaObj)) {
-          const className = result._javaObj.getClass().className;
-          if (className === "Lcom/javapoly/reflect/DoppioJSObject;" || className === "Lcom/javapoly/reflect/DoppioJSPrimitive;") {
-            return result._javaObj["com/javapoly/reflect/DoppioJSValue/rawValue"];
-          }
-        }
-        return result;
-      });
+      return resultPromise.then((result) => wrapper.dispatcher.unreflect(result));
     } else {
       return resultPromise;
     }

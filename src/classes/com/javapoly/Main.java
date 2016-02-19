@@ -340,7 +340,7 @@ public class Main {
   }
 
   public static JSValue wrapValue(Object[] res) {
-    return bridge.wrapValue(res);
+    return bridge.wrapValue((String) res[0], res[1]);
   }
 
 }

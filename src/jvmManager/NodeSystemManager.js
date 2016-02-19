@@ -7,12 +7,11 @@ import http from 'http';
  * The NodeDoppioManager manages the Doppio JVM on Node
  */
 export default class NodeSystemManager {
-  constructor(javapoly, secret, httpPortDeffered, dispatcher) {
+  constructor(javapoly, secret, httpPortDeffered, jsServer) {
     this.javapoly = javapoly;
-    // this.wsPort = wsPort;
     this.httpPortDeffered = httpPortDeffered;
     this.secret = secret;
-    this.dispatcher = dispatcher;
+    this.jsServer = jsServer;
 
     /**
      * Array that contains classpath, include the root path of class files , jar file path.
@@ -89,28 +88,8 @@ export default class NodeSystemManager {
     });
   }
 
-  startTempServer() {
-    const _this = this;
-
-    return new Promise((resolve, reject) => {
-      const srv = http.createServer((incoming, response) => {
-        if (_this.dispatcher.verifyToken(incoming.headers["token"])) {
-          _this.httpPortDeffered.resolve(incoming.headers["jvm-port"]);
-          response.writeHead(200, {'Content-Type': 'text/plain' });
-        } else {
-          response.writeHead(404, {'Content-Type': 'text/plain' });
-        }
-        response.end();
-        srv.close();
-      });
-      srv.listen(0, 'localhost', () => {
-        resolve(srv.address().port);
-      });
-    });
-  }
-
   initJVM() {
-    this.startTempServer().then((serverPort) => {
+    this.jsServer.then((serverPort) => {
       const childProcess = require('child_process');
       const spawn = childProcess.spawn;
       const classPath = CommonUtils.getCommonsPath()+':build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';

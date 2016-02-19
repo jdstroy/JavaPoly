@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.javapoly.reflect.*;
 
-class SystemBridge implements Bridge {
+public class SystemBridge implements Bridge {
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> responseQueue = new java.util.concurrent.LinkedBlockingQueue<>();
@@ -86,7 +86,7 @@ class SystemBridge implements Bridge {
   private void informPort(int port) {
     // System.out.println(String.format("::bridgePort=%d::", srv.getPort()));
     try {
-      final URL url = new URL("http://localhost:"+nodeServerPort+"/");
+      final URL url = new URL("http://localhost:"+nodeServerPort+"/informPort");
       final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("POST");
       connection.setRequestProperty("Connection", "close");
@@ -94,17 +94,24 @@ class SystemBridge implements Bridge {
       connection.setRequestProperty("TOKEN", makeToken());
       connection.setUseCaches(false);
 
-      final BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream()));
-      String decodedString;
-      while ((decodedString = in.readLine()) != null) {
-        System.out.println(decodedString);
-      }
-      in.close();
+      System.out.println(readResponse(connection));
+
       connection.disconnect();
 
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  private String readResponse(final HttpURLConnection connection) throws IOException {
+    final BufferedReader in = new BufferedReader( new InputStreamReader(connection.getInputStream()));
+    String result = "";
+    String decodedString = null;
+    while ((decodedString = in.readLine()) != null) {
+      result += decodedString;
+    }
+    in.close();
+    return result;
   }
 
   private void sendResponse(final Socket connection, final JsonObject msgObj) throws IOException {
@@ -210,9 +217,35 @@ class SystemBridge implements Bridge {
           return jsNumber.doubleValue();
         }
       }
+    } else if (val instanceof JsonObject) {
+      final JsonObject jsObj = (JsonObject) val;
+      return wrapValue(jsObj.getString("type"), jsObj.getInt("jsId"));
     } else {
       System.out.println("  TODO val: " + val);
-      return "TODO";
+      return val;
+    }
+  }
+
+  private JSValue toJSValue(JsonValue val) {
+    if (val instanceof JsonString) {
+      return new SystemJSPrimitive(((JsonString) val).getString());
+    } else if (val instanceof JsonNumber) {
+      final JsonNumber jsNumber = (JsonNumber) val;
+      try {
+        return new SystemJSPrimitive(jsNumber.intValueExact());
+      } catch (final ArithmeticException ae) {
+        try {
+          return new SystemJSPrimitive(jsNumber.longValueExact());
+        } catch (final ArithmeticException ae2) {
+          return new SystemJSPrimitive(jsNumber.doubleValue());
+        }
+      }
+    } else if (val instanceof JsonObject) {
+      final JsonObject jsObj = (JsonObject) val;
+      return wrapValue(jsObj.getString("type"), jsObj.getInt("jsId"));
+    } else {
+      System.out.println("  TODO val: " + val);
+      return null;
     }
   }
 
@@ -246,6 +279,11 @@ class SystemBridge implements Bridge {
         return arrayBuilder.build().getJsonString(0);
       } else if (obj instanceof Boolean) {
         return ((Boolean) obj) ? JsonValue.TRUE : JsonValue.FALSE;
+      } else if (obj instanceof SystemJSPrimitive) {
+        return toJsonObj(((SystemJSPrimitive) obj).getRawValue());
+      } else if (obj instanceof SystemJSObject) {
+        final JsonObject resultObj = Json.createObjectBuilder().add("jsObj", ((SystemJSObject) obj).getRawValue()).build();
+        return resultObj;
       } else if (obj instanceof Object[]) {
         final Object[] arr = (Object[]) obj;
         for (int i = 0; i < arr.length; i++) {
@@ -312,19 +350,50 @@ class SystemBridge implements Bridge {
     // TODO
   }
 
-  public JSValue wrapValue(Object[] res) {
-    // TODO
-    return null;
+  public JSValue wrapValue(String description, Object obj) {
+    switch (description) {
+      case "object":
+      case "function":
+        return new SystemJSObject(obj, this);
+      case "undefined":
+      case "boolean":
+      case "number":
+      case "string":
+        return new SystemJSPrimitive(obj);
+      default:
+        // TODO
+        return null;
+    }
   }
 
   public JSValue reflectJSValue(final Object[] obj) {
     System.out.println("reflecting: " + obj);
-    return wrapValue(obj);
+    return wrapValue((String) obj[0], obj[1]);
   }
 
   public Object[] reflectParams(final Object[] params) {
-    // TODO
-    return null;
+    return params;
+  }
+
+  public JSValue getObjectProperty(String name, final int id) {
+    try {
+      final URL url = new URL("http://localhost:"+nodeServerPort+"/getProperty?id="+id+"&fieldName="+name);
+      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.setRequestProperty("Connection", "close");
+      connection.setRequestProperty("TOKEN", makeToken());
+      connection.setUseCaches(false);
+
+      final String response = readResponse(connection);
+      final JsonObject responseObj = Json.createReader(new StringReader(response)).readObject();
+
+      connection.disconnect();
+
+      return toJSValue(responseObj.get("result"));
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 }
 

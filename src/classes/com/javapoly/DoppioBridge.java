@@ -15,17 +15,16 @@ class DoppioBridge implements Bridge {
 
   private static native Object[] getRawType(Object obj);
 
-  public JSValue wrapValue(Object[] res) {
-    final String description = (String) res[0];
+  public JSValue wrapValue(String description, Object obj) {
     switch (description) {
       case "object":
       case "function":
-        return new DoppioJSObject(res[1]);
+        return new DoppioJSObject(obj);
       case "undefined":
       case "boolean":
       case "number":
       case "string":
-        return new DoppioJSPrimitive(res[1]);
+        return new DoppioJSPrimitive(obj);
       default:
         // TODO
         return null;
@@ -35,7 +34,7 @@ class DoppioBridge implements Bridge {
   /** Wraps the provided JS object so that it can be introspected in Java */
   public JSValue reflectJSValue(final Object[] obj) {
     final Object[] data = getRawType(obj[0]);
-    return wrapValue(data);
+    return wrapValue((String) data[0], data[1]);
   }
 
   public Object[] reflectParams(final Object[] params) {

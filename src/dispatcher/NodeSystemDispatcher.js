@@ -4,14 +4,18 @@ import NodeSystemManager from '../jvmManager/NodeSystemManager.js'
 import WrapperUtil from '../core/WrapperUtil.js';
 import Tokens from 'csrf';
 import http from 'http';
+import url from 'url';
 
 /* Used for the case when javaploy is running in node with system JVM */
 export default class NodeSystemDispatcher extends CommonDispatcher {
 
   constructor(javapoly) {
     super(javapoly);
+    this.javapoly = javapoly;
 
     this.heartBeatPeriodMillis = 1000;
+    this.reflected = [];
+    this.reflectedCount = 0;
 
     const _this = this;
     this.count = 0;
@@ -44,6 +48,7 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
 
     process.on('uncaughtException', (e) => {
       console.log("Uncaught exception: " + e);
+      console.log("stack: " + e.stack);
       _this.terminating = true;
       WrapperUtil.dispatchOnJVM(javapoly, 'TERMINATE_NOW', 0, [], (willTerminate) => { });
     });
@@ -65,7 +70,7 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
     this.httpPortDeffered = new CommonUtils.deferred();
     this.tokens = new Tokens();
     this.secret = this.tokens.secretSync()
-    const mgr = new NodeSystemManager(javapoly, this.secret, this.httpPortDeffered, this);
+    const mgr = new NodeSystemManager(javapoly, this.secret, this.httpPortDeffered, this.startJSServer());
     return Promise.resolve(mgr);
   }
 
@@ -77,6 +82,41 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
     const id = this.javaPolyIdCount++;
 
     this.handleIncomingMessage(id, priority, messageType, data, callback);
+  }
+
+  handleRequest(incoming, response) {
+    const urlParts = url.parse(incoming.url, true);
+    if (urlParts.pathname === "/informPort") {
+      this.httpPortDeffered.resolve(incoming.headers["jvm-port"]);
+      response.writeHead(200, {'Content-Type': 'text/plain' });
+    } else if (urlParts.pathname === "/getProperty") {
+      const queryData = urlParts.query;
+      const jsId = queryData.id;
+      const fieldName = queryData.fieldName;
+      const jsObj = this.reflected[jsId];
+      const field = jsObj[fieldName];
+      response.writeHead(200, {'Content-Type': 'text/plain' });
+      response.write(JSON.stringify({result: this.reflect(field)}));
+    }
+  }
+
+  startJSServer() {
+    const _this = this;
+
+    return new Promise((resolve, reject) => {
+      const srv = http.createServer((incoming, response) => {
+        if (_this.verifyToken(incoming.headers["token"])) {
+          _this.handleRequest(incoming, response);
+        } else {
+          response.writeHead(404, {'Content-Type': 'text/plain' });
+        }
+        response.end();
+        srv.unref();
+      });
+      srv.listen(0, 'localhost', () => {
+        resolve(srv.address().port);
+      });
+    });
   }
 
   handleJVMMessage(id, priority, messageType, data, callback) {
@@ -115,6 +155,23 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
       req.write(msg);
       req.end();
     });
+  }
+
+  reflect(jsObj) {
+    if ((typeof jsObj === 'object') && (!jsObj._javaObj)) {
+      const id = this.reflectedCount++;
+      this.reflected[id] = jsObj;
+      return {"jsId": id, "type": typeof jsObj};
+    } else {
+      return jsObj;
+    }
+  }
+
+  unreflect(result) {
+    if ((!!result) && (typeof(result) === "object") && (!!result.jsObj)) {
+      return this.reflected[result.jsObj];
+    }
+    return result;
   }
 
 }

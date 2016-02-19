@@ -11,7 +11,7 @@ interface Bridge {
   void returnErrorFlat(String messageId, FlatThrowable ft);
   void setJavaPolyInstanceId(String javapolyId);
 
-  JSValue wrapValue(Object[] res);
+  JSValue wrapValue(String descripton, Object obj);
   JSValue reflectJSValue(final Object[] obj);
   Object[] reflectParams(final Object[] params);
 }
