@@ -1,6 +1,6 @@
 package com.javapoly.reflect;
 
-import com.javapoly.Eval;
+import com.javapoly.Main;
 
 public class DoppioJSObject extends DoppioJSValue implements JSObject {
   public DoppioJSObject(final Object rawValue) {
@@ -8,7 +8,7 @@ public class DoppioJSObject extends DoppioJSValue implements JSObject {
   }
 
   public JSValue getProperty(String name) {
-    return Eval.wrapValue(getProperty(rawValue, name));
+    return Main.wrapValue(getProperty(rawValue, name));
   }
 
   public JSValue invoke(Object... args) {
@@ -17,7 +17,7 @@ public class DoppioJSObject extends DoppioJSValue implements JSObject {
       final Object e = args[i];
       unwrappedArgs[i] = (e instanceof DoppioJSValue) ? ((DoppioJSValue) e).rawValue : e;
     }
-    return Eval.wrapValue(invoke(rawValue, unwrappedArgs));
+    return Main.wrapValue(invoke(rawValue, unwrappedArgs));
   }
 
   private static native Object[] invoke(Object functionObj, Object... args);

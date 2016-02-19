@@ -19,6 +19,8 @@ import java.io.PrintWriter;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.javapoly.reflect.*;
+
 class SystemBridge implements Bridge {
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
@@ -308,6 +310,11 @@ class SystemBridge implements Bridge {
 
   public void setJavaPolyInstanceId(String javapolyId) {
     // TODO
+  }
+
+  public JSValue wrapValue(Object[] res) {
+    // TODO
+    return null;
   }
 }
 

@@ -92,12 +92,14 @@ export default class JavaPolyBase {
       type: javaType,
       "new": (name, ...args) => {
         return javaType(name).then((classWrapper) => new classWrapper(...args))
-      },
+      }
+      /* TODO: use the reflect command
       reflect: (jsObj) => {
-        return javaType("com.javapoly.Eval").then((Eval) => {
-          return Eval.reflectJSValue(jsObj);
+        return javaType("com.javapoly.Main").then((Main) => {
+          return Main.reflectJSValue(jsObj);
         });
       }
+      */
     };
 
     api.addClass = (data) => this.addClass(data);

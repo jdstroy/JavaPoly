@@ -29,8 +29,10 @@ registerNatives({
       var expr = toEval.toString();
       var res = eval(expr);
       return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', [util.initString(thread.getBsCl(), typeof res), res]);
-    },
+    }
+  },
 
+  'com/javapoly/Main': {
     'getRawType(Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, obj) {
       return getRawType(thread, obj);
     }

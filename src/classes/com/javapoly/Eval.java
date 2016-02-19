@@ -6,7 +6,7 @@ public class Eval {
 
   /** Evals the provided string and returns a wrapped result that can be introspected in Java */
   public static JSValue eval(String s) {
-    return wrapValue(evalRaw(s));
+    return Main.wrapValue(evalRaw(s));
   }
 
   /** Evals the provided string and returns the raw javascript result.
@@ -18,28 +18,4 @@ public class Eval {
    * */
   public static native Object[] evalRaw(String s);
 
-  public static JSValue wrapValue(Object[] res) {
-    final String description = (String) res[0];
-    switch (description) {
-      case "object":
-      case "function":
-        return new DoppioJSObject(res[1]);
-      case "undefined":
-      case "boolean":
-      case "number":
-      case "string":
-        return new DoppioJSPrimitive(res[1]);
-      default:
-        // TODO
-        return null;
-    }
-  }
-
-  /** Wraps the provided JS object so that it can be introspected in Java */
-  static JSValue reflectJSValue(final Object obj) {
-    final Object[] data = getRawType(obj);
-    return wrapValue(data);
-  }
-
-  private static native Object[] getRawType(Object obj);
 }

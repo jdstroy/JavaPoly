@@ -10,6 +10,8 @@ import java.io.IOException;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 
+import com.javapoly.reflect.*;
+
 public class Main {
   private static Bridge bridge;
   private static int initialActiveCount = 0;
@@ -314,7 +316,7 @@ public class Main {
 
   public static void processReflectJSObject(final String messageId) {
     final Object[] data = bridge.getData(messageId);
-    bridge.returnResult(messageId, Eval.reflectJSValue(data[0]));
+    bridge.returnResult(messageId, reflectJSValue(data[0]));
   }
 
   private static void writeToFile(final Path path, final String data) throws IOException{
@@ -364,4 +366,15 @@ public class Main {
     e.printStackTrace();
   }
 
+  public static JSValue wrapValue(Object[] res) {
+    return bridge.wrapValue(res);
+  }
+
+  /** Wraps the provided JS object so that it can be introspected in Java */
+  private static JSValue reflectJSValue(final Object obj) {
+    final Object[] data = getRawType(obj);
+    return Main.wrapValue(data);
+  }
+
+  private static native Object[] getRawType(Object obj);
 }
