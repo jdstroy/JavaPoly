@@ -321,5 +321,10 @@ class SystemBridge implements Bridge {
     System.out.println("reflecting: " + obj);
     return wrapValue(obj);
   }
+
+  public Object[] reflectParams(final Object[] params) {
+    // TODO
+    return null;
+  }
 }
 

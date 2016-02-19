@@ -40,38 +40,26 @@ class Wrapper {
     }
   }
 
-  reflect(jsObj) {
-    return this.dispatcher.reflect(jsObj);
-  }
-
   runMethodWithJSReflection(methodName, args) {
     const wrapper = this;
     const okToReflect = !wrapper.isReflectMethod(methodName);
 
-    const wrappedArgPromises = args.map (e => {
-      if (okToReflect && (typeof(e) === "object") && (!e._javaObj)) {
-        return wrapper.reflect(e);
-      } else {
-        return Promise.resolve(e);
-      }
-    });
+    const reflectedArgs = args.map((e) => wrapper.dispatcher.reflect(e));
 
-    return Promise.all(wrappedArgPromises).then((wrappedArgs) => {
-      const resultPromise = wrapper.runMethodWithJavaDispatching(methodName, wrappedArgs);
-      if (okToReflect) {
-        return resultPromise.then(result => {
-          if ((!!result) && (typeof(result) === "object") && (!!result._javaObj)) {
-            const className = result._javaObj.getClass().className;
-            if (className === "Lcom/javapoly/reflect/DoppioJSObject;" || className === "Lcom/javapoly/reflect/DoppioJSPrimitive;") {
-              return result._javaObj["com/javapoly/reflect/DoppioJSValue/rawValue"];
-            }
+    const resultPromise = wrapper.runMethodWithJavaDispatching(methodName, reflectedArgs);
+    if (okToReflect) {
+      return resultPromise.then(result => {
+        if ((!!result) && (typeof(result) === "object") && (!!result._javaObj)) {
+          const className = result._javaObj.getClass().className;
+          if (className === "Lcom/javapoly/reflect/DoppioJSObject;" || className === "Lcom/javapoly/reflect/DoppioJSPrimitive;") {
+            return result._javaObj["com/javapoly/reflect/DoppioJSValue/rawValue"];
           }
-          return result;
-        });
-      } else {
-        return resultPromise;
-      }
-    });
+        }
+        return result;
+      });
+    } else {
+      return resultPromise;
+    }
   }
 }
 

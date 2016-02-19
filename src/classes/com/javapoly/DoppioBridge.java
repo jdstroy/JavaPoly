@@ -11,6 +11,8 @@ class DoppioBridge implements Bridge {
   public native void returnErrorFlat(String messageId, FlatThrowable ft);
   public native void setJavaPolyInstanceId(String javapolyId);
 
+  private static native boolean isJSNativeObj(Object obj);
+
   private static native Object[] getRawType(Object obj);
 
   public JSValue wrapValue(Object[] res) {
@@ -34,5 +36,19 @@ class DoppioBridge implements Bridge {
   public JSValue reflectJSValue(final Object[] obj) {
     final Object[] data = getRawType(obj[0]);
     return wrapValue(data);
+  }
+
+  public Object[] reflectParams(final Object[] params) {
+    final Object[] reflected = new Object[params.length];
+
+    for (int i = 0;i < params.length; i++) {
+      if (isJSNativeObj(params[i])) {
+        reflected[i] = reflectJSValue(new Object[]{params[i]});
+      } else {
+        reflected[i] = params[i];
+      }
+    }
+
+    return reflected;
   }
 }

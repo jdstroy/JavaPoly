@@ -56,9 +56,7 @@ class BrowserDispatcher extends CommonDispatcher {
   };
 
   reflect(jsObj) {
-    return new Promise((resolve, reject) => {
-      WrapperUtil.dispatchOnJVM(this.javapoly, 'REFLECT_JS_OBJECT', 0, [jsObj], resolve, reject);
-    });
+    return jsObj;
   }
 }
 

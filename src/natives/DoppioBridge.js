@@ -183,6 +183,11 @@ registerNatives({
       }
     },
 
+    'isJSNativeObj(Ljava/lang/Object;)Z': function(thread, e) {
+      // TODO: find a better way to check for a JS native object
+      return (typeof(e) === "object") && (!e.hasOwnProperty("$monitor"));
+    },
+
     'getMessageType(Ljava/lang/String;)Ljava/lang/String;': function(thread, obj, msgId) {
       var unwrappedData = javapoly0.dispatcher.getMessageType(msgId);
       if (typeof unwrappedData !== 'undefined') {

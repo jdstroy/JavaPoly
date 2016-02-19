@@ -76,9 +76,6 @@ public class Main {
         case "JAR_PATH_ADD":
           processAddJarPath(messageId);
           break;
-        case "REFLECT_JS_OBJECT":
-          processReflectJSObject(messageId);
-          break;
         case "TERMINATE":
           processTerminate(messageId);
           break;
@@ -241,7 +238,7 @@ public class Main {
 
   public static Object invokeClassMethod(String className, String methodName, Object[] params) throws Exception {
     final Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-    final Object returnValue = MethodUtils.invokeStaticMethodFuzzy(clazz, methodName, params);
+    final Object returnValue = MethodUtils.invokeStaticMethodFuzzy(clazz, methodName, bridge.reflectParams(params));
     return returnValue;
   }
 
@@ -312,11 +309,6 @@ public class Main {
     } catch (final IOException e) {
       returnError(messageId, new RuntimeException("Compilation failed.", e));
     }
-  }
-
-  public static void processReflectJSObject(final String messageId) {
-    final Object[] data = bridge.getData(messageId);
-    bridge.returnResult(messageId, bridge.reflectJSValue(data));
   }
 
   private static void writeToFile(final Path path, final String data) throws IOException{

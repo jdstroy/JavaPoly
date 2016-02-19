@@ -13,5 +13,6 @@ interface Bridge {
 
   JSValue wrapValue(Object[] res);
   JSValue reflectJSValue(final Object[] obj);
+  Object[] reflectParams(final Object[] params);
 }
 
