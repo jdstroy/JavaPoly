@@ -80,7 +80,7 @@ public class Main {
           processTerminate(messageId);
           break;
         default:
-          System.out.println("Unknown message type, callback will be executed");
+          System.out.println("Unknown message type: " + messageType +", callback will be executed");
           bridge.dispatchMessage(messageId);
         }
       }
@@ -318,25 +318,6 @@ public class Main {
     try(final java.io.FileWriter fileWriter = new java.io.FileWriter(path.toFile())) {
       fileWriter.write(data);
     }
-  }
-
-  // TODO: method and constructor matching need to be more smart. Issue #40
-  private static Method matchMethod(final Method[] methods, final String methodName, final Object[] params) {
-    for (Method method : methods) {
-      if (methodName.equals(method.getName()) && method.getParameterCount() == params.length) {
-        return method;
-      }
-    }
-    return null;
-  }
-
-  private static Constructor matchConstructor(final Constructor[] constructors, final Object[] params) {
-    for (Constructor constructor : constructors) {
-      if (constructor.getParameterCount() == params.length) {
-        return constructor;
-      }
-    }
-    return null;
   }
 
   private static FlatThrowable flatten(final Throwable throwable) {
