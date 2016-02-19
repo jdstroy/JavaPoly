@@ -316,7 +316,7 @@ public class Main {
 
   public static void processReflectJSObject(final String messageId) {
     final Object[] data = bridge.getData(messageId);
-    bridge.returnResult(messageId, reflectJSValue(data[0]));
+    bridge.returnResult(messageId, bridge.reflectJSValue(data));
   }
 
   private static void writeToFile(final Path path, final String data) throws IOException{
@@ -370,11 +370,4 @@ public class Main {
     return bridge.wrapValue(res);
   }
 
-  /** Wraps the provided JS object so that it can be introspected in Java */
-  private static JSValue reflectJSValue(final Object obj) {
-    final Object[] data = getRawType(obj);
-    return Main.wrapValue(data);
-  }
-
-  private static native Object[] getRawType(Object obj);
 }

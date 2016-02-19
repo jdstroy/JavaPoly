@@ -11,6 +11,8 @@ class DoppioBridge implements Bridge {
   public native void returnErrorFlat(String messageId, FlatThrowable ft);
   public native void setJavaPolyInstanceId(String javapolyId);
 
+  private static native Object[] getRawType(Object obj);
+
   public JSValue wrapValue(Object[] res) {
     final String description = (String) res[0];
     switch (description) {
@@ -28,4 +30,9 @@ class DoppioBridge implements Bridge {
     }
   }
 
+  /** Wraps the provided JS object so that it can be introspected in Java */
+  public JSValue reflectJSValue(final Object[] obj) {
+    final Object[] data = getRawType(obj[0]);
+    return wrapValue(data);
+  }
 }

@@ -316,5 +316,10 @@ class SystemBridge implements Bridge {
     // TODO
     return null;
   }
+
+  public JSValue reflectJSValue(final Object[] obj) {
+    System.out.println("reflecting: " + obj);
+    return wrapValue(obj);
+  }
 }
 

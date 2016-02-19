@@ -12,5 +12,6 @@ interface Bridge {
   void setJavaPolyInstanceId(String javapolyId);
 
   JSValue wrapValue(Object[] res);
+  JSValue reflectJSValue(final Object[] obj);
 }
 
