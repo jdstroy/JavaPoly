@@ -189,8 +189,8 @@ module.exports = function(grunt) {
   grunt.registerTask('build:java', ['mkdir:build', 'copy:jars', 'copy:natives', 'run_java:compile']);
   grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
   grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'browserify:node-doppio', 'listings:javapoly']);
-  grunt.registerTask('build:node-doppio', ['mkdir:build', 'build:java', 'browserify:node-doppio']);
-  grunt.registerTask('build:node-system', ['mkdir:build', 'build:java', 'browserify:node-system']);
+  grunt.registerTask('build:node-doppio', ['mkdir:build', 'build:java', 'run_java:compile-test', 'browserify:node-doppio']);
+  grunt.registerTask('build:node-system', ['mkdir:build', 'build:java', 'run_java:compile-test', 'browserify:node-system']);
   grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'browserify:production', 'listings:javapoly']);
 
   grunt.registerTask('default', ['build']);
