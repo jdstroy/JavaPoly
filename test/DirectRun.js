@@ -39,8 +39,10 @@ addClass(path.resolve('test/classes/Threads.class')).then(function(addClassResul
  return 0;
 });
 
+/*
 setTimeout(() => {
   throw new Error("Check error handling");
 }, 2000);
+*/
 
 // setTimeout(() => {console.log("Dummy timeout")}, 10000);
