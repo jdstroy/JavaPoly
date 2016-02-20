@@ -18,4 +18,12 @@ export default class NodeDoppioDispatcher extends CommonDispatcher {
     this.handleIncomingMessage(id, priority, messageType, data, callback);
   }
 
+  reflect(jsObj) {
+    return jsObj;
+  }
+
+  unreflect(result) {
+    return result;
+  }
+
 }
