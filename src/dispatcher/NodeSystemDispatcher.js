@@ -158,10 +158,11 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
   }
 
   reflect(jsObj) {
-    if ((typeof jsObj === 'object') && (!jsObj._javaObj)) {
+    const objType = typeof jsObj;
+    if ((objType === 'function') || ((objType === 'object')) && (!jsObj._javaObj)) {
       const id = this.reflectedCount++;
       this.reflected[id] = jsObj;
-      return {"jsId": id, "type": typeof jsObj};
+      return {"jsId": id, "type": objType};
     } else {
       return jsObj;
     }

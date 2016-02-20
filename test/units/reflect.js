@@ -3,16 +3,28 @@ function testReflect() {
     describe('Reflection', function() {
       it('should reflect js object into java', function() {
         return Java.type("EvalTest").then(function(EvalTest) {
-          var stringTest = EvalTest.getProperty({name1: "xyz", name2: 10}, "name1").then(function(name1Val) {
+          var obj = {name1: "xyz", name2: 10};
+          var objDeep = {name1: "xyz", name2: 10, name3: {inner: "pqr"}};
+          var objFunction = {name1: "xyz", square: function(n) { return n * n}};
+          var objArray = {name1: "xyz", primes: [2, 3, 5, 7, 11]};
+
+          var stringTest = EvalTest.getProperty(obj, "name1").then(function(name1Val) {
             expect(name1Val).toBe("xyz");
           });
-          var numberTest = EvalTest.getProperty({name1: "xyz", name2: 10}, "name2").then(function(name2Val) {
+          var numberTest = EvalTest.getProperty(obj, "name2").then(function(name2Val) {
             expect(name2Val).toBe(10);
           });
-          var deepObjTest = EvalTest.getProperty({name1: "xyz", name3: {inner:"pqr"}}, "name3").then(function(name3Val) {
+          var deepObjTest = EvalTest.getProperty(objDeep, "name3").then(function(name3Val) {
             expect(name3Val.inner).toBe("pqr");
           });
-          return Promise.all([stringTest, numberTest, deepObjTest]);
+          var functionObjTest = EvalTest.getProperty(objFunction, "square").then(function(square) {
+            expect(square(5)).toBe(25);
+          });
+          var arrayObjTest = EvalTest.getProperty(objArray, "primes").then(function(primes) {
+            expect(primes[0]).toBe(2);
+            expect(primes[4]).toBe(11);
+          });
+          return Promise.all([stringTest, numberTest, deepObjTest, functionObjTest, arrayObjTest]);
         });
       });
 
