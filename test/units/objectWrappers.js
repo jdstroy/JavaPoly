@@ -39,15 +39,18 @@ function testObjectWrappers() {
       });
 
       it('should not return positive 64 bit integers too big for JS', function() {
-        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
-          return myclass.testFailingPos().then(function() {
-            Error('Not expecting promise to resolve')
-          },
-          function(e) {
-            expect(e.name).toBe("RangeError");
-            expect(e.message).toBe("Unfortunately, JavaScript does not yet support 64 bit integers");
-            expect(e.causedBy).toNotExist();
-            expect(e.printStackTrace).toExist();
+        return new Promise(function(resolve, reject) {
+          return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+            return myclass.testFailingPos().then(function() {
+              reject(new Error('Not expecting promise to resolve'));
+            },
+            function(e) {
+              expect(e.name).toBe("RangeError");
+              expect(e.message).toBe("Unfortunately, JavaScript does not yet support 64 bit integers");
+              expect(e.causedBy).toNotExist();
+              expect(e.printStackTrace).toExist();
+              resolve();
+            });
           });
         });
       });
@@ -61,15 +64,18 @@ function testObjectWrappers() {
       });
 
       it('should not return negative 64 bit integers too big for JS', function() {
-        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
-          return myclass.testFailingNeg().then(function() {
-            Error('Not expecting promise to resolve')
-          },
-          function(e) {
-            expect(e.name).toBe("RangeError");
-            expect(e.message).toBe("Unfortunately, JavaScript does not yet support 64 bit integers");
-            expect(e.causedBy).toNotExist();
-            expect(e.printStackTrace).toExist();
+        return new Promise(function(resolve, reject) {
+          return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+            return myclass.testFailingNeg().then(function() {
+              reject(new Error("not expecting the promise to resolve"));
+            },
+            function(e) {
+              expect(e.name).toBe("RangeError");
+              expect(e.message).toBe("Unfortunately, JavaScript does not yet support 64 bit integers");
+              expect(e.causedBy).toNotExist();
+              expect(e.printStackTrace).toExist();
+              resolve();
+            });
           });
         });
       });
