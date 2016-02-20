@@ -221,7 +221,7 @@ public class SystemBridge implements Bridge {
       final JsonObject jsObj = (JsonObject) val;
       return wrapValue(jsObj.getString("type"), jsObj.getInt("jsId"));
     } else {
-      System.out.println("  TODO val: " + val);
+      System.out.println("  TODO toJavaObj : " + val);
       return val;
     }
   }
@@ -244,7 +244,7 @@ public class SystemBridge implements Bridge {
       final JsonObject jsObj = (JsonObject) val;
       return wrapValue(jsObj.getString("type"), jsObj.getInt("jsId"));
     } else {
-      System.out.println("  TODO val: " + val);
+      System.out.println("  TODO toJSValue : " + val);
       return null;
     }
   }
