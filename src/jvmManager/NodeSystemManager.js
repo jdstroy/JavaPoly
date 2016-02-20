@@ -92,7 +92,7 @@ export default class NodeSystemManager {
     this.jsServer.then((serverPort) => {
       const childProcess = require('child_process');
       const spawn = childProcess.spawn;
-      const classPath = CommonUtils.getCommonsPath()+':build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
+      const classPath = 'build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
       const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.secret, serverPort];
       // const child = spawn('java', args, {detached: true, stdio: ['ignore', 'ignore', 'ignore']});
       const child = spawn('java', args, {detached: true, stdio: 'inherit'});

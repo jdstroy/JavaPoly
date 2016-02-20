@@ -4,9 +4,7 @@ const CLASS_MAGIC_NUMBER = 'cafebabe';
 const ZIP_MAGIC_NUMBER = '504b0304';
 
 
-class CommonUtils{
-  static getCommonsPath() { return 'build/jars/commons-lang3-3.5-SNAPSHOT.jar'; }
-
+class CommonUtils {
   static xhrRetrieve (url, responseType) {
     return new Promise((resolve, reject) => {
       const xmlr = new XMLHttpRequest();

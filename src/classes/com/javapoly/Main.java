@@ -7,8 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Files;
 import java.nio.file.FileSystems;
 import java.io.IOException;
-import org.apache.commons.lang3.reflect.MethodUtils;
-import org.apache.commons.lang3.reflect.ConstructorUtils;
+import com.javapoly.invoke.MethodUtils;
+import com.javapoly.invoke.ConstructorUtils;
 
 import com.javapoly.reflect.*;
 
