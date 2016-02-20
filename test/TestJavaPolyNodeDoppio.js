@@ -67,6 +67,16 @@ describe('javapoly test', function() {
     testObjectWrappers();
   });
 
+  describe('Reflection Tests', function() {
+    before(() => {
+      return addClass(path.resolve('test/classes/EvalTest.class'));
+    });
+
+    runScript("test/units/reflect.js");
+    testReflect();
+
+  });
+
   describe('Eval Tests', function() {
     before(() => {
       return addClass(path.resolve('test/classes/EvalTest.class'));
