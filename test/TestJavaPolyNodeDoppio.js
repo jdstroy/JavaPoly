@@ -58,7 +58,9 @@ describe('javapoly test', function() {
 
   describe('Object wrapper Tests', function() {
     before(() => {
-      return addClass(path.resolve('test/classes/Counter.class'));
+      const counterAdd = addClass(path.resolve('test/classes/Counter.class'));
+      const longAdd = addClass(path.resolve('test/classes/com/javapoly/test/LongTest.class'));
+      return Promise.all([counterAdd, longAdd]);
     });
 
     runScript("test/units/objectWrappers.js");
