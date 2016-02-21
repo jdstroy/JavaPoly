@@ -126,7 +126,7 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
   handleJVMMessage(id, priority, messageType, data, callback) {
     const _this = this;
     const thisDispatcher = this;
-    const token = this.tokens.create(this.secret)
+    const token = this.tokens.create(this.secret);
     this.javaPolyCallbacks[id] = callback;
     this.httpPortDeffered.promise.then((port) => {
       const msgObj = {id: ""+id, priority: priority, messageType: messageType, data: data, token: token};
@@ -145,7 +145,8 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
           if (thisDispatcher.verifyToken(msg.token)) {
             thisDispatcher.callbackMessage(msg.id, msg.result);
           } else {
-            console.log("Invalid CSRF token, ignoring message");
+            console.log("[Node] Invalid CSRF token in message's response from jvm, ignoring message");
+            console.log("[Node] Rcvd token: ", msg.token);
           }
         });
       });
