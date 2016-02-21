@@ -48,109 +48,106 @@ import com.javapoly.invoke.internal.MemberUtils;
  */
 public class ConstructorUtils {
 
-    /**
-     * <p>ConstructorUtils instances should NOT be constructed in standard
-     * programming. Instead, the class should be used as
-     * {@code ConstructorUtils.invokeConstructor(cls, args)}.</p>
-     *
-     * <p>This constructor is {@code public} to permit tools that require a JavaBean
-     * instance to operate.</p>
+  /**
+   * <p>ConstructorUtils instances should NOT be constructed in standard
+   * programming. Instead, the class should be used as
+   * {@code ConstructorUtils.invokeConstructor(cls, args)}.</p>
+   *
+   * <p>This constructor is {@code public} to permit tools that require a JavaBean
+   * instance to operate.</p>
+   */
+  public ConstructorUtils() {
+      super();
+  }
+
+  /**
+   * <p>Checks if the specified constructor is accessible.</p>
+   *
+   * <p>This simply ensures that the constructor is accessible.</p>
+   *
+   * @param <T> the constructor type
+   * @param ctor  the prototype constructor object, not {@code null}
+   * @return the constructor, {@code null} if no matching accessible constructor found
+   * @see java.lang.SecurityManager
+   * @throws NullPointerException if {@code ctor} is {@code null}
+   */
+  public static <T> Constructor<T> getAccessibleConstructor(final Constructor<T> ctor) {
+      return MemberUtils.isAccessible(ctor)
+              && isAccessible(ctor.getDeclaringClass()) ? ctor : null;
+  }
+
+  /**
+   * Learn whether the specified class is generally accessible, i.e. is
+   * declared in an entirely {@code public} manner.
+   * @param type to check
+   * @return {@code true} if {@code type} and any enclosing classes are
+   *         {@code public}.
+   */
+  private static boolean isAccessible(final Class<?> type) {
+      Class<?> cls = type;
+      while (cls != null) {
+          if (!Modifier.isPublic(cls.getModifiers())) {
+              return false;
+          }
+          cls = cls.getEnclosingClass();
+      }
+      return true;
+  }
+
+  // --------------
+  // Fuzzy matching
+
+  public static <T> T invokeConstructorFuzzy(final Class<T> cls, Object... args)
+          throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
+          InstantiationException {
+      args = ArrayUtils.nullToEmpty(args);
+      final Class<?>[] parameterTypes = ClassUtils.toClass(args);
+      final Constructor<T> ctor = getMatchingAccessibleConstructorFuzzy(cls, parameterTypes, args);
+      if (ctor == null) {
+          throw new NoSuchMethodException(
+              "No such accessible constructor on object: " + cls.getName());
+      }
+      args = MethodUtils.castArgumentsForMethodFuzzy(parameterTypes, ctor.getParameterTypes(), args);
+      return ctor.newInstance(args);
+  }
+
+  public static <T> Constructor<T> getMatchingAccessibleConstructorFuzzy(final Class<T> cls,
+      final Class<?>[] parameterTypes, Object[] args) {
+    // see if we can find the constructor directly
+    // most of the time this works and it's much faster
+    try {
+      final Constructor<T> ctor = cls.getConstructor(parameterTypes);
+      MemberUtils.setAccessibleWorkaround(ctor);
+      return ctor;
+    } catch (final NoSuchMethodException e) { // NOPMD - Swallow
+    }
+    Constructor<T> result = null;
+    /*
+     * (1) Class.getConstructors() is documented to return Constructor<T> so as
+     * long as the array is not subsequently modified, everything's fine.
      */
-    public ConstructorUtils() {
-        super();
-    }
+    final Constructor<?>[] ctors = cls.getConstructors();
 
-    /**
-     * <p>Checks if the specified constructor is accessible.</p>
-     *
-     * <p>This simply ensures that the constructor is accessible.</p>
-     *
-     * @param <T> the constructor type
-     * @param ctor  the prototype constructor object, not {@code null}
-     * @return the constructor, {@code null} if no matching accessible constructor found
-     * @see java.lang.SecurityManager
-     * @throws NullPointerException if {@code ctor} is {@code null}
-     */
-    public static <T> Constructor<T> getAccessibleConstructor(final Constructor<T> ctor) {
-        return MemberUtils.isAccessible(ctor)
-                && isAccessible(ctor.getDeclaringClass()) ? ctor : null;
-    }
-
-    /**
-     * Learn whether the specified class is generally accessible, i.e. is
-     * declared in an entirely {@code public} manner.
-     * @param type to check
-     * @return {@code true} if {@code type} and any enclosing classes are
-     *         {@code public}.
-     */
-    private static boolean isAccessible(final Class<?> type) {
-        Class<?> cls = type;
-        while (cls != null) {
-            if (!Modifier.isPublic(cls.getModifiers())) {
-                return false;
-            }
-            cls = cls.getEnclosingClass();
+    // return best match:
+    for (Constructor<?> ctor : ctors) {
+      // compare parameters
+      if (MethodUtils.isAssignableFuzzy(parameterTypes, ctor.getParameterTypes(), args)) {
+        // get accessible version of constructor
+        ctor = getAccessibleConstructor(ctor);
+        if (ctor != null) {
+          MemberUtils.setAccessibleWorkaround(ctor);
+          if (result == null
+                || MemberUtils.compareParameterTypes(ctor.getParameterTypes(), result
+                        .getParameterTypes(), parameterTypes) < 0) {
+            final Constructor<T> constructor = (Constructor<T>)ctor;
+            result = constructor;
+          }
         }
-        return true;
+      }
     }
+    return result;
+  }
 
-    // --------------
-    // Fuzzy matching
-
-    public static <T> T invokeConstructorFuzzy(final Class<T> cls, Object... args)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
-            InstantiationException {
-        args = ArrayUtils.nullToEmpty(args);
-        final Class<?>[] parameterTypes = ClassUtils.toClass(args);
-        final Constructor<T> ctor = getMatchingAccessibleConstructorFuzzy(cls, parameterTypes, args);
-        if (ctor == null) {
-            throw new NoSuchMethodException(
-                "No such accessible constructor on object: " + cls.getName());
-        }
-        args = MethodUtils.castArgumentsForMethodFuzzy(parameterTypes, ctor.getParameterTypes(), args);
-        return ctor.newInstance(args);
-    }
-
-    public static <T> Constructor<T> getMatchingAccessibleConstructorFuzzy(final Class<T> cls,
-            final Class<?>[] parameterTypes, Object[] args) {
-        // see if we can find the constructor directly
-        // most of the time this works and it's much faster
-        try {
-            final Constructor<T> ctor = cls.getConstructor(parameterTypes);
-            MemberUtils.setAccessibleWorkaround(ctor);
-            return ctor;
-        } catch (final NoSuchMethodException e) { // NOPMD - Swallow
-        }
-        Constructor<T> result = null;
-        /*
-         * (1) Class.getConstructors() is documented to return Constructor<T> so as
-         * long as the array is not subsequently modified, everything's fine.
-         */
-        final Constructor<?>[] ctors = cls.getConstructors();
-
-        // return best match:
-        for (Constructor<?> ctor : ctors) {
-            // compare parameters
-            if (MethodUtils.isAssignableFuzzy(parameterTypes, ctor.getParameterTypes(), args)) {
-                // get accessible version of constructor
-                ctor = getAccessibleConstructor(ctor);
-                if (ctor != null) {
-                    MemberUtils.setAccessibleWorkaround(ctor);
-                    if (result == null
-                            || MemberUtils.compareParameterTypes(ctor.getParameterTypes(), result
-                                    .getParameterTypes(), parameterTypes) < 0) {
-                        // temporary variable for annotation, see comment above (1)
-                        @SuppressWarnings("unchecked")
-                        final
-                        Constructor<T> constructor = (Constructor<T>)ctor;
-                        result = constructor;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    // Fuzzy matching
-    // --------------
+  // Fuzzy matching
+  // --------------
 }
