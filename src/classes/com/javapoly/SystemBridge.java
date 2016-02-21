@@ -206,7 +206,7 @@ public class SystemBridge implements Bridge {
   }
 
   private String makeToken() {
-    final String salt = ""+Math.random();
+    final String salt = String.format("%f", Math.random());
     try {
       return salt + "-" + tokenize(salt, secret);
     } catch(java.security.NoSuchAlgorithmException e) {
