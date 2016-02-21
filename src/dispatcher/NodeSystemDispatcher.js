@@ -89,6 +89,10 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
     if (urlParts.pathname === "/informPort") {
       this.httpPortDeffered.resolve(incoming.headers["jvm-port"]);
       response.writeHead(200, {'Content-Type': 'text/plain' });
+    } else if (urlParts.pathname === "/releaseObject") {
+      const objId = incoming.headers["obj-id"];
+      delete this.reflected[objId];
+      response.writeHead(200, {'Content-Type': 'text/plain' });
     } else if (urlParts.pathname === "/getProperty") {
       const queryData = urlParts.query;
       const jsId = queryData.id;

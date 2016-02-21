@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 
 import com.javapoly.reflect.*;
 
@@ -31,6 +34,10 @@ public class SystemBridge implements Bridge {
   private final int nodeServerPort;
   private final AtomicLong lastPingTime = new AtomicLong(System.currentTimeMillis());
 
+  // For gargbage collection of JS objects
+  private final ReferenceQueue<SystemJSObject> refQueue = new ReferenceQueue<>();
+  private final ConcurrentHashMap<Reference<SystemJSObject>, Object> refMap = new ConcurrentHashMap<>();
+
   // This has to match the hear beat period in NodeSystemDispatcher. TODO: Pass it as a command line argument
   private static long HEARTBEAT_PERIOD_MILLIS = 1000;
 
@@ -41,6 +48,18 @@ public class SystemBridge implements Bridge {
     try {
       final SimpleHttpServer srv = new SimpleHttpServer(0);
       informPort(srv.getPort());
+
+      new Thread(() -> {
+        try {
+          while (true) {
+            final Reference<? extends SystemJSObject> ref = refQueue.remove();
+            final Object rawValue = refMap.remove(ref);
+            releaseJsObj(rawValue);
+          }
+        } catch (final InterruptedException ie) {
+          ie.printStackTrace();
+        }
+      }).start();
 
       new Thread(() -> {
         try {
@@ -81,6 +100,25 @@ public class SystemBridge implements Bridge {
       e.printStackTrace();
     }
 
+  }
+
+  private void releaseJsObj(Object rawValue) {
+    try {
+      final URL url = new URL("http://localhost:"+nodeServerPort+"/releaseObject");
+      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("POST");
+      connection.setRequestProperty("Connection", "close");
+      connection.setRequestProperty("obj-id", "" +rawValue);
+      connection.setRequestProperty("TOKEN", makeToken());
+      connection.setUseCaches(false);
+
+      // System.out.println(readResponse(connection));
+
+      connection.disconnect();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   private void informPort(int port) {
@@ -354,7 +392,10 @@ public class SystemBridge implements Bridge {
     switch (description) {
       case "object":
       case "function":
-        return new SystemJSObject(obj, this);
+        final SystemJSObject sysObj = new SystemJSObject(obj, this);
+        final WeakReference<SystemJSObject> wf = new WeakReference<>(sysObj, refQueue);
+        refMap.put(wf, sysObj.getRawValue());
+        return sysObj;
       case "undefined":
       case "boolean":
       case "number":

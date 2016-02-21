@@ -85,6 +85,16 @@ describe('javapoly test', function() {
 
   });
 
+  describe('Reference Tests', function() {
+    before(() => {
+      return addClass(path.resolve('test/classes/References.class'));
+    });
+
+    runScript("test/units/reference.js");
+    testReference();
+
+  });
+
   describe('Reflection Tests', function() {
     before(() => {
       return addClass(path.resolve('test/classes/EvalTest.class'));
