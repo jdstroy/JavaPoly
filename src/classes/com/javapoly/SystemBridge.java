@@ -389,6 +389,11 @@ public class SystemBridge implements Bridge {
     // TODO
   }
 
+  public JSValue eval(final String s) {
+    // TODO
+    return null;
+  }
+
   public JSValue wrapValue(String description, Object obj) {
     switch (description) {
       case "object":

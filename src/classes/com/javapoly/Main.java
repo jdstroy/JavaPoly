@@ -343,4 +343,8 @@ public class Main {
     return bridge.wrapValue((String) res[0], res[1]);
   }
 
+  public static JSValue bridgedEval(final String s) {
+    return bridge.eval(s);
+  }
+
 }

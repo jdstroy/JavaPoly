@@ -150,6 +150,12 @@ function getRawType(thread, obj) {
 registerNatives({
   'com/javapoly/DoppioBridge': {
 
+    'evalRaw(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, toEval) {
+      var expr = toEval.toString();
+      var res = eval(expr);
+      return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', [util.initString(thread.getBsCl(), typeof res), res]);
+    },
+
     'dispatchMessage(Ljava/lang/String;)V': function(thread, obj, msgId) {
       var callback = javapoly0.dispatcher.getMessageCallback(msgId);
       thread.setStatus(6); // ASYNC_WAITING
