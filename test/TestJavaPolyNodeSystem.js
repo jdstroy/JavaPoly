@@ -105,7 +105,6 @@ describe('javapoly test', function() {
 
   });
 
-  /*
   describe('Eval Tests', function() {
     before(() => {
       return addClass(path.resolve('test/classes/EvalTest.class'));
@@ -115,6 +114,5 @@ describe('javapoly test', function() {
     testEval();
 
   });
-  */
 
 });

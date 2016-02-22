@@ -85,14 +85,17 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
   }
 
   handleRequest(incoming, response) {
+    const _this = this;
     const urlParts = url.parse(incoming.url, true);
     if (urlParts.pathname === "/informPort") {
       this.httpPortDeffered.resolve(incoming.headers["jvm-port"]);
       response.writeHead(200, {'Content-Type': 'text/plain' });
+      response.end();
     } else if (urlParts.pathname === "/releaseObject") {
       const objId = incoming.headers["obj-id"];
       delete this.reflected[objId];
       response.writeHead(200, {'Content-Type': 'text/plain' });
+      response.end();
     } else if (urlParts.pathname === "/getProperty") {
       const queryData = urlParts.query;
       const jsId = queryData.id;
@@ -101,7 +104,38 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
       const field = jsObj[fieldName];
       response.writeHead(200, {'Content-Type': 'text/plain' });
       response.write(JSON.stringify({result: this.reflect(field)}));
+      response.end();
+    } else if (urlParts.pathname === "/eval") {
+      this.readStream(incoming, (s) => {
+        const result = eval(s);
+        response.writeHead(200, {'Content-Type': 'text/plain' });
+        response.write(JSON.stringify({result: _this.reflect(result)}));
+        response.end();
+      });
+    } else if (urlParts.pathname === "/invoke") {
+      this.readStream(incoming, (s) => {
+        const json = JSON.parse(s);
+        const func = this.reflected[json.functionId];
+        const result = func.apply(null, json.args);
+        response.writeHead(200, {'Content-Type': 'text/plain' });
+        response.write(JSON.stringify({result: _this.reflect(result)}));
+        response.end();
+      });
     }
+  }
+
+  readStream(rr, cb) {
+    rr.setEncoding('utf8');
+    let data = "";
+    rr.on('readable', () => {
+      const rcvd = rr.read();
+      if (rcvd != null) {
+        data += rcvd;
+      }
+    });
+    rr.on('end', () => {
+      cb(data);
+    });
   }
 
   startJSServer() {
@@ -113,8 +147,8 @@ export default class NodeSystemDispatcher extends CommonDispatcher {
           _this.handleRequest(incoming, response);
         } else {
           response.writeHead(404, {'Content-Type': 'text/plain' });
+          response.end();
         }
-        response.end();
         srv.unref();
       });
       srv.listen(0, 'localhost', () => {
