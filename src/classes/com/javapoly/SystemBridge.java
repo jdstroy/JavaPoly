@@ -168,7 +168,8 @@ public class SystemBridge implements Bridge {
     srv.process((headers, requestMethod, requestUrl, body, connection) -> {
       try {
         final JsonObject jsonObj = Json.createReader(new StringReader(body)).readObject();
-        if (verify(jsonObj.getString("token"), secret)) {
+        final String token = jsonObj.getString("token");
+        if (verify(token, secret)) {
           lastPingTime.set(System.currentTimeMillis());
           final String msgType = jsonObj.getString("messageType");
           final String msgId = jsonObj.getString("id");
@@ -184,7 +185,7 @@ public class SystemBridge implements Bridge {
             msgQueue.add(jsonObj);
           }
         } else {
-          System.err.println("Invalid token, ignoring message");
+          System.err.println("[JVM] Invalid token in msg from JSVM, ignoring message. Salted token: " + token);
         }
       } catch (IOException e) {
         System.out.println("Exception: " + e.getMessage());
@@ -205,7 +206,7 @@ public class SystemBridge implements Bridge {
   }
 
   private String makeToken() {
-    final String salt = ""+Math.random();
+    final String salt = String.format("%f", Math.random());
     try {
       return salt + "-" + tokenize(salt, secret);
     } catch(java.security.NoSuchAlgorithmException e) {
