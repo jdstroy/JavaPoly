@@ -1,6 +1,11 @@
 const doppioPath = "./node_modules/@hrj/doppiojvm-snapshot/"
+
 const babelTransforms = [
    ["babelify", { "presets": ["es2015"], "plugins": ["transform-runtime"] }]
+];
+
+const babelNativeTransforms = [
+   ["babelify", { "presets": ["es2015"] }]
 ];
 
 const gruntBrowserifyOptionsForNode = {
@@ -29,8 +34,14 @@ module.exports = function(grunt) {
         files: { 'build/javapoly-node-system.js':['src/node-system.js'] },
         options: gruntBrowserifyOptionsForNode
       },
+      natives: {
+        files: {'build/natives/DoppioBridge.js':['src/natives/DoppioBridge.js']},
+        options: {
+          transform: babelNativeTransforms
+        }
+      },
       production: {
-        files:{
+        files: {
           'build/javapoly.js':['src/main.js'],
           'build/javapoly_worker.js':['src/webworkers/JavaPolyWorker.js']
         },
@@ -110,11 +121,6 @@ module.exports = function(grunt) {
           {expand: true, cwd: './src/jars/', src: ['*.jar'], dest: './build/jars'}
         ]
       },
-      natives: {
-        files: [
-          {expand: true, cwd: './src/natives/', src: ['*.js'], dest: './build/natives'}
-        ]
-      },
       jars: {
         files: [
           {expand: true, cwd: './src/jars/', src: ['*.jar'], dest: './build/jars'}
@@ -192,7 +198,7 @@ module.exports = function(grunt) {
 
   grunt.loadTasks('tasks');
 
-  grunt.registerTask('build:java', ['mkdir:build', 'copy:jars', 'copy:natives', 'run_java:compile']);
+  grunt.registerTask('build:java', ['mkdir:build', 'copy:jars', 'browserify:natives', 'run_java:compile']);
   grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
   grunt.registerTask('build', ['mkdir:build', 'build:java', 'browserify:production', 'browserify:node-doppio', 'listings:javapoly']);
   grunt.registerTask('build:node-doppio', ['mkdir:build', 'build:java', 'run_java:compile-test', 'browserify:node-doppio']);
