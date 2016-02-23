@@ -229,11 +229,11 @@ registerNatives({
 
     'invoke(Ljava/lang/Object;[Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, toInvoke, args) {
       var ubArgs = args.array.map( (e) => {
-        if (typeof e == "object" && typeof e['getClass'] == "function") {
+        if (typeof e === "object" && typeof e['getClass'] === "function") {
           var intName = e.getClass().getInternalName();
           if (util.is_primitive_type(toPrimitiveTypeName(intName))) {
             return e.unbox();
-          } else if (intName == 'Ljava/lang/String;') {
+          } else if (intName === 'Ljava/lang/String;') {
             return e.toString();
           } else {
             return e;
