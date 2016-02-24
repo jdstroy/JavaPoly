@@ -12,20 +12,19 @@ public class SystemJSPrimitive extends SystemJSValue implements JSPrimitive {
   }
 
   public double asDouble() {
-    return (Double) rawValue;
+    return ((Number) rawValue).doubleValue();
   }
 
   public int asInteger() {
-    return (Integer) rawValue;
+    return ((Number) rawValue).intValue();
   }
 
   public long asLong() {
-    return (Long)rawValue;
+    return ((Number) rawValue).longValue();
   }
 
   public String asString() {
-    // return (String)rawValue;
-    return "TODO";
+    return (String)rawValue;
   }
 
   public Object getRawValue() {

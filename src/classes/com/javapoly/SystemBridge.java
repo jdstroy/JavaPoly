@@ -389,6 +389,34 @@ public class SystemBridge implements Bridge {
     // TODO
   }
 
+  public JSValue eval(final String s) {
+    try {
+      final URL url = new URL("http://localhost:"+nodeServerPort+"/eval");
+      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("POST");
+      connection.setRequestProperty("Connection", "close");
+      connection.setRequestProperty("TOKEN", makeToken());
+      connection.setUseCaches(false);
+      connection.setDoOutput(true);
+
+      final OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream());
+      out.write(s);
+      out.flush();
+      out.close();
+
+      final String response = readResponse(connection);
+
+      final JsonObject responseObj = Json.createReader(new StringReader(response)).readObject();
+
+      connection.disconnect();
+
+      return toJSValue(responseObj.get("result"));
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
   public JSValue wrapValue(String description, Object obj) {
     switch (description) {
       case "object":
@@ -427,6 +455,38 @@ public class SystemBridge implements Bridge {
       connection.setUseCaches(false);
 
       final String response = readResponse(connection);
+      final JsonObject responseObj = Json.createReader(new StringReader(response)).readObject();
+
+      connection.disconnect();
+
+      return toJSValue(responseObj.get("result"));
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  public JSValue invoke(Object functionObj, Object...args) {
+    try {
+      final URL url = new URL("http://localhost:"+nodeServerPort+"/invoke");
+      final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("POST");
+      connection.setRequestProperty("Connection", "close");
+      connection.setRequestProperty("TOKEN", makeToken());
+      connection.setUseCaches(false);
+      connection.setDoOutput(true);
+
+      final JsonObject msgObj = Json.createObjectBuilder()
+        .add("functionId", (Integer) functionObj)
+        .add("args", toJsonObj(args)).build();
+
+      final OutputStreamWriter out = new OutputStreamWriter(connection.getOutputStream());
+      out.write(msgObj.toString());
+      out.flush();
+      out.close();
+
+      final String response = readResponse(connection);
+
       final JsonObject responseObj = Json.createReader(new StringReader(response)).readObject();
 
       connection.disconnect();

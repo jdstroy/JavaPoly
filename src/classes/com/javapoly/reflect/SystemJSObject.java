@@ -22,13 +22,11 @@ public class SystemJSObject extends SystemJSValue implements JSObject {
       final Object e = args[i];
       unwrappedArgs[i] = (e instanceof SystemJSValue) ? ((SystemJSValue) e).rawValue : e;
     }
-    return Main.wrapValue(invoke(rawValue, unwrappedArgs));
+    return invoke(rawValue, unwrappedArgs);
   }
 
-  private static Object[] invoke(Object functionObj, Object... args) {
-    // TODO
-    System.out.println("TODO: Invoke");
-    return null;
+  private JSValue invoke(Object functionObj, Object... args) {
+    return bridge.invoke(functionObj, args);
   }
 
   public int getRawValue() {

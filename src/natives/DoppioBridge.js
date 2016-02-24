@@ -150,6 +150,12 @@ function getRawType(thread, obj) {
 registerNatives({
   'com/javapoly/DoppioBridge': {
 
+    'evalRaw(Ljava/lang/String;)[Ljava/lang/Object;': function(thread, toEval) {
+      var expr = toEval.toString();
+      var res = eval(expr);
+      return util.newArrayFromData(thread, thread.getBsCl(), '[Ljava/lang/Object;', [util.initString(thread.getBsCl(), typeof res), res]);
+    },
+
     'dispatchMessage(Ljava/lang/String;)V': function(thread, obj, msgId) {
       var callback = javapoly0.dispatcher.getMessageCallback(msgId);
       thread.setStatus(6); // ASYNC_WAITING
@@ -223,11 +229,11 @@ registerNatives({
 
     'invoke(Ljava/lang/Object;[Ljava/lang/Object;)[Ljava/lang/Object;': function(thread, toInvoke, args) {
       var ubArgs = args.array.map( (e) => {
-        if (typeof e == "object" && typeof e['getClass'] == "function") {
+        if (typeof e === "object" && typeof e['getClass'] === "function") {
           var intName = e.getClass().getInternalName();
           if (util.is_primitive_type(toPrimitiveTypeName(intName))) {
             return e.unbox();
-          } else if (intName == 'Ljava/lang/String;') {
+          } else if (intName === 'Ljava/lang/String;') {
             return e.toString();
           } else {
             return e;
