@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "csrf": "^3.0.1",
-    "jvminstall": "0.0.5",
+    "jvminstall": "^0.0.6",
     "ws": "^1.0.1"
   }
 }
