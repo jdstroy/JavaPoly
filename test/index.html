@@ -26,6 +26,7 @@
   <script src="expect/umd/expect.min.js"></script>
   <script src="mocha/mocha.js"></script>
 
+  <script src="units/util.js"></script>
   <script src="units/proxy.js"></script>
   <script src="units/objectWrappers.js"></script>
   <script src="units/eval.js"></script>
@@ -56,10 +57,23 @@
       }
     });
 
-    var isWorkerBased = !!defaultJavapoly.options.worker;
+    var params = getParams(window.location.search);
+    var isWorkerBased = !!params.worker; //!!defaultJavapoly.options.worker;
     document.querySelector(".workerChoice " + (isWorkerBased ? ".worker" : ".browser")).classList.add("selected");
-
     var titleSuffix = isWorkerBased ? " Web Worker" : " Browser";
+
+    var checkJavaPolyLoaded = function (done) {
+      if ( typeof defaultJavapoly !== 'undefined' ) {
+        done();
+      } else {
+        setTimeout(checkJavaPolyLoaded, 100, done);
+      }
+    }
+
+    // ensure the javapoly lib has been loaded, especially when async loading javapoly lib
+    before( function(done) {
+      checkJavaPolyLoaded(done);
+    });
 
     describe('JavaPoly' + titleSuffix, function() {
       this.timeout(150000); // Let jvm to start and do not interrupt promises
