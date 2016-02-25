@@ -85,12 +85,17 @@ class JavaPoly extends JavaPolyBase {
       this.loadJavaPolyCoreInBrowser(resolveDispatcherReady);
     }
 
-    global.document.addEventListener('DOMContentLoaded', e => {
-
+    // case when async loading javapoly lib and the DOM contented already loaded
+    if (global.document.readyState !== 'loading'){
       this.processScripts();
       WrapperUtil.dispatchOnJVM(this,'META_START_JVM', 0, null);
+    } else {
+      global.document.addEventListener('DOMContentLoaded', e => {
+        this.processScripts();
+        WrapperUtil.dispatchOnJVM(this,'META_START_JVM', 0, null);
+      }, false);
+    }
 
-    }, false);
   }
 
   processScripts() {
