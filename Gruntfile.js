@@ -1,4 +1,4 @@
-const doppioPath = "./node_modules/@hrj/doppiojvm-snapshot/"
+const doppioPath = "./node_modules/@hrj/doppiojvm-snapshot/";
 
 const babelTransforms = [
    ["babelify", { "presets": ["es2015"], "plugins": ["transform-runtime"] }]
@@ -14,13 +14,11 @@ const gruntBrowserifyOptionsForNode = {
     "builtins": false,
     "bare": true,
     insertGlobalVars: {
-      process: function() {
-        return;
-      },
+      process: function() { }
     }
   },
   transform: babelTransforms
-}
+};
 
 module.exports = function(grunt) {
   grunt.initConfig({
@@ -67,9 +65,9 @@ module.exports = function(grunt) {
         files: 'src/**/*.js',
         tasks: ['browserify:development', 'symlink:build_to_test'],
         options: {
-          interrupt: true,
-        },
-      },
+          interrupt: true
+        }
+      }
     },
     symlink: {
       build_to_test: {
@@ -121,11 +119,6 @@ module.exports = function(grunt) {
           {expand: true, cwd: './src/jars/', src: ['*.jar'], dest: './build/jars'}
         ]
       },
-      jars: {
-        files: [
-          {expand: true, cwd: './src/jars/', src: ['*.jar'], dest: './build/jars'}
-        ]
-      },
       doppio_fastdev: {
         files: [
           {expand: true, cwd: doppioPath + '/dist/fast-dev/', src: ['**'], dest: './test/doppio'},
@@ -172,8 +165,8 @@ module.exports = function(grunt) {
         options: {
           mode: 0700,
           create: ['build/classes/com/javapoly', 'build/natives', 'build/jars']
-        },
-      },
+        }
+      }
     },
     listings: {
       options: {
@@ -207,4 +200,4 @@ module.exports = function(grunt) {
 
   grunt.registerTask('default', ['build']);
   grunt.registerTask('dev', ['build:test', 'http-server:dev', 'watch:dev_js']);
-}
+};
