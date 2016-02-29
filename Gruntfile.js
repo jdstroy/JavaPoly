@@ -226,6 +226,7 @@ module.exports = function (grunt) {
             + padLeftTwo(now.getHours()) + padLeftTwo(now.getMinutes()) + padLeftTwo(now.getSeconds());
         packageJson.version = version;
         grunt.file.write('./package/package.json', JSON.stringify(packageJson, null, '\t'));
+        grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
     grunt.registerTask('build:package', 'Creating complete package', ['build', 'mkdir:package', 'copy:package', 'package:prepare']);
 };
