@@ -101,3 +101,9 @@ test/build
 
 # build directory
 /build
+
+# package directory
+/package
+
+# Jetbrains .idea project directory
+.idea
