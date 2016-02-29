@@ -131,6 +131,12 @@ module.exports = function (grunt) {
                     {expand: true, cwd: './node_modules/browserfs/dist/', src: ['**'], dest: './test/browserfs'},
                     {expand: true, cwd: './node_modules/browserfs/', src: ['package.json'], dest: './test/browserfs'}
                 ]
+            },
+            package: {
+                files: [
+                    {expand: true, cwd: './build/', src: ['**'], dest: './package'},
+                    {expand: true, cwd: './tasks/package', src: ['README.md'], dest: './package'}
+                ]
             }
         },
         compare_version: {
@@ -167,6 +173,12 @@ module.exports = function (grunt) {
                     mode: 0700,
                     create: ['build/classes/com/javapoly', 'build/natives', 'build/jars']
                 }
+            },
+            package: {
+                options: {
+                    mode: 0700,
+                    create: ['package']
+                }
             }
         },
         listings: {
@@ -199,4 +211,21 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', ['build']);
     grunt.registerTask('dev', ['build:test', 'http-server:dev', 'watch:dev_js']);
+
+    grunt.registerTask('package:prepare', 'A sample task that logs stuff.', function () {
+        var packageJson = grunt.file.readJSON('./tasks/package/package.json');
+        var now = new Date();
+        var padLeftTwo = function (val) {
+            var result = val.toString();
+            if (result.length === 1) {
+                result = '0' + result;
+            }
+            return result;
+        };
+        var version = '0.0.' + now.getFullYear() + padLeftTwo(now.getMonth() + 1) + padLeftTwo(now.getDate())
+            + padLeftTwo(now.getHours()) + padLeftTwo(now.getMinutes()) + padLeftTwo(now.getSeconds());
+        packageJson.version = version;
+        grunt.file.write('./package/package.json', JSON.stringify(packageJson, null, '\t'));
+    });
+    grunt.registerTask('build:package', 'Creating complete package', ['build', 'mkdir:package', 'copy:package', 'package:prepare']);
 };

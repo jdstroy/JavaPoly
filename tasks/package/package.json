@@ -1,0 +1,9 @@
+{
+  "name": "javapoly",
+  "version": "0.0.1",
+  "description": "JavaPoly.js is a library that polyfills native JVM support. It allows you to import Java code and invoke the code directly from Javascript, even if the user doesn't have Java installed on their computer.",
+  "main": "index.js",
+  "author": "",
+  "homepage": "https://www.javapoly.com",
+  "license": "BSD-3-Clause"
+}
