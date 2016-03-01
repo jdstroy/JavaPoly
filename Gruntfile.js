@@ -59,6 +59,17 @@ module.exports = function (grunt) {
                         debug: true
                     }
                 }
+            },
+            packageIndex: {
+                files: {
+                    'package/index.js': ['tasks/package/index.js']
+                },
+                options: {
+                    transform: babelTransforms,
+                    browserifyOptions: {
+                        debug: true
+                    }
+                }
             }
         },
         watch: {
@@ -226,5 +237,5 @@ module.exports = function (grunt) {
     });
     grunt.registerTask('build:package', 'Creating complete package', ['build:java',
         'browserify:production', 'browserify:node-system', 'browserify:node-doppio',
-        'mkdir:package', 'copy:package', 'package:prepare']);
+        'mkdir:package', 'copy:package', 'package:prepare', 'browserify:packageIndex']);
 };
