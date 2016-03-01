@@ -216,11 +216,7 @@ module.exports = function (grunt) {
         var packageJson = grunt.file.readJSON('./tasks/package/package.json');
         var now = new Date();
         var padLeftTwo = function (val) {
-            var result = val.toString();
-            if (result.length === 1) {
-                result = '0' + result;
-            }
-            return result;
+            return (val < 10) ? ('0' + val.toString()) : val.toString();
         };
         var version = '0.0.' + now.getFullYear() + padLeftTwo(now.getMonth() + 1) + padLeftTwo(now.getDate())
             + padLeftTwo(now.getHours()) + padLeftTwo(now.getMinutes()) + padLeftTwo(now.getSeconds());
@@ -228,5 +224,7 @@ module.exports = function (grunt) {
         grunt.file.write('./package/package.json', JSON.stringify(packageJson, null, '\t'));
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
-    grunt.registerTask('build:package', 'Creating complete package', ['build', 'mkdir:package', 'copy:package', 'package:prepare']);
+    grunt.registerTask('build:package', 'Creating complete package', ['build:java',
+        'browserify:production', 'browserify:node-system', 'browserify:node-doppio',
+        'mkdir:package', 'copy:package', 'package:prepare']);
 };
