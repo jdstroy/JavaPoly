@@ -170,13 +170,13 @@ module.exports = function (grunt) {
         mkdir: {
             build: {
                 options: {
-                    mode: 0700,
+                    mode: 0o700,
                     create: ['build/classes/com/javapoly', 'build/natives', 'build/jars']
                 }
             },
             package: {
                 options: {
-                    mode: 0700,
+                    mode: 0o700,
                     create: ['package']
                 }
             }
