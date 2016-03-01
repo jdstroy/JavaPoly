@@ -19,7 +19,7 @@ export default class NodeSystemManager {
      */
     const options = this.getOptions();
     this.classpath = [options.javapolyBase + "/classes", options.storageDir];
-
+    this.javaBin = this.getJavaExec();
   }
 
   getOptions() {
@@ -88,14 +88,46 @@ export default class NodeSystemManager {
     });
   }
 
+  getJavaExec() {
+    const path = require('path');
+    const fs = require("fs");
+
+    const homeRootDirectory = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+    const binDirName = '.jvm';
+    const javaDirectory = path.join(homeRootDirectory, binDirName, 'jre', 'bin');
+
+    try {
+      const filterRegex = (process.platform === 'win32') ? /^java.exe$/ : /^java$/;
+      const filterFunc = (fileName) => fileName.search(filterRegex) != -1;
+      const result = fs.readdirSync(javaDirectory).filter(filterFunc);
+
+      if (result.length === 1) {
+        // Java exe file was found
+        return path.join(javaDirectory, result[0]);
+      } else if (result.length > 1) {
+        console.log("More than one java exe file was fount!");
+        result.map(console.log);
+      }
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        // Java wasn't installed locally
+      } else {
+        // Hm unknown error
+        console.error(e);
+      }
+    }
+    return "java";
+  }
+
   initJVM() {
+    var javaBin = this.javaBin;
     this.jsServer.then((serverPort) => {
       const childProcess = require('child_process');
       const spawn = childProcess.spawn;
       const classPath = 'build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
       const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.secret, serverPort];
       // const child = spawn('java', args, {detached: true, stdio: ['ignore', 'ignore', 'ignore']});
-      const child = spawn('java', args, {detached: true, stdio: 'inherit'});
+      const child = spawn(javaBin, args, {detached: true, stdio: 'inherit'});
       child.unref();
     });
   }

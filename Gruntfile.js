@@ -64,12 +64,7 @@ module.exports = function (grunt) {
                 files: {
                     'package/index.js': ['tasks/package/index.js']
                 },
-                options: {
-                    transform: babelTransforms,
-                    browserifyOptions: {
-                        debug: true
-                    }
-                }
+                options: gruntBrowserifyOptionsForNode
             }
         },
         watch: {

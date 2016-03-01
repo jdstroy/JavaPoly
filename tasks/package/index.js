@@ -1,31 +1,28 @@
-//import JavaPolyNodeDoppio from '../../src/core/JavaPolyNodeDoppio';
-//import JavaPolyNodeSystem from '../../src/core/JavaPolyNodeSystem';
-
 let JavaPoly;
 
 if (typeof window !== "undefined") {
-    console.log("running in browser");
     // Running in browser
-    const JavaPolyBrowser = require('../../src/core/JavaPoly');
-    JavaPoly = JavaPolyBrowser;
-    console.log(JavaPolyBrowser);
-    console.log(new JavaPoly());
-} else {
-    console.log("running in node");
+    console.log("JavaPolyBrowser running in browser");
 
-    var child_process = require("child_process");
-    console.log(child_process);
+    const JavaPolyBrowser = require('../../src/core/JavaPoly').default;
+    // JavaPoly for browser create object already
+    // JavaPolyBrowser = new JavaPoly({/* with options */});
+
+    JavaPoly = JavaPolyBrowser;
+} else {
     // Running in Node
-    /*
-    * Should detect env for running JVM or Doppio
-    * */
-    const JavaPolyNodeDoppio = require('../../src/core/JavaPolyNodeDoppio').default;
-    JavaPoly = JavaPolyNodeDoppio;
-    console.log(JavaPolyNodeDoppio);
-    console.log(new JavaPoly());
+    console.log("JavaPolyNodeSystem running in Node");
+
+    const JavaPolyNodeSystem = require('../../src/core/JavaPolyNodeSystem').default;
+    // It returns only object with default method
+    // default is constructor
+
+    JavaPoly = JavaPolyNodeSystem;
 }
 
-global.JavaPoly = JavaPoly;
+global.JavaPoly = new JavaPoly();
 
-// Maybe should do this?
+// For Node
 module.exports = JavaPoly;
+
+console.log(JavaPoly);

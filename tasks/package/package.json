@@ -5,5 +5,11 @@
   "main": "index.js",
   "author": "",
   "homepage": "https://www.javapoly.com",
-  "license": "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "jvminstall": "^0.1.0"
+  },
+  "scripts": {
+    "postinstall": "node node_modules/jvminstall"
+  }
 }
