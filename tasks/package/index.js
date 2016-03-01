@@ -26,3 +26,4 @@ global.JavaPoly = new JavaPoly();
 module.exports = JavaPoly;
 
 console.log(JavaPoly);
+console.log(global.JavaPoly);
