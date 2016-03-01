@@ -5,8 +5,6 @@ if (typeof window !== "undefined") {
     console.log("JavaPolyBrowser running in browser");
 
     const JavaPolyBrowser = require('../../src/core/JavaPoly').default;
-    // JavaPoly for browser create object already
-    // JavaPolyBrowser = new JavaPoly({/* with options */});
 
     JavaPoly = JavaPolyBrowser;
 } else {
@@ -14,8 +12,6 @@ if (typeof window !== "undefined") {
     console.log("JavaPolyNodeSystem running in Node");
 
     const JavaPolyNodeSystem = require('../../src/core/JavaPolyNodeSystem').default;
-    // It returns only object with default method
-    // default is constructor
 
     JavaPoly = JavaPolyNodeSystem;
 }
