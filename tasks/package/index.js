@@ -11,7 +11,8 @@ if (typeof window !== "undefined") {
     // Running in Node
     console.log("JavaPolyNodeSystem running in Node");
 
-    const JavaPolyNodeSystem = require('../../src/core/JavaPolyNodeSystem').default;
+    const JavaPolyNodeSystem = require('./javapoly-node-system.js');
+    console.log(JavaPolyNodeSystem);
 
     JavaPoly = JavaPolyNodeSystem;
 }

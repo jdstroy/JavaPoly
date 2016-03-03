@@ -13,6 +13,7 @@ const gruntBrowserifyOptionsForNode = {
         "ignoreMissing": true,
         "builtins": false,
         "bare": true,
+        "standalone": "JavaPoly",
         insertGlobalVars: {
             process: function () {
             }
