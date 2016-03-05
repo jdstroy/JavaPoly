@@ -94,19 +94,13 @@ export default class NodeSystemManager {
 
     const homeRootDirectory = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
     const binDirName = '.jvm';
-    const javaDirectory = path.join(homeRootDirectory, binDirName, 'jre', 'bin');
+    const javaExec = (process.platform === 'win32') ? "java.exe" : "java";
+    const javaFullPath = path.join(homeRootDirectory, binDirName, 'jre', 'bin', javaExec);
 
     try {
-      const filterRegex = (process.platform === 'win32') ? /^java.exe$/ : /^java$/;
-      const filterFunc = (fileName) => fileName.search(filterRegex) != -1;
-      const result = fs.readdirSync(javaDirectory).filter(filterFunc);
-
-      if (result.length === 1) {
-        // Java exe file was found
-        return path.join(javaDirectory, result[0]);
-      } else if (result.length > 1) {
-        console.log("More than one java exe file was fount!");
-        result.map(console.log);
+      const stat = fs.statSync(javaFullPath);
+      if (stat.isFile()) {
+        return javaFullPath;
       }
     } catch (e) {
       if (e.code === 'ENOENT') {
