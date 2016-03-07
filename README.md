@@ -66,15 +66,15 @@ and the javapoly.js which build:browser(or build) task generate will load the do
 
 To test JavaPoly you should run HTTP server for folder `test` and open `index.html` in browser.
 
-Simplest way to do this is using light HTTP server `http-server`. To install this run command:
+Simplest way to do this is using light HTTP server `httpserver`. To install this run command:
 ```sh
-$ npm install -g http-server
+$ npm install -g httpserver
 ```
 
 And then locate to folder `test` and run there command:
 ```sh
 $ cd test
-$ http-server
+$ httpserver
 ```
 
 After this, open browser and navigate to http://localhost:8080/index.html. The page contains tests written in Mocha environment.
