@@ -34,7 +34,10 @@ module.exports = function (grunt) {
                 options: gruntBrowserifyOptionsForNode
             },
             natives: {
-                files: {'build/natives/DoppioBridge.js': ['src/natives/DoppioBridge.js']},
+                files: {
+                  'build/natives/DoppioBridge.js': ['src/natives/DoppioBridge.js'],
+                  'build/natives/XHRConnection.js': ['src/natives/XHRConnection.js']
+                },
                 options: {
                     transform: babelNativeTransforms
                 }
