@@ -257,6 +257,6 @@ module.exports = function (grunt) {
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
     grunt.registerTask('build:package', 'Creating complete package', ['build:java',
-        'browserify:production', 'build:babel:node-system', 'browserify:node-doppio',
+        'browserify:production', 'build:babel', 'browserify:node-doppio',
         'mkdir:package', 'copy:package', 'package:prepare']);
 };
