@@ -3,7 +3,7 @@ if (typeof window === "undefined") {
     console.log("JavaPolyNodeSystem running in Node");
 
     var loadModule = function() {
-        var paths = ['./javapoly-node-system.js', './package/javapoly-node-system.js', 'JavaPoly/javapoly-node-system.js'];
+        var paths = ['./javapoly-node-system-raw.js', './package/javapoly-node-system-raw.js', 'JavaPoly/javapoly-node-system-raw.js'];
         var result;
         var fs = require('fs');
         var errors = [];
@@ -27,9 +27,8 @@ if (typeof window === "undefined") {
     // Constructor
     const JavaPolyNodeSystem = loadModule();
     if (JavaPolyNodeSystem) {
-        console.log(JavaPolyNodeSystem);
 
-        // For creating this code as Node module
+        // For running this code as Node module
         module.exports = JavaPolyNodeSystem;
     } else {
         console.error("JavaPolyNodeSystem wasn't loaded");
@@ -40,5 +39,4 @@ if (typeof window === "undefined") {
 
     //
     const JavaPolyBrowser = require('./javapoly-browser.js');
-    console.log(JavaPolyBrowser);
 }
