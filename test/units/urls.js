@@ -20,10 +20,10 @@ function testUrls() {
         return Java.type("com.javapoly.XHRUrlStreamHandlerFactory").then(function(XHRUrlStreamHandlerFactory) {
           return XHRUrlStreamHandlerFactory.register().then(function() {
             return Java.type("java.net.URL").then(function(URL) {
-              return new URL("http://u1.local:8080/simpleResponse.bin").then(function(url) {
+              return new URL(window.location.origin + "/simpleResponse.bin").then(function(url) {
                 return url.openConnection().then(function(urlConnection) {
                   var headerPromise = urlConnection.getHeaderField('content-type').then(function(contentType) {
-                      expect(contentType).toBe('application/octet-stream');
+                    expect(contentType).toBe('application/octet-stream');
                   });
                   var contentPromise = urlConnection.getInputStream().then(function(is) {
                     return readFromIS(is).then(function(content) {
