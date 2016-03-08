@@ -60,12 +60,6 @@ module.exports = function (grunt) {
                         debug: true
                     }
                 }
-            },
-            packageIndex: {
-                files: {
-                    'package/index.js': ['tasks/package/index.js']
-                },
-                options: gruntBrowserifyOptionsForNode
             }
         },
         watch: {
@@ -142,7 +136,7 @@ module.exports = function (grunt) {
             package: {
                 files: [
                     {expand: true, cwd: './build/', src: ['**'], dest: './package'},
-                    {expand: true, cwd: './tasks/package', src: ['README.md'], dest: './package'}
+                    {expand: true, cwd: './tasks/package', src: ['README.md', 'index.js'], dest: './package'}
                 ]
             }
         },
@@ -194,6 +188,35 @@ module.exports = function (grunt) {
                 output: 'build/listings.json'
             },
             javapoly: {}
+        },
+        babel: {
+            options: {
+                presets: ['es2015']
+            },
+            dist: {
+                files: {
+                    'build/javapoly-node-system.js': 'src/node-system.js',
+                    'build/core/JavaPolyNodeSystem.js': 'src/core/JavaPolyNodeSystem.js',
+                    'build/core/JavaPolyBase.js': 'src/core/JavaPolyBase.js',
+                    'build/core/ProxyWrapper.js': 'src/core/ProxyWrapper.js',
+                    'build/core/JavaClassWrapper.js': 'src/core/JavaClassWrapper.js',
+                    'build/core/Wrapper.js': 'src/core/Wrapper.js',
+                    'build/core/WrapperUtil.js': 'src/core/WrapperUtil.js',
+                    'build/core/CommonUtils.js': 'src/core/CommonUtils.js',
+                    'build/core/JavaObjectWrapper.js': 'src/core/JavaObjectWrapper.js',
+                    'build/dispatcher/NodeSystemDispatcher.js': 'src/dispatcher/NodeSystemDispatcher.js',
+                    'build/dispatcher/CommonDispatcher.js': 'src/dispatcher/CommonDispatcher.js',
+                    'build/jvmManager/NodeSystemManager.js': 'src/jvmManager/NodeSystemManager.js',
+
+                    'build/javapoly-browser.js': 'src/main.js',
+                    'build/core/JavaPoly.js': 'src/core/JavaPoly.js',
+                    'build/dispatcher/BrowserDispatcher.js': 'src/dispatcher/BrowserDispatcher.js',
+                    'build/jvmManager/DoppioManager.js': 'src/jvmManager/DoppioManager.js',
+                    'build/tools/classfile.js': 'src/tools/classfile.js',
+                    'build/tools/fsext.js': 'src/tools/fsext.js',
+                    'build/dispatcher/WorkerCallBackDispatcher.js': 'src/dispatcher/WorkerCallBackDispatcher.js'
+                }
+            }
         }
     });
 
@@ -219,6 +242,8 @@ module.exports = function (grunt) {
     grunt.registerTask('default', ['build']);
     grunt.registerTask('dev', ['build:test', 'http-server:dev', 'watch:dev_js']);
 
+    grunt.registerTask('build:babel:node-system', ['babel']);
+
     grunt.registerTask('package:prepare', 'A sample task that logs stuff.', function () {
         var packageJson = grunt.file.readJSON('./tasks/package/package.json');
         var now = new Date();
@@ -232,6 +257,6 @@ module.exports = function (grunt) {
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
     grunt.registerTask('build:package', 'Creating complete package', ['build:java',
-        'browserify:production', 'browserify:node-system', 'browserify:node-doppio',
-        'mkdir:package', 'copy:package', 'package:prepare', 'browserify:packageIndex']);
+        'browserify:production', 'build:babel:node-system', 'browserify:node-doppio',
+        'mkdir:package', 'copy:package', 'package:prepare']);
 };
