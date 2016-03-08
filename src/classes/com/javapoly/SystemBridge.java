@@ -330,7 +330,7 @@ public class SystemBridge implements Bridge {
         }
         return arrayBuilder.build();
       } else {
-        System.err.println("Value type not yet handled by this implementation: " + obj);
+        System.err.println("Value type not yet handled by this implementation: " + obj + " of class: " + obj.getClass());
         throw new RuntimeException("Value type not yet handled by this implementation: " + obj);
       }
     }

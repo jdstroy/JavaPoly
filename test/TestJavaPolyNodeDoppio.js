@@ -33,6 +33,12 @@ describe('javapoly test', function() {
 
   this.timeout(100000); // Let jvm to start and do not interrupt promises
 
+  /*
+   Currently doesn't work because XMLHttpRequest is not available in node!
+  runScript("test/units/urls.js");
+  testUrls();
+  */
+
   it('add jar', function(){
     return addClass(path.resolve('test/jars/commons-codec-1.10.jar')).then(function(addClassResult){
       return Java.type('org.apache.commons.codec.binary.StringUtils').then(function(StringUtils) {

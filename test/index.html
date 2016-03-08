@@ -34,6 +34,7 @@
   <script src="units/stringIdAccess.js"></script>
   <script src="units/dynamicAdd.js"></script>
   <script src="units/exceptions.js"></script>
+  <script src="units/urls.js"></script>
 
   <script type="text/javascript">
     mocha.setup('bdd');
@@ -77,6 +78,8 @@
 
     describe('JavaPoly' + titleSuffix, function() {
       this.timeout(150000); // Let jvm to start and do not interrupt promises
+
+      testUrls();
 
       testProxy();
 

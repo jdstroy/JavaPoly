@@ -39,7 +39,8 @@
     "jsjavaparser": "https://github.com/sreym/jsjavaparser.git",
     "mocha": "^2.4.5",
     "semver": "^5.1.0",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "grunt-newer": "^1.1.2"
   },
   "dependencies": {
     "csrf": "^3.0.1",
