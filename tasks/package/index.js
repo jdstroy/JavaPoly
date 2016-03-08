@@ -38,5 +38,5 @@ if (typeof window === "undefined") {
     console.log("JavaPolyBrowser running in browser");
 
     //
-    const JavaPolyBrowser = require('./javapoly-browser.js');
+    module.exports = require('./javapoly-browser.js');
 }
