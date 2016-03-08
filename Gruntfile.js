@@ -198,7 +198,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 files: {
-                    'build/javapoly-node-system.js': 'src/node-system.js',
+                    'build/javapoly-node-system-raw.js': 'src/node-system.js',
                     'build/core/JavaPolyNodeSystem.js': 'src/core/JavaPolyNodeSystem.js',
                     'build/core/JavaPolyBase.js': 'src/core/JavaPolyBase.js',
                     'build/core/ProxyWrapper.js': 'src/core/ProxyWrapper.js',
@@ -246,8 +246,6 @@ module.exports = function (grunt) {
     grunt.registerTask('default', ['build']);
     grunt.registerTask('dev', ['build:test', 'http-server:dev', 'watch:dev_js']);
 
-    grunt.registerTask('build:babel:node-system', ['babel']);
-
     grunt.registerTask('package:prepare', 'A sample task that logs stuff.', function () {
         var packageJson = grunt.file.readJSON('./tasks/package/package.json');
         var now = new Date();
@@ -260,7 +258,7 @@ module.exports = function (grunt) {
         grunt.file.write('./package/package.json', JSON.stringify(packageJson, null, '\t'));
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
-    grunt.registerTask('build:package', 'Creating complete package', ['build:java',
-        'browserify:production', 'build:babel', 'browserify:node-doppio',
-        'mkdir:package', 'copy:package', 'package:prepare']);
+    grunt.registerTask('build:package', 'Creating complete package', ['build:java', 'newer:browserify:production',
+        'babel', 'newer:browserify:node-doppio', 'newer:browserify:node-system', 'mkdir:package', 'copy:package',
+        'package:prepare']);
 };
