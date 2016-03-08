@@ -1,14 +1,14 @@
 function readFromIS(is, callback) {
   const bytes = [];
   return new Promise(function(resolve, reject) {
-  function handleRead(byte) {
-        if (byte < 0) {
-          resolve(bytes);
-        } else {
-          bytes.push(byte);
-          is.read().then(handleRead);
-        }
+    function handleRead(byte) {
+      if (byte < 0) {
+        resolve(bytes);
+      } else {
+        bytes.push(byte);
+        is.read().then(handleRead);
       }
+    }
     is.read().then(handleRead);
   });
 }
