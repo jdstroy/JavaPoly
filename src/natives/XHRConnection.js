@@ -1,11 +1,21 @@
 registerNatives({
   'com/javapoly/XHRHttpURLConnection': {
 
-    'getResponse(Ljava/lang/String;Ljava/lang/String;)Lcom/javapoly/XHRResponse;': function(thread, method, url) {
+    'getResponse([Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/javapoly/XHRResponse;': function(thread, headers, method, url) {
       const methodStr = method.toString();
       const urlStr = url.toString();
       const myRequest = new XMLHttpRequest();
       myRequest.open(methodStr, urlStr);
+
+      // Set the headers
+      {
+        const headerArray = headers.array;
+        const headerCount = headerArray.length / 2;
+        for (let i = 0; i < headerCount; i++) {
+          myRequest.setRequestHeader(headerArray[2*i], headerArray[2*i + 1]);
+        }
+      }
+
       myRequest.responseType = "arraybuffer";
       myRequest.addEventListener("load", () => {
         thread.getBsCl().initializeClass(thread, 'Lcom/javapoly/XHRResponse;', () => {

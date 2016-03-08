@@ -89,6 +89,23 @@ function testUrls() {
         });
       });
 
+      it('should set the request headers', function() {
+        return Java.type("java.net.URL").then(function(URL) {
+          return new URL(window.location.origin + "/api").then(function(url) {
+            return url.openConnection().then(function(urlConnection) {
+              return urlConnection.addRequestProperty("xxx-test-property", "test42").then(function() {
+                return urlConnection.getInputStream().then(function(is) {
+                  return readFromIS(is).then(function(content) {
+                    const json = JSON.parse(utf8ByteArrayToString(content));
+                    expect(json.headers["xxx-test-property"]).toBe("test42");
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+
     });
   }
 }
