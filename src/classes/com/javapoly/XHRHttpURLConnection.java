@@ -22,7 +22,7 @@ class XHRHttpURLConnection extends HttpURLConnection {
       connectionStarted.set(true);
       new Thread() {
         public void run() {
-          final XHRResponse response= getResponse("GET", getURL().toString());
+          final XHRResponse response= getResponse(getRequestMethod(), getURL().toString());
           responseFuture.complete(response);
         }
       }.start();
