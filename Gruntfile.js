@@ -116,6 +116,12 @@ module.exports = function (grunt) {
             },
             browserfs: {
                 src: ['./test/browserfs']
+            },
+            build: {
+                src: ['./build/*']
+            },
+            package: {
+                src: ['./package/*']
             }
         },
         copy: {
@@ -249,16 +255,13 @@ module.exports = function (grunt) {
     grunt.registerTask('package:prepare', 'A sample task that logs stuff.', function () {
         var packageJson = grunt.file.readJSON('./tasks/package/package.json');
         var now = new Date();
-        var padLeftTwo = function (val) {
-            return (val < 10) ? ('0' + val.toString()) : val.toString();
-        };
+        var padLeftTwo = (val) => (val < 10) ? ('0' + val.toString()) : val.toString();
         var version = '0.0.' + now.getFullYear() + padLeftTwo(now.getMonth() + 1) + padLeftTwo(now.getDate())
             + padLeftTwo(now.getHours()) + padLeftTwo(now.getMinutes()) + padLeftTwo(now.getSeconds());
         packageJson.version = version;
         grunt.file.write('./package/package.json', JSON.stringify(packageJson, null, '\t'));
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
-    grunt.registerTask('build:package', 'Creating complete package', ['build:java', 'newer:browserify:production',
-        'babel', 'newer:browserify:node-doppio', 'newer:browserify:node-system', 'mkdir:package', 'copy:package',
-        'package:prepare']);
+    grunt.registerTask('build:package', 'Creating complete package', ['clean:build', 'build:java', 'newer:browserify:production',
+        'babel', 'mkdir:package', 'clean:package', 'copy:package', 'package:prepare']);
 };
