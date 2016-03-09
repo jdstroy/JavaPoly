@@ -263,5 +263,5 @@ module.exports = function (grunt) {
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
     grunt.registerTask('build:package', 'Creating complete package', ['clean:build', 'build:java', 'newer:browserify:production',
-        'babel', 'mkdir:package', 'clean:package', 'copy:package', 'package:prepare']);
+        'babel', 'listings:javapoly', 'mkdir:package', 'clean:package', 'copy:package', 'package:prepare']);
 };
