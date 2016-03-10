@@ -87,7 +87,7 @@ export default class JavaPolyBase {
     }
 
     this.processScripts();
-    const javaType = (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName);
+    const javaType = this.type;
     api.Java = {
       type: javaType,
       "new": (name, ...args) => {
@@ -118,6 +118,10 @@ export default class JavaPolyBase {
 
   static type(clsName) {
     return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).type(clsName);
+  }
+
+  type(clsName) {
+    return JavaClassWrapper.getClassWrapperByName(this, clsName);
   }
 
   // data could be text string of java source or the url of remote java class/jar/source
