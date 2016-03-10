@@ -8,6 +8,9 @@ import java.net.URLConnection;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.Map;
+import java.util.List;
+import java.util.Iterator;
 
 class XHRHttpURLConnection extends HttpURLConnection {
   private final AtomicBoolean connectionStarted = new AtomicBoolean(false);
@@ -22,8 +25,20 @@ class XHRHttpURLConnection extends HttpURLConnection {
       connectionStarted.set(true);
       new Thread() {
         public void run() {
-          final XHRResponse response= getResponse("GET", getURL().toString());
+          final Map<String, List<String>> requestPropertyMap= getRequestProperties();
+          final Iterator<String> requestPropretyKeys = requestPropertyMap.keySet().iterator();
+          final String[] requestProperties = new String[requestPropertyMap.size() * 2];
+          {
+            int i = 0;
+            while (requestPropretyKeys.hasNext()) {
+              final String key = requestPropretyKeys.next();
+              requestProperties[i++] = key;
+              requestProperties[i++] = String.join(", ", requestPropertyMap.get(key));
+            }
+          }
+          final XHRResponse response= getResponse(requestProperties, getRequestMethod(), getURL().toString());
           responseFuture.complete(response);
+          XHRHttpURLConnection.this.connected = true;
         }
       }.start();
     }
@@ -68,5 +83,5 @@ class XHRHttpURLConnection extends HttpURLConnection {
     System.out.println("Need to set request property: " + field + ": " + newValue);
   }
 
-  private static native XHRResponse getResponse(final String method, final String url);
+  private static native XHRResponse getResponse(final String[] requestProperties, final String method, final String url);
 }
