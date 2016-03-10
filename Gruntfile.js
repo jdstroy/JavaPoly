@@ -228,7 +228,7 @@ module.exports = function (grunt) {
                     'build/javapoly-node-doppio-raw.js': 'src/node-doppio.js',
                     'build/core/JavaPolyNodeDoppio.js': 'src/core/JavaPolyNodeDoppio.js',
                     'build/dispatcher/NodeDoppioDispatcher.js': 'src/dispatcher/NodeDoppioDispatcher.js',
-                    'build/jvmManager/NodeDoppioManager.js': 'src/jvmManager/NodeDoppioManager.js',
+                    'build/jvmManager/NodeDoppioManager.js': 'src/jvmManager/NodeDoppioManager.js'
                 }
             }
         }
