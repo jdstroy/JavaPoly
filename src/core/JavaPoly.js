@@ -52,7 +52,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * @type {boolean}
    */
    assertionsEnabled : false
-}
+};
 
 /**
  * Main JavaPoly class that do all underliying job for initialization

@@ -11,7 +11,7 @@ class WrapperUtil {
           for (const se in response.cause.stack) {
             console.warn(response.cause.stack[se]);
           }
-        }
+        };
         if (reject)
           reject(response.cause);
       }

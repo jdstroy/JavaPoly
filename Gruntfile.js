@@ -223,7 +223,12 @@ module.exports = function (grunt) {
                     'build/jvmManager/DoppioManager.js': 'src/jvmManager/DoppioManager.js',
                     'build/tools/classfile.js': 'src/tools/classfile.js',
                     'build/tools/fsext.js': 'src/tools/fsext.js',
-                    'build/dispatcher/WorkerCallBackDispatcher.js': 'src/dispatcher/WorkerCallBackDispatcher.js'
+                    'build/dispatcher/WorkerCallBackDispatcher.js': 'src/dispatcher/WorkerCallBackDispatcher.js',
+
+                    'build/javapoly-node-doppio-raw.js': 'src/node-doppio.js',
+                    'build/core/JavaPolyNodeDoppio.js': 'src/core/JavaPolyNodeDoppio.js',
+                    'build/dispatcher/NodeDoppioDispatcher.js': 'src/dispatcher/NodeDoppioDispatcher.js',
+                    'build/jvmManager/NodeDoppioManager.js': 'src/jvmManager/NodeDoppioManager.js',
                 }
             }
         }

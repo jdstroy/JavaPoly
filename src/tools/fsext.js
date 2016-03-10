@@ -53,4 +53,4 @@ module.exports = function(fs, path) {
     rmkdirSync
   } 
 
-}
+};
