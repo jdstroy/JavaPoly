@@ -113,20 +113,11 @@ export default class JavaPolyBase {
   }
 
   static getDefaultJvm() {
-    console.log(this);
     if (JavaPolyBase.idCount === 0) {
       return new this({});
     } else {
       return JavaPolyBase.instances['1'];
     }
-  }
-
-  static addClass(data) {
-    return getDefaultJvm().addClass(data);
-  }
-
-  static type(clsName) {
-    return getDefaultJvm().type(clsName);
   }
 
   // data could be text string of java source or the url of remote java class/jar/source
