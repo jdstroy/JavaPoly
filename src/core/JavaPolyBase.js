@@ -112,12 +112,12 @@ export default class JavaPolyBase {
     return api;
   }
 
-  static getDefaultJvm() {
-    if (JavaPolyBase.idCount === 0) {
-      return new this({});
-    } else {
-      return JavaPolyBase.instances['1'];
-    }
+  static addClass(data) {
+    return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).addClass(data);
+  }
+
+  static type(clsName) {
+    return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).type(clsName);
   }
 
   // data could be text string of java source or the url of remote java class/jar/source
