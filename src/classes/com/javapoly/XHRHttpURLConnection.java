@@ -2,6 +2,8 @@ package com.javapoly;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -15,6 +17,7 @@ import java.util.Iterator;
 class XHRHttpURLConnection extends HttpURLConnection {
   private final AtomicBoolean connectionStarted = new AtomicBoolean(false);
   private final CompletableFuture<XHRResponse> responseFuture = new CompletableFuture<>();
+  private ByteArrayOutputStream outputStream = null;
 
   XHRHttpURLConnection(final URL url) {
     super(url);
@@ -43,7 +46,10 @@ class XHRHttpURLConnection extends HttpURLConnection {
               requestProperties[i++] = String.join(", ", requestPropertyMap.get(key));
             }
           }
-          final XHRResponse response= getResponse(requestProperties, getRequestMethod(), getURL().toString());
+
+          final byte[] outputBytes = outputStream == null ? null : outputStream.toByteArray();
+
+          final XHRResponse response= getResponse(requestProperties, getRequestMethod(), getURL().toString(), outputBytes);
           responseFuture.complete(response);
           XHRHttpURLConnection.this.connected = true;
         }
@@ -69,6 +75,14 @@ class XHRHttpURLConnection extends HttpURLConnection {
     return new LazyResponseInputStream();
   }
 
+  @Override public OutputStream getOutputStream() throws IOException {
+    if (outputStream == null) {
+      outputStream = new ByteArrayOutputStream();
+    }
+
+    return outputStream;
+  }
+
   @Override public void disconnect() {
     // TODO
     System.out.println("disconnect request to: " + getURL());
@@ -83,13 +97,15 @@ class XHRHttpURLConnection extends HttpURLConnection {
     System.out.println("Need to set request property: " + field + ": " + newValue);
   }
 
-  private static native XHRResponse getResponse(final String[] requestProperties, final String method, final String url);
+  private static native XHRResponse getResponse(final String[] requestProperties, final String method, final String url, final byte[] outputBytes);
 
   private class LazyResponseInputStream extends InputStream {
     private int currPos = -1;
     private byte[] responseBytes = null;
 
     @Override public int read() {
+      connect();
+
       try {
         if (currPos < 0) {
           responseBytes = responseFuture.get().getResponseBytes();
