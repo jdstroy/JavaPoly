@@ -36,6 +36,7 @@
   <script src="units/dynamicAdd.js"></script>
   <script src="units/exceptions.js"></script>
   <script src="units/urls.js"></script>
+  <script src="units/jars.js"></script>
 
   <script type="text/javascript">
     mocha.setup('bdd');
@@ -76,7 +77,7 @@
     before( function(done) {
       checkJavaPolyLoaded(done);
     });
-
+    
     describe('JavaPoly' + titleSuffix, function() {
       this.timeout(150000); // Let jvm to start and do not interrupt promises
 
@@ -95,6 +96,8 @@
       testExceptions();
 
       testDynamicAdd();
+      
+      testJarFile();
     });
 
     // TODO: akadeev: checkLeaks() does not work for such complex promises tests

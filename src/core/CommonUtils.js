@@ -33,12 +33,30 @@ class CommonUtils {
     return str.join('');
   }
 
+  /**
+   * Detects if passed 'data' is zip file
+   * @param {String|Buffer} data URL string or data buffer
+   * @return {Boolean}
+   */
   static isZipFile(data){
-    return ZIP_MAGIC_NUMBER === CommonUtils.hexFromBuffer(data, 0, 4);
+    if (typeof data === 'string') {
+      return data.endsWith('.jar') || data.endsWith('.zip');
+    } else {
+      return ZIP_MAGIC_NUMBER === CommonUtils.hexFromBuffer(data, 0, 4);
+    }
   }
-
+  
+/**
+   * Detects if passed 'data' is class file
+   * @param {String|Buffer} data URL string or data buffer
+   * @return {Boolean}
+   */
   static isClassFile(data){
-    return CLASS_MAGIC_NUMBER === CommonUtils.hexFromBuffer(data, 0, 4);
+    if (typeof data === 'string') {
+      return data.endsWith('.class');
+    } else {
+      return CLASS_MAGIC_NUMBER === CommonUtils.hexFromBuffer(data, 0, 4);
+    }
   }
 
   /**
