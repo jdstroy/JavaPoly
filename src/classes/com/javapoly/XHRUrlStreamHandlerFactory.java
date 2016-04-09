@@ -17,8 +17,7 @@ public class XHRUrlStreamHandlerFactory implements URLStreamHandlerFactory {
   }
 
   public URLStreamHandler createURLStreamHandler(String protocol) {
-    // TODO: support https
-    if ("http".equals(protocol)) {
+    if ("http".equals(protocol) || "https".equals(protocol)) {
       return new URLStreamHandler() {
         public HttpURLConnection openConnection(URL url) {
           return new XHRHttpURLConnection(url);
