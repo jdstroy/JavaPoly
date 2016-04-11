@@ -2,7 +2,7 @@ function testStringIdAccess() {
   describe('String identifiers access', function() {
 
     it('checks that Java is defined', function() {
-      expect(Java).toExist();
+      expect(JavaPoly).toExist();
       expect(JavaPoly.type).toExist();
     });
 
@@ -184,7 +184,7 @@ function testStringIdAccess() {
       });
       if (!isWorkerBased) {
         it('should call String method', function() {
-          return Java.new('Overload').then(function(obj) {
+          return JavaPoly.new('Overload').then(function(obj) {
             return obj.method('a').then(function(result) {
               expect(result).toEqual('String:a');
             });
@@ -192,7 +192,7 @@ function testStringIdAccess() {
         });
 
         it('should call Short method', function() {
-          return Java.new('Overload').then(function(obj) {
+          return JavaPoly.new('Overload').then(function(obj) {
             return obj.method(142).then(function(result) {
               expect(result).toEqual('Short:142');
             });
@@ -200,7 +200,7 @@ function testStringIdAccess() {
         });
 
         it('should call Character constructor', function() {
-          return Java.new('Overload', 'a').then(function(obj) {
+          return JavaPoly.new('Overload', 'a').then(function(obj) {
             return obj.getText().then(function(result) {
               expect(result).toEqual('Character:a');
             });
@@ -208,7 +208,7 @@ function testStringIdAccess() {
         });
 
         it('should call long constructor', function() {
-          return Java.new('Overload', 100000000000001).then(function(obj) {
+          return JavaPoly.new('Overload', 100000000000001).then(function(obj) {
             return obj.getText().then(function(result) {
               expect(result).toEqual('long:100000000000001');
             });
@@ -216,7 +216,7 @@ function testStringIdAccess() {
         });
 
         it('should call Float constructor', function() {
-          return Java.new('Overload', 1.5).then(function(obj) {
+          return JavaPoly.new('Overload', 1.5).then(function(obj) {
             return obj.getText().then(function(result) {
               expect(result).toEqual('Float:1.5');
             });

@@ -80,6 +80,7 @@ export default class JavaPolyBase {
 
     this.processScripts();
     const javaType = this.type;
+    /*
     api.Java = {
       type: javaType,
       "new": (name, ...args) => {
@@ -91,8 +92,7 @@ export default class JavaPolyBase {
           return Main.reflectJSValue(jsObj);
         });
       }
-      */
-    };
+    };*/
 
     api.addClass = (data) => this.addClass(data);
 
@@ -101,6 +101,10 @@ export default class JavaPolyBase {
     }
 
     return api;
+  }
+
+  static new(name, ...args) {
+    return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).type(name).then((classWrapper) => new classWrapper(...args));
   }
 
   static addClass(data) {

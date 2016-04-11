@@ -5,7 +5,7 @@ function testObjectWrappers() {
     describe('Object wrappers', function() {
 
       it('should wrap fields', function() {
-        return Java.new('Counter').then(function(counter) {
+        return JavaPoly.new('Counter').then(function(counter) {
           var t1 = counter.increment(42).then(function() {
             return counter.currentValue.then(function(cValue) {
               expect(cValue).toEqual(15);
@@ -21,8 +21,8 @@ function testObjectWrappers() {
       });
 
       it('should automatically unwrap when passed as parameter', function() {
-        return Java.new("java.io.File", "/abc").then(function(abcFile) {
-          return Java.new("java.io.File", "/xyz").then(function(xyzFile) {
+        return JavaPoly.new("java.io.File", "/abc").then(function(abcFile) {
+          return JavaPoly.new("java.io.File", "/xyz").then(function(xyzFile) {
             return abcFile.compareTo(xyzFile).then(function(comparison) {
               expect(comparison).toBeLessThan(0);
             });
@@ -81,7 +81,7 @@ function testObjectWrappers() {
       });
 
       it('should be used for new objects defined with convenience function', function() {
-        return Java.new('java.io.File', "/sys/someunlikelyfilenamethatwontexist").then(function(file) {
+        return JavaPoly.new('java.io.File', "/sys/someunlikelyfilenamethatwontexist").then(function(file) {
           return file.exists().then(function(itExists) {
             expect(itExists).toBe(false);
           });
