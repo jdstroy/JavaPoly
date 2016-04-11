@@ -78,13 +78,14 @@ export default class JavaPolyBase {
       this.createProxyForClass(globalObject, null, 'javax');
     }
 
+    /*
     if (typeof Proxy !== 'undefined') {
       api.J = ProxyWrapper.createRootEntity(this, null);
       if(globalObject) globalObject.J = api.J;
     } else {
       this.defineProxyWarning(api, 'J', 'accessor');
       if(globalObject) this.defineProxyWarning(globalObject, 'J', 'accessor');
-    }
+    }*/
 
     this.processScripts();
     const javaType = this.type;
@@ -104,8 +105,8 @@ export default class JavaPolyBase {
 
     api.addClass = (data) => this.addClass(data);
 
-    if (globalObject) {
-      globalObject.Java = api.Java;
+    if (globalObject) {/*
+      globalObject.Java = api.Java;*/
       globalObject.addClass = api.addClass;
     }
 
@@ -161,7 +162,7 @@ export default class JavaPolyBase {
 
   defineProxyWarning(obj, name, type) {
     var self = this;
-    Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.error('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
+    Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.error('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using JavaPoly.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `JavaPoly.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_JavaPoly.type()'); self.proxyWarnings[name] = true;}});
   }
 
   wrapJavaObject(obj, methods, nonFinalFields, finalFields) {

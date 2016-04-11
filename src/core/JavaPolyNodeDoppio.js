@@ -36,7 +36,7 @@ const DEFAULT_JAVAPOLY_NODE_DOPPIO_OPTIONS = {
  * 2. Use JavaPoly API classes such as `J` and `Java`.
  *
  * (new JavaPoly());
- * Java.type(....).then(() => {  } );
+ * JavaPoly.type(....).then(() => {  } );
  */
 export default class JavaPoly extends JavaPolyBase {
   constructor(_options) {
