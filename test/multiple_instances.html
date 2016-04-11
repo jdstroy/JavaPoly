@@ -105,26 +105,26 @@
 
         it('checks that Java is defined', function() {
           expect(api.Java).toExist();
-          expect(api.Java.type).toExist();
+          expect(api.JavaPoly.type).toExist();
         });
         
-        describe('Java.type', function() {
+        describe('JavaPoly.type', function() {
 
           it('should load class', function() {
-            return api.Java.type('java.lang.Integer').then(function(Integer) {
+            return api.JavaPoly.type('java.lang.Integer').then(function(Integer) {
               expect(Integer).toExist();
             });
           });
 
           describe('java.lang.Integer', function() {
             it('instance method should not exist in class wrapper: byteValue', function() {
-              return api.Java.type('java.lang.Integer').then(function(Integer) {
+              return api.JavaPoly.type('java.lang.Integer').then(function(Integer) {
                 expect(Integer.byteValue).toNotExist();
               });
             });
 
             it('toHexString', function() {
-              return api.Java.type('java.lang.Integer').then(function(Integer) {
+              return api.JavaPoly.type('java.lang.Integer').then(function(Integer) {
                 return Integer.toHexString(42).then(function(result) {
                   expect(result).toEqual('2a');
                 });
@@ -132,7 +132,7 @@
             });
 
             it('toString', function() {
-              return api.Java.type('java.lang.Integer').then(function(Integer) {
+              return api.JavaPoly.type('java.lang.Integer').then(function(Integer) {
                 return Integer.toString(42, 16).then(function(result) {
                   expect(result).toEqual('2a');
                 });
@@ -140,7 +140,7 @@
             });
 
             it('parseInt', function() {
-              return api.Java.type('java.lang.Integer').then(function(Integer) {
+              return api.JavaPoly.type('java.lang.Integer').then(function(Integer) {
                 return Integer.parseInt('42').then(function(result) {
                   expect(result).toEqual(42);
                 });
@@ -152,7 +152,7 @@
 
         describe('Math', function() {
           it('addExact() should add', function() {
-            return api.Java.type('java.lang.Math').then(function(Math) {
+            return api.JavaPoly.type('java.lang.Math').then(function(Math) {
               return Math.addExact(3, 7).then(function(result) {
                 expect(result).toEqual(10);
               });
@@ -160,7 +160,7 @@
           });
 
           it('random() should return a value', function() {
-            return api.Java.type('java.lang.Math').then(function(Math) {
+            return api.JavaPoly.type('java.lang.Math').then(function(Math) {
               return Math.random().then(function(result) {
                 expect(result)
                   .toExist()
@@ -171,7 +171,7 @@
           })
 
           it('final fields should be accessible', function() {
-            return api.Java.type('java.lang.Math').then(function(JMath) {
+            return api.JavaPoly.type('java.lang.Math').then(function(JMath) {
               return JMath.PI.then(function(result) {
                 expect(result)
                   .toBeLessThan(4.0)

@@ -47,13 +47,13 @@ function testUrls() {
   if (!isWorkerBased) {
     describe('URLs', function() {
       before(() => {
-        return Java.type("com.javapoly.XHRUrlStreamHandlerFactory").then(function(XHRUrlStreamHandlerFactory) {
+        return JavaPoly.type("com.javapoly.XHRUrlStreamHandlerFactory").then(function(XHRUrlStreamHandlerFactory) {
           return XHRUrlStreamHandlerFactory.register();
         });
       });
 
       it('should fetch data', function() {
-        return Java.type("java.net.URL").then(function(URL) {
+        return JavaPoly.type("java.net.URL").then(function(URL) {
           return new URL(window.location.origin + "/simpleResponse.bin").then(function(url) {
             return url.openConnection().then(function(urlConnection) {
               var headerPromise = urlConnection.getHeaderField('content-type').then(function(contentType) {
@@ -73,7 +73,7 @@ function testUrls() {
       });
 
       it('should set the request method', function() {
-        return Java.type("java.net.URL").then(function(URL) {
+        return JavaPoly.type("java.net.URL").then(function(URL) {
           return new URL(window.location.origin + "/api").then(function(url) {
             return url.openConnection().then(function(urlConnection) {
               return urlConnection.setRequestMethod("POST").then(function() {
@@ -90,7 +90,7 @@ function testUrls() {
       });
 
       it('should set the request headers', function() {
-        return Java.type("java.net.URL").then(function(URL) {
+        return JavaPoly.type("java.net.URL").then(function(URL) {
           return new URL(window.location.origin + "/api").then(function(url) {
             return url.openConnection().then(function(urlConnection) {
               return urlConnection.addRequestProperty("xxx-test-property", "test42").then(function() {

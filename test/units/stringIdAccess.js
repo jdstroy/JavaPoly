@@ -3,35 +3,35 @@ function testStringIdAccess() {
 
     it('checks that Java is defined', function() {
       expect(Java).toExist();
-      expect(Java.type).toExist();
+      expect(JavaPoly.type).toExist();
     });
 
     if (!isWorkerBased) {
       // Doppio not available when using web worker
       it('doppio should not be a release build', function() {
-        Java.type('java.lang.Integer').then(function() {
+        JavaPoly.type('java.lang.Integer').then(function() {
           expect(Doppio.VM.JVM.isReleaseBuild()).toBe(false);
         });
       });
     }
 
-    describe('Java.type', function() {
+    describe('JavaPoly.type', function() {
 
       it('should load class', function() {
-        return Java.type('java.lang.Integer').then(function(Integer) {
+        return JavaPoly.type('java.lang.Integer').then(function(Integer) {
           expect(Integer).toExist();
         });
       });
 
       describe('java.lang.Integer', function() {
         it('instance method should not exist in class wrapper: byteValue', function() {
-          return Java.type('java.lang.Integer').then(function(Integer) {
+          return JavaPoly.type('java.lang.Integer').then(function(Integer) {
             expect(Integer.byteValue).toNotExist();
           });
         });
 
         it('toHexString', function() {
-          return Java.type('java.lang.Integer').then(function(Integer) {
+          return JavaPoly.type('java.lang.Integer').then(function(Integer) {
             return Integer.toHexString(42).then(function(result) {
               expect(result).toEqual('2a');
             });
@@ -39,7 +39,7 @@ function testStringIdAccess() {
         });
 
         it('toString', function() {
-          return Java.type('java.lang.Integer').then(function(Integer) {
+          return JavaPoly.type('java.lang.Integer').then(function(Integer) {
             return Integer.toString(42, 16).then(function(result) {
               expect(result).toEqual('2a');
             });
@@ -47,7 +47,7 @@ function testStringIdAccess() {
         });
 
         it('parseInt', function() {
-          return Java.type('java.lang.Integer').then(function(Integer) {
+          return JavaPoly.type('java.lang.Integer').then(function(Integer) {
             return Integer.parseInt('42').then(function(result) {
               expect(result).toEqual(42);
             });
@@ -59,7 +59,7 @@ function testStringIdAccess() {
 
     describe('Math', function() {
       it('addExact() should add', function() {
-        return Java.type('java.lang.Math').then(function(Math) {
+        return JavaPoly.type('java.lang.Math').then(function(Math) {
           return Math.addExact(3, 7).then(function(result) {
             expect(result).toEqual(10);
           });
@@ -67,7 +67,7 @@ function testStringIdAccess() {
       });
 
       it('random() should return a value', function() {
-        return Java.type('java.lang.Math').then(function(Math) {
+        return JavaPoly.type('java.lang.Math').then(function(Math) {
           return Math.random().then(function(result) {
             expect(result)
               .toExist()
@@ -78,7 +78,7 @@ function testStringIdAccess() {
       })
 
       it('final fields should be accessible', function() {
-        return Java.type('java.lang.Math').then(function(JMath) {
+        return JavaPoly.type('java.lang.Math').then(function(JMath) {
           return JMath.PI.then(function(result) {
             expect(result)
               .toBeLessThan(4.0)
@@ -90,7 +90,7 @@ function testStringIdAccess() {
 
     describe('System', function() {
       it('currentTimeMillis() should return a timestamp', function() {
-        return Java.type('java.lang.System').then(function(System) {
+        return JavaPoly.type('java.lang.System').then(function(System) {
           return System.currentTimeMillis().then(function(result) {
             expect(result)
               .toExist()
@@ -102,7 +102,7 @@ function testStringIdAccess() {
 
     describe('classes/Main.class', function() {
       it('instance and private methods should not exist in class wrapper', function() {
-        return Java.type('Main').then(function(Main) {
+        return JavaPoly.type('Main').then(function(Main) {
           expect(Main.publicInstanceMethod).toNotExist();
           expect(Main.privateMethod).toNotExist();
           expect(Main.protectedMethod).toNotExist();
@@ -112,7 +112,7 @@ function testStringIdAccess() {
       });
 
       it('static test()', function() {
-        return Java.type('Main').then(function(Main) {
+        return JavaPoly.type('Main').then(function(Main) {
           return Main.test().then(function(result) {
             expect(result).toEqual('test message');
           });
@@ -120,7 +120,7 @@ function testStringIdAccess() {
       });
 
       it('function that flips a boolean value', function() {
-        return Java.type('Main').then(function(Main) {
+        return JavaPoly.type('Main').then(function(Main) {
           var trueCheck = Main.flip(true).then(function(result) {
             expect(result).toEqual(false);
           });
@@ -132,7 +132,7 @@ function testStringIdAccess() {
       });
 
       it('function that returns a true value', function() {
-        return Java.type('Main').then(function(Main) {
+        return JavaPoly.type('Main').then(function(Main) {
           return Main.checkLength("xyz", 3).then(function(result) {
             expect(result).toEqual(true);
           });
@@ -140,7 +140,7 @@ function testStringIdAccess() {
       });
 
       it('function that returns a false value', function() {
-        return Java.type('Main').then(function(Main) {
+        return JavaPoly.type('Main').then(function(Main) {
           return Main.checkLength("xyz", 8).then(function(result) {
             expect(result).toEqual(false);
           });
@@ -151,7 +151,7 @@ function testStringIdAccess() {
     describe('method signature matching logic', function() {
       if (!isWorkerBased) {
         it('should print string', function() {
-          return Java.type('java.lang.System').then(function(System) {
+          return JavaPoly.type('java.lang.System').then(function(System) {
             return System.out.then(function(out) {
               out.println("hello javapoly");
             });
@@ -160,7 +160,7 @@ function testStringIdAccess() {
       }
       
       it('should call char static method', function() {
-        return Java.type('Overload').then(function(Overload) {
+        return JavaPoly.type('Overload').then(function(Overload) {
           return Overload.staticMethod('a').then(function(result) {
             expect(result).toEqual('char:a');
           });
@@ -168,7 +168,7 @@ function testStringIdAccess() {
       });
 
       it('should call byte static method', function() {
-        return Java.type('Overload').then(function(Overload) {
+        return JavaPoly.type('Overload').then(function(Overload) {
           return Overload.staticMethod(42).then(function(result) {
             expect(result).toEqual('byte:42');
           });
@@ -176,7 +176,7 @@ function testStringIdAccess() {
       });
 
       it('should call Float static method', function() {
-        return Java.type('Overload').then(function(Overload) {
+        return JavaPoly.type('Overload').then(function(Overload) {
           return Overload.staticMethod(42.5).then(function(result) {
             expect(result).toEqual('Float:42.5');
           });
