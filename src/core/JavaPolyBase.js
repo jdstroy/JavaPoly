@@ -104,7 +104,7 @@ export default class JavaPolyBase {
   }
 
   static new(name, ...args) {
-    return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).type(name).then((classWrapper) => new classWrapper(...args));
+    return JavaPolyBase.type(name).then((classWrapper) => new classWrapper(...args));
   }
 
   static addClass(data) {
