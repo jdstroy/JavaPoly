@@ -79,14 +79,8 @@ export default class JavaPolyBase {
     }
 
     this.processScripts();
-    const javaType = this.type;
     /*
-    api.Java = {
-      type: javaType,
-      "new": (name, ...args) => {
-        return javaType(name).then((classWrapper) => new classWrapper(...args))
-      }
-      /* TODO: use the reflect command
+      TODO: use the reflect command
       reflect: (jsObj) => {
         return javaType("com.javapoly.Main").then((Main) => {
           return Main.reflectJSValue(jsObj);
