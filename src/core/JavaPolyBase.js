@@ -78,6 +78,14 @@ export default class JavaPolyBase {
       this.createProxyForClass(globalObject, null, 'javax');
     }
 
+    if (typeof Proxy !== 'undefined') {
+      api.J = ProxyWrapper.createRootEntity(this, null);
+      if(globalObject) globalObject.J = api.J;
+    } else {
+      this.defineProxyWarning(api, 'J', 'accessor');
+      if(globalObject) this.defineProxyWarning(globalObject, 'J', 'accessor');
+    }
+
     this.processScripts();
     /*
       TODO: use the reflect command

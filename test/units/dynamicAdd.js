@@ -52,7 +52,7 @@ function testDynamicAdd() {
 
         it('proxy access of added jar, ', function(){
           return addClass('/jars/commons-codec-1.10.jar').then(function(addClassResult){
-            return J.org.apache.commons.codec.binary.StringUtils.equals('a','a').then(function (result){
+            return org.apache.commons.codec.binary.StringUtils.equals('a','a').then(function (result){
               expect(result).toEqual(true);
               });
           });
@@ -68,7 +68,7 @@ function testDynamicAdd() {
 
         it('proxy access of added source code', function() {
           return addClass('/classes/Main3.java').then(function(addClassResult){
-            return J.com.javapoly.test.Main3.testIt().then(function(result) {
+            return com.javapoly.test.Main3.testIt().then(function(result) {
               expect(result).toEqual('Main3::testIt()');
             });
           });
@@ -82,7 +82,7 @@ function testDynamicAdd() {
             '}\n' +
           '}';
           return addClass(mainJavaSource).then(function(addClassResult){
-            return J.com.javapoly.test.Main4.testIt().then(function(result) {
+            return com.javapoly.test.Main4.testIt().then(function(result) {
               expect(result).toEqual('Main4:testIt()');
             });
           });
