@@ -107,7 +107,7 @@ function testUrls() {
       });
 
       it('should send data', function() {
-        return Java.type("URLConnectionTest").then(function(URLConnectionTest) {
+        return JavaPoly.type("URLConnectionTest").then(function(URLConnectionTest) {
           return URLConnectionTest.sendData(window.location.origin + "/api").then(function(is) {
             return readFromIS(is).then(function(content) {
               const json = JSON.parse(utf8ByteArrayToString(content));
