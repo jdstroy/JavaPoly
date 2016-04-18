@@ -106,6 +106,18 @@ function testUrls() {
         });
       });
 
+      it('should send data', function() {
+        return Java.type("URLConnectionTest").then(function(URLConnectionTest) {
+          return URLConnectionTest.sendData(window.location.origin + "/api").then(function(is) {
+            return readFromIS(is).then(function(content) {
+              const json = JSON.parse(utf8ByteArrayToString(content));
+              expect(json["input-count"]).toBe(120);
+              expect(json["input-md5"]).toBe('b7ba1efc6022e9ed272f00b8831e26e6');
+            });
+          });
+        });
+      });
+
     });
   }
 }

@@ -1,7 +1,7 @@
 registerNatives({
   'com/javapoly/XHRHttpURLConnection': {
 
-    'getResponse([Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/javapoly/XHRResponse;': function(thread, headers, method, url) {
+    'getResponse([Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[B)Lcom/javapoly/XHRResponse;': function(thread, headers, method, url, outputBytes) {
       const methodStr = method.toString();
       const urlStr = url.toString();
       const myRequest = new XMLHttpRequest();
@@ -32,7 +32,11 @@ registerNatives({
 
       thread.setStatus(6); // ASYNC_WAITING
 
-      myRequest.send();
+      if (outputBytes == null) {
+        myRequest.send();
+      } else {
+        myRequest.send(outputBytes.array);
+      }
 
     }
   },

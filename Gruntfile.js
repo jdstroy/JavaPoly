@@ -1,3 +1,5 @@
+var path = require('path');
+
 const doppioPath = "./node_modules/@hrj/doppiojvm-snapshot/";
 
 const babelTransforms = [
@@ -198,6 +200,14 @@ module.exports = function (grunt) {
             },
             javapoly: {}
         },
+        nodemon: {
+            dev: {
+                script: 'server.js',
+                options: {
+                    cwd: path.join(__dirname, 'test')
+                }
+            }
+        },
         babel: {
             options: {
                 presets: ['es2015']
@@ -244,18 +254,19 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-mkdir');
     grunt.loadNpmTasks('grunt-babel');
     grunt.loadNpmTasks('grunt-newer');
+    grunt.loadNpmTasks('grunt-nodemon');
 
     grunt.loadTasks('tasks');
 
     grunt.registerTask('build:java', ['mkdir:build', 'copy:jars', 'newer:browserify:natives', 'run_java:compile']);
-    grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'newer:browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
+    grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
     grunt.registerTask('build', ['mkdir:build', 'build:java', 'newer:browserify:production', 'newer:browserify:node-doppio', 'listings:javapoly']);
     grunt.registerTask('build:node-doppio', ['mkdir:build', 'build:java', 'run_java:compile-test', 'newer:browserify:node-doppio']);
     grunt.registerTask('build:node-system', ['mkdir:build', 'build:java', 'run_java:compile-test', 'newer:browserify:node-system']);
     grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'newer:browserify:production', 'listings:javapoly']);
 
     grunt.registerTask('default', ['build']);
-    grunt.registerTask('dev', ['build:test', 'http-server:dev', 'watch:dev_js']);
+    grunt.registerTask('dev', ['build:test', 'nodemon:dev', 'watch:dev_js']);
 
     grunt.registerTask('package:prepare', 'A sample task that logs stuff.', function () {
         var packageJson = grunt.file.readJSON('./tasks/package/package.json');

@@ -2,6 +2,8 @@ package com.javapoly;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -15,9 +17,17 @@ import java.util.Iterator;
 class XHRHttpURLConnection extends HttpURLConnection {
   private final AtomicBoolean connectionStarted = new AtomicBoolean(false);
   private final CompletableFuture<XHRResponse> responseFuture = new CompletableFuture<>();
+  private ByteArrayOutputStream outputStream = null;
 
   XHRHttpURLConnection(final URL url) {
     super(url);
+  }
+
+  /* Connect only if doOutput == false */
+  private void connectLazy() {
+    if (!getDoOutput()) {
+      connect();
+    }
   }
 
   @Override public void connect() {
@@ -36,7 +46,10 @@ class XHRHttpURLConnection extends HttpURLConnection {
               requestProperties[i++] = String.join(", ", requestPropertyMap.get(key));
             }
           }
-          final XHRResponse response= getResponse(requestProperties, getRequestMethod(), getURL().toString());
+
+          final byte[] outputBytes = outputStream == null ? null : outputStream.toByteArray();
+
+          final XHRResponse response= getResponse(requestProperties, getRequestMethod(), getURL().toString(), outputBytes);
           responseFuture.complete(response);
           XHRHttpURLConnection.this.connected = true;
         }
@@ -57,16 +70,17 @@ class XHRHttpURLConnection extends HttpURLConnection {
   }
 
   @Override public InputStream getInputStream() throws IOException {
-    connect();
+    connectLazy();
 
-    try {
-      final byte[] responseBytes = responseFuture.get().getResponseBytes();
-      return new java.io.ByteArrayInputStream(responseBytes);
-    } catch (final InterruptedException ie) {
-      throw new RuntimeException("Interrupted while waiting for connection", ie);
-    } catch (final ExecutionException ee) {
-      throw new RuntimeException("Error connecting to URL", ee);
+    return new LazyResponseInputStream();
+  }
+
+  @Override public OutputStream getOutputStream() throws IOException {
+    if (outputStream == null) {
+      outputStream = new ByteArrayOutputStream();
     }
+
+    return outputStream;
   }
 
   @Override public void disconnect() {
@@ -83,5 +97,31 @@ class XHRHttpURLConnection extends HttpURLConnection {
     System.out.println("Need to set request property: " + field + ": " + newValue);
   }
 
-  private static native XHRResponse getResponse(final String[] requestProperties, final String method, final String url);
+  private static native XHRResponse getResponse(final String[] requestProperties, final String method, final String url, final byte[] outputBytes);
+
+  private class LazyResponseInputStream extends InputStream {
+    private int currPos = -1;
+    private byte[] responseBytes = null;
+
+    @Override public int read() {
+      connect();
+
+      try {
+        if (currPos < 0) {
+          responseBytes = responseFuture.get().getResponseBytes();
+          currPos = 0;
+        }
+
+        if (currPos < responseBytes.length) {
+          return responseBytes[currPos++];
+        } else {
+          return -1;
+        }
+      } catch (final InterruptedException ie) {
+        throw new RuntimeException("Interrupted while waiting for connection", ie);
+      } catch (final ExecutionException ee) {
+        throw new RuntimeException("Error connecting to URL", ee);
+      }
+    }
+  }
 }

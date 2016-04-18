@@ -13,6 +13,12 @@ class DoppioManager {
     this.javapoly = javapoly;
 
     this.fs = null;
+    
+    /**
+     * It's a MountableFileSystem that contains XHR mounted file systems.
+     * It's needed for loading JAR-files without loading and resaving it.
+     */
+    this.xhrdirs = new BrowserFS.FileSystem.MountableFileSystem();
 
     /**
      * Stores referense to the special extension for fs (for example it contains recursive mkdir)
@@ -54,7 +60,8 @@ class DoppioManager {
       CommonUtils.xhrRetrieve(options.doppioLibUrl + "/listings.json", "json").then(doppioListings => {
         CommonUtils.xhrRetrieve(options.javaPolyBaseUrl + "/listings.json", "json").then(javapolyListings => {
           mfs.mount('/sys', new BrowserFS.FileSystem.XmlHttpRequest(doppioListings, options.doppioLibUrl));
-          mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest(javapolyListings, options.javaPolyBaseUrl));
+          mfs.mount('/javapoly', new BrowserFS.FileSystem.XmlHttpRequest(javapolyListings, options.javaPolyBaseUrl));          
+          mfs.mount('/xhrdirs', this.xhrdirs);
 
           this.fs = BrowserFS.BFSRequire('fs');
           this.path = BrowserFS.BFSRequire('path');
@@ -68,87 +75,89 @@ class DoppioManager {
     });
 
   }
-
-  mountJava(src) {
+  
+  _mountJava(src, fRegJarPath) {
     const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
     const options = this.getOptions();
+
+    return new Promise((resolve, reject) => {
+      if (CommonUtils.isZipFile(src)) {
+        return this.mountFileViaXHR(src).then(
+          fRegJarPath.bind(this, resolve, reject),
+          reject );
+      } else {
+        // remote file, we need to download the file data of that url and parse the type.
+        CommonUtils.xhrRetrieve(src, 'arraybuffer').then(fileData => {
+          const fileDataBuf = new Buffer(fileData);
+
+          // remote java class/jar file
+          if (CommonUtils.isClassFile(fileDataBuf)){
+            //return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_CLASS', 10, {src:script.src});
+            return this.writeRemoteClassFileIntoFS(src, fileDataBuf).then(resolve, reject);
+          } else if (CommonUtils.isZipFile(fileDataBuf)) {
+            //return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAR', 10, {src:script.src});
+            return this.writeRemoteJarFileIntoFS(src, fileDataBuf).then(
+              fRegJarPath.bind(this, resolve, reject),
+              reject );
+          }
+
+          // remote java source code file
+          const classInfo = CommonUtils.detectClassAndPackageNames(fileDataBuf.toString());
+          if (classInfo && classInfo.class) {
+            const className = classInfo.class;
+            const packageName = classInfo.package;
+            return WrapperUtil.dispatchOnJVM(
+              this.javapoly, 'FILE_COMPILE', 10,
+              [className, packageName ? packageName : '', options.storageDir, fileDataBuf.toString()], resolve, reject
+            );
+          }
+
+          console.log('Unknown java file type', src);
+          reject('Unknown java file type'+src);
+        }, () => {
+          console.log('URL Not Found', src);
+          reject('Unknown java file type'+src);
+        });            
+      }          
+    });
+  }
+
+  mountJava(src) {
     this.bfsReady.then(() => {
       this.mountHub.push(
-        new Promise((resolve, reject) => {
-          // remote file, we need to download the file data of that url and parse the type.
-          CommonUtils.xhrRetrieve(src, "arraybuffer").then(fileData => {
-            const fileDataBuf = new Buffer(fileData);
-
-            // remote java class/jar file
-            if (CommonUtils.isClassFile(fileDataBuf)){
-              //return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_CLASS', 10, {src:script.src});
-              return this.writeRemoteClassFileIntoFS(src, fileDataBuf).then(resolve, reject);
-            }else if (CommonUtils.isZipFile(fileDataBuf)){
-              //return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAR', 10, {src:script.src});
-              return this.writeRemoteJarFileIntoFS(src, fileDataBuf).then(
-                (jarStorePath) => { this.classpath.push(jarStorePath); resolve(); },
-                reject );
-            }
-
-            // remote java source code file
-            const classInfo = CommonUtils.detectClassAndPackageNames(fileDataBuf.toString());
-            if (classInfo && classInfo.class ){
-              const className = classInfo.class;
-              const packageName = classInfo.package;
-              return WrapperUtil.dispatchOnJVM(
-                  this.javapoly, "FILE_COMPILE", 10,
-                  [className, packageName ? packageName : "", options.storageDir, fileDataBuf.toString()], resolve, reject
-                );
-            }
-
-            console.log('Unknown java file type', src);
-            reject('Unknown java file type'+src);
-          }, () => {
-            console.log('URL Not Found', src);
-            reject('Unknown java file type'+src);
-          });
-        })
-      );
+        this._mountJava(src, 
+          (resolve, reject, jarStorePath) => {this.classpath.push(jarStorePath); resolve();}
+        )
+      )
     });
   }
 
   dynamicMountJava(src) {
     const Buffer = global.BrowserFS.BFSRequire('buffer').Buffer;
     const options = this.getOptions();
+    return this._mountJava(src, 
+      (resolve, reject, jarStorePath) => WrapperUtil.dispatchOnJVM(this.javapoly, 'JAR_PATH_ADD', 10, ['file://' + jarStorePath], resolve, reject)
+    ); 
+  }
+  
+  mountFileViaXHR(src) {
+    const options = this.getOptions();
+    
     return new Promise((resolve, reject) => {
-      // remote file, we need to download the file data of that url and parse the type.
-      CommonUtils.xhrRetrieve(src, "arraybuffer").then(fileData => {
-        const fileDataBuf = new Buffer(fileData);
+      const fileName = this.path.basename(src);    
+      const dirName = this.path.join(src.replace(/[\///\:]/gi, ''));
 
-        // remote java class/jar file
-        if (CommonUtils.isClassFile(fileDataBuf)){
-          //return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_CLASS', 10, {src:script.src});
-          return this.writeRemoteClassFileIntoFS(src, fileDataBuf).then(resolve, reject);
-        }else if (CommonUtils.isZipFile(fileDataBuf)){
-          //return WrapperUtil.dispatchOnJVM(this, 'FS_MOUNT_JAR', 10, {src:script.src});
-          return this.writeRemoteJarFileIntoFS(src, fileDataBuf).then(
-            (jarStorePath) => WrapperUtil.dispatchOnJVM(this.javapoly, 'JAR_PATH_ADD', 10, ['file://'+jarStorePath], resolve, reject) ,
-            reject);
-        }
-
-        // remote java source code file
-        const classInfo = CommonUtils.detectClassAndPackageNames(fileDataBuf.toString()) ;
-        if (classInfo && classInfo.class ){
-          const className = classInfo.class;
-          const packageName = classInfo.package;
-          return WrapperUtil.dispatchOnJVM(
-              this.javapoly, "FILE_COMPILE", 10,
-              [className, packageName ? packageName : "", options.storageDir, fileDataBuf.toString()], resolve, reject
-            );
-        }
-
-        console.log('Unknown java file type', src);
-        reject('Unknown java file type'+src);
-      }, () => {
-        console.log('URL Not Found', src);
-        reject('Unknown java file type'+src);
-      });
-    })
+      if (!this.fs.existsSync('/xhrdirs/' + dirName)) {
+        let listingObject = {}; listingObject[fileName] = null;
+        let lastSlash = 0; 
+        for(let ti = 0; (ti = src.indexOf('/', lastSlash + 1)) > 0; lastSlash = ti) ;            
+        const mountPoint = new BrowserFS.FileSystem.XmlHttpRequest(listingObject, src.substr(0,lastSlash));        
+        
+        this.xhrdirs.mount('/' + dirName, mountPoint);        
+      }      
+      
+      resolve(this.path.join('/xhrdirs', dirName, fileName));
+    });
   }
 
   writeRemoteJarFileIntoFS(src,jarFileData) {

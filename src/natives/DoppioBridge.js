@@ -135,7 +135,7 @@ function flatThrowableToJS(ft) {
     name: ft["com/javapoly/FlatThrowable/name"].toString(),
     message: ft["com/javapoly/FlatThrowable/message"].toString(),
     stack: ft["com/javapoly/FlatThrowable/stack"].array.map(e => e.toString()),
-    causedBy: cause === null ? null : flatThrwoableToJs(cause)
+    causedBy: cause === null ? null : flatThrowableToJS(cause)
   }
 }
 
