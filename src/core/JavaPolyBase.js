@@ -105,16 +105,20 @@ export default class JavaPolyBase {
     return api;
   }
 
+  static initialJavaPoly(JavaPolyProto) {
+      return (JavaPolyBase.idCount === 0 ? new JavaPolyProto() : JavaPolyBase.instances['1']);
+  }
+
   static new(name, ...args) {
-    return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).type(name).then((classWrapper) => new classWrapper(...args));
+    return JavaPolyBase.initialJavaPoly(this).type(name).then((classWrapper) => new classWrapper(...args));
   }
 
   static addClass(data) {
-    return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).addClass(data);
+    return JavaPolyBase.initialJavaPoly(this).addClass(data);
   }
 
   static type(clsName) {
-    return (JavaPolyBase.idCount === 0 ? new this() : JavaPolyBase.instances['1']).type(clsName);
+    return JavaPolyBase.initialJavaPoly(this).type(clsName);
   }
 
   type(clsName) {
