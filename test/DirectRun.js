@@ -15,7 +15,7 @@ function initJavaPoly() {
 initJavaPoly();
 
 addClass(path.resolve('test/classes/Main3.java')).then(function(addClassResult){
-  return Java.type('com.javapoly.test.Main3').then(function(Main3) {
+  return JavaPoly.type('com.javapoly.test.Main3').then(function(Main3) {
     return Main3.testIt().then(function (result){
       console.log("pass: " + (result === "Main3::testIt()23541499653099"));
       // setTimeout(() => {activeHandles.print();}, 2000);
@@ -26,7 +26,7 @@ addClass(path.resolve('test/classes/Main3.java')).then(function(addClassResult){
 
 addClass(path.resolve('test/classes/Threads.class')).then(function(addClassResult){
   console.log("Threads added");
-  return Java.type('Threads').then(function(Threads) {
+  return JavaPoly.type('Threads').then(function(Threads) {
     return Threads.startSleepyThread().then(function () {
       return Threads.startBusyThread().then(function () {
         return Threads.testIt().then(function (result){

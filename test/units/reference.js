@@ -11,9 +11,9 @@ function hold(References, n) {
 function testReference() {
   describe('hold and release weak references', function(){
     it('should release references', function(){
-      return Java.type('References').then(function(References) {
+      return JavaPoly.type('References').then(function(References) {
         return hold(References, 0).then(function() {
-          return Java.type('java.lang.Thread').then(function(Thread) {
+          return JavaPoly.type('java.lang.Thread').then(function(Thread) {
             return Thread.sleep(1000).then(function (){
               return References.release().then(function (){
                 return new Promise((resolve) => {

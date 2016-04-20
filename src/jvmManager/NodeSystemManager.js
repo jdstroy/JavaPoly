@@ -19,7 +19,7 @@ export default class NodeSystemManager {
      */
     const options = this.getOptions();
     this.classpath = [options.javapolyBase + "/classes", options.storageDir];
-
+    this.javaBin = this.getJavaExec();
   }
 
   getOptions() {
@@ -88,14 +88,47 @@ export default class NodeSystemManager {
     });
   }
 
+  getJavaExec() {
+    const path = require('path');
+    const fs = require("fs");
+
+    const homeRootDirectory = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+    const binDirName = '.jvm';
+    const javaExec = (process.platform === 'win32') ? "java.exe" : "java";
+    const javaFullPath = path.join(homeRootDirectory, binDirName, 'jre', 'bin', javaExec);
+
+    try {
+      const stat = fs.statSync(javaFullPath);
+      if (stat.isFile()) {
+        return javaFullPath;
+      }
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        // Java wasn't installed locally
+      } else {
+        // Hm unknown error
+        console.error(e);
+      }
+    }
+    return "java";
+  }
+
   initJVM() {
+    var javaBin = this.javaBin;
     this.jsServer.then((serverPort) => {
       const childProcess = require('child_process');
       const spawn = childProcess.spawn;
-      const classPath = 'build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar:build/classes:/tmp/data';
+
+      const path = require('path');
+      const currentDirectory = __dirname;
+      const packageRoot = path.resolve(currentDirectory, "..");
+
+      const classPath =  packageRoot + '/jars/java_websocket.jar:' + packageRoot + '/jars/javax.json-1.0.4.jar:' +
+          packageRoot + '/classes:/tmp/data';
+
       const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.secret, serverPort];
       // const child = spawn('java', args, {detached: true, stdio: ['ignore', 'ignore', 'ignore']});
-      const child = spawn('java', args, {detached: true, stdio: 'inherit'});
+      const child = spawn(javaBin, args, {detached: true, stdio: 'inherit'});
       child.unref();
     });
   }

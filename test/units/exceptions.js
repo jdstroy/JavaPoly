@@ -2,7 +2,7 @@ function testExceptions() {
   describe('Exception check', function() {
 
     it('should handle exceptions correctly', function() {
-      return Java.type('Main').then(function(Main) {
+      return JavaPoly.type('Main').then(function(Main) {
         return new Promise(function(resolve, reject) {
           Main.exceptionThrower().then(function() {
             reject(new Error("not expecting the promise to resolve"));
@@ -18,7 +18,7 @@ function testExceptions() {
     });
 
     it('should handle arithmetic exceptions correctly', function() {
-      return Java.type('Main').then(function(Main) {
+      return JavaPoly.type('Main').then(function(Main) {
         return new Promise(function(resolve, reject) {
           Main.exceptionThrower2(0).then(function(result) {
             reject(new Error("not expecting the promise to resolve"));

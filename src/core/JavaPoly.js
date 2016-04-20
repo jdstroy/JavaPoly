@@ -52,7 +52,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
    * @type {boolean}
    */
    assertionsEnabled : false
-}
+};
 
 /**
  * Main JavaPoly class that do all underliying job for initialization
@@ -61,7 +61,7 @@ const DEFAULT_JAVAPOLY_OPTIONS = {
  * 2. Use JavaPoly API classes such as `J` and `Java`.
  *
  * (new JavaPoly());
- * Java.type(....).then(() => {  } );
+ * JavaPoly.type(....).then(() => {  } );
  */
 class JavaPoly extends JavaPolyBase {
   constructor(_options) {

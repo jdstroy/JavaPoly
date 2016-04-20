@@ -2,7 +2,7 @@ function testEval() {
   describe('Eval', function() {
 
     it('should pass all tests from EvalTest.java', function() {
-      return Java.type('EvalTest').then(function(EvalTest) {
+      return JavaPoly.type('EvalTest').then(function(EvalTest) {
         return EvalTest.test().then(function(result) {
           expect(result).toEqual(true);
         });
@@ -18,7 +18,7 @@ describe('Utilities', function() {
 
   describe('eval', function() {
     it('integer arithmetic', function() {
-      return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
+      return JavaPoly.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
         Utilities.eval("40 + 2").then(function(result) {
           expect(result).toEqual(42);
         });
@@ -26,7 +26,7 @@ describe('Utilities', function() {
     });
 
     it('string split', function() {
-      return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
+      return JavaPoly.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
         Utilities.eval("'a,b,c'.split(',')").then(function(result) {
           expect(result).toEqual(["a", "b", "c"]);
         });
@@ -34,7 +34,7 @@ describe('Utilities', function() {
     });
 
     it('function definition', function() {
-      return Java.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
+      return JavaPoly.type('com.javapoly.runtime.Utilities').then(function(Utilities) {
         Utilities.eval("(function(x){return x*x})").then(function(result) {
           expect(result(7)).toEqual(49);
         });

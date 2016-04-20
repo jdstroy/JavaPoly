@@ -87,29 +87,42 @@ export default class JavaPolyBase {
     }
 
     this.processScripts();
-    const javaType = (clsName) => JavaClassWrapper.getClassWrapperByName(this, clsName);
-    api.Java = {
-      type: javaType,
-      "new": (name, ...args) => {
-        return javaType(name).then((classWrapper) => new classWrapper(...args))
-      }
-      /* TODO: use the reflect command
+    /*
+      TODO: use the reflect command
       reflect: (jsObj) => {
         return javaType("com.javapoly.Main").then((Main) => {
           return Main.reflectJSValue(jsObj);
         });
       }
-      */
-    };
+    };*/
 
     api.addClass = (data) => this.addClass(data);
 
     if (globalObject) {
-      globalObject.Java = api.Java;
       globalObject.addClass = api.addClass;
     }
 
     return api;
+  }
+
+  static initialJavaPoly(JavaPolyProto) {
+      return (JavaPolyBase.idCount === 0 ? new JavaPolyProto() : JavaPolyBase.instances['1']);
+  }
+
+  static new(name, ...args) {
+    return JavaPolyBase.initialJavaPoly(this).type(name).then((classWrapper) => new classWrapper(...args));
+  }
+
+  static addClass(data) {
+    return JavaPolyBase.initialJavaPoly(this).addClass(data);
+  }
+
+  static type(clsName) {
+    return JavaPolyBase.initialJavaPoly(this).type(clsName);
+  }
+
+  type(clsName) {
+    return JavaClassWrapper.getClassWrapperByName(this, clsName);
   }
 
   // data could be text string of java source or the url of remote java class/jar/source
@@ -149,7 +162,7 @@ export default class JavaPolyBase {
 
   defineProxyWarning(obj, name, type) {
     var self = this;
-    Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.error('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using Java.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `Java.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_Java.type()'); self.proxyWarnings[name] = true;}});
+    Object.defineProperty(obj, name, {configurable: true, get: function(){ if(!self.proxyWarnings) self.proxyWarnings = {}; if(!self.proxyWarnings[name]) console.error('Your browser does not support Proxy objects, so the `'+name+'` '+type+' must be accessed using JavaPoly.type(\''+(type === 'class' ? 'YourClass' : 'com.yourpackage.YourClass')+'\') instead of using the class\' fully qualified name directly from javascript.  Note that `JavaPoly.type` will return a promise for a class instead of a direct class reference.  For more info: https://javapoly.com/details.html#Java_Classes_using_JavaPoly.type()'); self.proxyWarnings[name] = true;}});
   }
 
   wrapJavaObject(obj, methods, nonFinalFields, finalFields) {

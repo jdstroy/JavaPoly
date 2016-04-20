@@ -5,3 +5,5 @@ global.window.javapoly = new JavaPoly({
   doppioLibUrl: 'https://www.javapoly.com/doppio/',
   browserfsLibUrl: 'https://www.javapoly.com/browserfs/'
 });
+
+module.exports = JavaPoly;

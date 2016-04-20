@@ -128,7 +128,7 @@
 
       describe('TestCompile1', function() {
         it('static method returns String', function() {
-          return Java.type('com.javapoly.test.TestCompile1').then(function(TestCompile1) {
+          return JavaPoly.type('com.javapoly.test.TestCompile1').then(function(TestCompile1) {
             return TestCompile1.testIt().then(function(result) {
               expect(result).toEqual('TestCompile1::testIt()');
             });
@@ -138,7 +138,7 @@
 
       describe('TestCompile2', function() {
         it('static method returns Integer', function() {
-          return Java.type('com.javapoly.test.TestCompile2').then(function(TestCompile2) {
+          return JavaPoly.type('com.javapoly.test.TestCompile2').then(function(TestCompile2) {
             return TestCompile2.testIt().then(function(result) {
               expect(result).toEqual(8008);
             });

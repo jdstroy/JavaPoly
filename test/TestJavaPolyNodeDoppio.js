@@ -41,7 +41,7 @@ describe('javapoly test', function() {
 
   it('add jar', function(){
     return addClass(path.resolve('test/jars/commons-codec-1.10.jar')).then(function(addClassResult){
-      return Java.type('org.apache.commons.codec.binary.StringUtils').then(function(StringUtils) {
+      return JavaPoly.type('org.apache.commons.codec.binary.StringUtils').then(function(StringUtils) {
         return StringUtils.equals('a','a').then(function (result){
           expect(result).toEqual(true);
         });
@@ -51,7 +51,7 @@ describe('javapoly test', function() {
 
   it('compile java source', function(){
     return addClass(path.resolve('test/classes/Main3.java')).then(function(addClassResult){
-      return Java.type('com.javapoly.test.Main3').then(function(Main3) {
+      return JavaPoly.type('com.javapoly.test.Main3').then(function(Main3) {
         return Main3.testIt().then(function (result){
           expect(result).toEqual("Main3::testIt()");
         });

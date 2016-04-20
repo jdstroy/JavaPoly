@@ -5,7 +5,7 @@ function testObjectWrappers() {
     describe('Object wrappers', function() {
 
       it('should wrap fields', function() {
-        return Java.new('Counter').then(function(counter) {
+        return JavaPoly.new('Counter').then(function(counter) {
           var t1 = counter.increment(42).then(function() {
             return counter.currentValue.then(function(cValue) {
               expect(cValue).toEqual(15);
@@ -21,8 +21,8 @@ function testObjectWrappers() {
       });
 
       it('should automatically unwrap when passed as parameter', function() {
-        return Java.new("java.io.File", "/abc").then(function(abcFile) {
-          return Java.new("java.io.File", "/xyz").then(function(xyzFile) {
+        return JavaPoly.new("java.io.File", "/abc").then(function(abcFile) {
+          return JavaPoly.new("java.io.File", "/xyz").then(function(xyzFile) {
             return abcFile.compareTo(xyzFile).then(function(comparison) {
               expect(comparison).toBeLessThan(0);
             });
@@ -31,7 +31,7 @@ function testObjectWrappers() {
       });
 
       it('should return positive 64 bit integers that JS can handle', function() {
-        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+        return JavaPoly.type("com.javapoly.test.LongTest").then(function(myclass) {
           return myclass.testPassingPos().then(function(result) {
             expect(result).toEqual(9007199254740991);
           });
@@ -40,7 +40,7 @@ function testObjectWrappers() {
 
       it('should not return positive 64 bit integers too big for JS', function() {
         return new Promise(function(resolve, reject) {
-          return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+          return JavaPoly.type("com.javapoly.test.LongTest").then(function(myclass) {
             return myclass.testFailingPos().then(function() {
               reject(new Error('Not expecting promise to resolve'));
             },
@@ -56,7 +56,7 @@ function testObjectWrappers() {
       });
 
       it('should return negative 64 bit integers that JS can handle', function() {
-        return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+        return JavaPoly.type("com.javapoly.test.LongTest").then(function(myclass) {
           return myclass.testPassingNeg().then(function(result) {
             expect(result).toEqual(-9007199254740991);
           });
@@ -65,7 +65,7 @@ function testObjectWrappers() {
 
       it('should not return negative 64 bit integers too big for JS', function() {
         return new Promise(function(resolve, reject) {
-          return Java.type("com.javapoly.test.LongTest").then(function(myclass) {
+          return JavaPoly.type("com.javapoly.test.LongTest").then(function(myclass) {
             return myclass.testFailingNeg().then(function() {
               reject(new Error("not expecting the promise to resolve"));
             },
@@ -81,7 +81,7 @@ function testObjectWrappers() {
       });
 
       it('should be used for new objects defined with convenience function', function() {
-        return Java.new('java.io.File', "/sys/someunlikelyfilenamethatwontexist").then(function(file) {
+        return JavaPoly.new('java.io.File', "/sys/someunlikelyfilenamethatwontexist").then(function(file) {
           return file.exists().then(function(itExists) {
             expect(itExists).toBe(false);
           });
@@ -89,7 +89,7 @@ function testObjectWrappers() {
       });
 
       it('should be used for new objects', function() {
-        return Java.type('java.io.File').then(function(File) {
+        return JavaPoly.type('java.io.File').then(function(File) {
           return new File("/sys/someunlikelyfilenamethatwontexist").then(function(file) {
             return file.exists().then(function(itExists) {
               expect(itExists).toBe(false);
@@ -100,7 +100,7 @@ function testObjectWrappers() {
 
       describe('should wrap Properties object', function() {
         it('get property', function() {
-          return Java.type('java.lang.System').then(function(System) {
+          return JavaPoly.type('java.lang.System').then(function(System) {
             return System.getProperties().then(function(properties) {
 
               function checkProperty(key, expectedValue) {

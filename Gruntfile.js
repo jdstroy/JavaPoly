@@ -15,6 +15,7 @@ const gruntBrowserifyOptionsForNode = {
         "ignoreMissing": true,
         "builtins": false,
         "bare": true,
+        "standalone": "JavaPoly",
         insertGlobalVars: {
             process: function () {
             }
@@ -117,6 +118,12 @@ module.exports = function (grunt) {
             },
             browserfs: {
                 src: ['./test/browserfs']
+            },
+            build: {
+                src: ['./build/*']
+            },
+            package: {
+                src: ['./package/*']
             }
         },
         copy: {
@@ -140,7 +147,7 @@ module.exports = function (grunt) {
             package: {
                 files: [
                     {expand: true, cwd: './build/', src: ['**'], dest: './package'},
-                    {expand: true, cwd: './tasks/package', src: ['README.md'], dest: './package'}
+                    {expand: true, cwd: './tasks/package', src: ['README.md', 'index.js'], dest: './package'}
                 ]
             }
         },
@@ -175,13 +182,13 @@ module.exports = function (grunt) {
         mkdir: {
             build: {
                 options: {
-                    mode: 0700,
+                    mode: 0o700,
                     create: ['build/classes/com/javapoly', 'build/natives', 'build/jars']
                 }
             },
             package: {
                 options: {
-                    mode: 0700,
+                    mode: 0o700,
                     create: ['package']
                 }
             }
@@ -194,12 +201,46 @@ module.exports = function (grunt) {
             javapoly: {}
         },
         nodemon: {
-          dev: {
-            script: 'server.js',
-            options: {
-              cwd: path.join(__dirname, 'test')
+            dev: {
+                script: 'server.js',
+                options: {
+                    cwd: path.join(__dirname, 'test')
+                }
             }
-          }
+        },
+        babel: {
+            options: {
+                presets: ['es2015']
+            },
+            dist: {
+                files: {
+                    'build/javapoly-node-system-raw.js': 'src/node-system.js',
+                    'build/core/JavaPolyNodeSystem.js': 'src/core/JavaPolyNodeSystem.js',
+                    'build/core/JavaPolyBase.js': 'src/core/JavaPolyBase.js',
+                    'build/core/ProxyWrapper.js': 'src/core/ProxyWrapper.js',
+                    'build/core/JavaClassWrapper.js': 'src/core/JavaClassWrapper.js',
+                    'build/core/Wrapper.js': 'src/core/Wrapper.js',
+                    'build/core/WrapperUtil.js': 'src/core/WrapperUtil.js',
+                    'build/core/CommonUtils.js': 'src/core/CommonUtils.js',
+                    'build/core/JavaObjectWrapper.js': 'src/core/JavaObjectWrapper.js',
+                    'build/dispatcher/NodeSystemDispatcher.js': 'src/dispatcher/NodeSystemDispatcher.js',
+                    'build/dispatcher/CommonDispatcher.js': 'src/dispatcher/CommonDispatcher.js',
+                    'build/jvmManager/NodeSystemManager.js': 'src/jvmManager/NodeSystemManager.js',
+
+                    'build/javapoly-browser.js': 'src/main.js',
+                    'build/core/JavaPoly.js': 'src/core/JavaPoly.js',
+                    'build/dispatcher/BrowserDispatcher.js': 'src/dispatcher/BrowserDispatcher.js',
+                    'build/jvmManager/DoppioManager.js': 'src/jvmManager/DoppioManager.js',
+                    'build/tools/classfile.js': 'src/tools/classfile.js',
+                    'build/tools/fsext.js': 'src/tools/fsext.js',
+                    'build/dispatcher/WorkerCallBackDispatcher.js': 'src/dispatcher/WorkerCallBackDispatcher.js',
+
+                    'build/javapoly-node-doppio-raw.js': 'src/node-doppio.js',
+                    'build/core/JavaPolyNodeDoppio.js': 'src/core/JavaPolyNodeDoppio.js',
+                    'build/dispatcher/NodeDoppioDispatcher.js': 'src/dispatcher/NodeDoppioDispatcher.js',
+                    'build/jvmManager/NodeDoppioManager.js': 'src/jvmManager/NodeDoppioManager.js'
+                }
+            }
         }
     });
 
@@ -230,18 +271,13 @@ module.exports = function (grunt) {
     grunt.registerTask('package:prepare', 'A sample task that logs stuff.', function () {
         var packageJson = grunt.file.readJSON('./tasks/package/package.json');
         var now = new Date();
-        var padLeftTwo = function (val) {
-            var result = val.toString();
-            if (result.length === 1) {
-                result = '0' + result;
-            }
-            return result;
-        };
+        var padLeftTwo = (val) => (val < 10) ? ('0' + val.toString()) : val.toString();
         var version = '0.0.' + now.getFullYear() + padLeftTwo(now.getMonth() + 1) + padLeftTwo(now.getDate())
             + padLeftTwo(now.getHours()) + padLeftTwo(now.getMinutes()) + padLeftTwo(now.getSeconds());
         packageJson.version = version;
         grunt.file.write('./package/package.json', JSON.stringify(packageJson, null, '\t'));
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
-    grunt.registerTask('build:package', 'Creating complete package', ['build', 'mkdir:package', 'copy:package', 'package:prepare']);
+    grunt.registerTask('build:package', 'Creating complete package', ['clean:build', 'build:java', 'newer:browserify:production',
+        'babel', 'listings:javapoly', 'mkdir:package', 'clean:package', 'copy:package', 'package:prepare']);
 };

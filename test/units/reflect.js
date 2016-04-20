@@ -2,7 +2,7 @@ function testReflect() {
   if (!isWorkerBased) {
     describe('Reflection', function() {
       it('should reflect js object into java', function() {
-        return Java.type("EvalTest").then(function(EvalTest) {
+        return JavaPoly.type("EvalTest").then(function(EvalTest) {
           var obj = {name1: "xyz", name2: 10};
           var objDeep = {name1: "xyz", name2: 10, name3: {inner: "pqr"}};
           var objFunction = {name1: "xyz", square: function(n) { return n * n}};
@@ -29,7 +29,7 @@ function testReflect() {
       });
 
       it('should reflect js object from java', function() {
-        return Java.type("com.javapoly.Eval").then(function(Eval) {
+        return JavaPoly.type("com.javapoly.Eval").then(function(Eval) {
           return Eval.eval('({name1: "xyz", name2: 10, name3: {inner: "music"}})').then(function(result) {
             expect(result.name1).toBe("xyz");
             expect(result.name3.inner).toBe("music");
