@@ -8,9 +8,11 @@
   "homepage": "https://www.javapoly.com",
   "license": "BSD-3-Clause",
   "dependencies": {
+    "csrf": "^3.0.1",
     "jvminstall": "^0.1.0",
     "underscore": "^1.8.3",
-    "jsjavaparser": "https://github.com/sreym/jsjavaparser.git"
+    "jsjavaparser": "https://github.com/sreym/jsjavaparser.git",
+    "ws": "^1.0.1"
   },
   "scripts": {
     "postinstall": "node node_modules/jvminstall"
