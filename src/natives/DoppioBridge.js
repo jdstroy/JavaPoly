@@ -191,7 +191,7 @@ registerNatives({
 
     'isJSNativeObj(Ljava/lang/Object;)Z': function(thread, e) {
       // TODO: find a better way to check for a JS native object
-      return (typeof(e) === "object") && (!e.hasOwnProperty("$monitor"));
+      return (typeof(e) === "object") && (e !== null && !e.hasOwnProperty("$monitor"));
     },
 
     'getMessageType(Ljava/lang/String;)Ljava/lang/String;': function(thread, obj, msgId) {

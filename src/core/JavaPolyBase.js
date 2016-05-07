@@ -171,7 +171,7 @@ export default class JavaPolyBase {
 
   unwrapJavaObject(obj) {
     // TODO: is a better check possible using prototypes
-    if (obj._javaObj) {
+    if (obj && obj._javaObj) {
       return obj._javaObj;
     } else {
       return null;

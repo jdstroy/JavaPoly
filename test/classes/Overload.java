@@ -47,4 +47,8 @@ public class Overload {
   public String getText() {
     return text;
   }
+
+  public static Object identityFunction(Object arg) {
+    return arg;
+  }
 }

@@ -182,6 +182,7 @@ function testStringIdAccess() {
           });
         });
       });
+
       if (!isWorkerBased) {
         it('should call String method', function() {
           return JavaPoly.new('Overload').then(function(obj) {
@@ -219,6 +220,22 @@ function testStringIdAccess() {
           return JavaPoly.new('Overload', 1.5).then(function(obj) {
             return obj.getText().then(function(result) {
               expect(result).toEqual('Float:1.5');
+            });
+          });
+        });
+
+        it('should accept null as a parameter', function() {
+          return JavaPoly.type('java.lang.String').then(function(String) {
+            return String.valueOf(null).then(function(result) {
+              expect(result).toEqual('null');
+            });
+          });
+        });
+
+        it('should accept null as a return value', function() {
+          return JavaPoly.type('Overload').then(function(Overload) {
+            return Overload.identityFunction(null).then(function(result) {
+              expect(result).toEqual(null);
             });
           });
         });
