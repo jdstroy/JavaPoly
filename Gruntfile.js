@@ -163,22 +163,6 @@ module.exports = function (grunt) {
                 tasks: ['clean:browserfs', 'copy:browserfs']
             }
         },
-        'http-server': {
-            dev: {
-                showDir: true,
-                autoIndex: true,
-                runInBackground: true,
-                port: 8080,
-                root: 'test/.'
-            },
-            test: {
-                showDir: true,
-                autoIndex: true,
-                runInBackground: false,
-                port: 8080,
-                root: 'test/.'
-            }
-        },
         mkdir: {
             build: {
                 options: {
@@ -250,7 +234,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-symlink');
     grunt.loadNpmTasks('grunt-run-java');
-    grunt.loadNpmTasks('grunt-http-server');
     grunt.loadNpmTasks('grunt-mkdir');
     grunt.loadNpmTasks('grunt-babel');
     grunt.loadNpmTasks('grunt-newer');
