@@ -22,11 +22,12 @@ class CommonUtils {
       xmlr.send(null);
     });
   }
-
+  
   static hexFromBuffer(buffer, from, count) {
     var str = [];
+    let bufferGetter = (global.BrowserFS) ? (index) => { return buffer.get(index); } : (index) => {return buffer[index]; };
     for(let i = 0; i < count; i++) {
-      var ss = buffer[from + i].toString(16);
+      var ss = bufferGetter(from + i).toString(16);
       if (ss.length < 2) ss = '0' + ss;
       str.push(ss);
     }
