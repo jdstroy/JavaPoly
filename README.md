@@ -12,25 +12,23 @@ After this install all needed packages and type:
 $ npm install
 ```
 
-For building JavaPoly run command:
+For building JavaPoly browser version only run command:
 ```sh
-$ grunt build
-or
 $ grunt build:browser
 ```
 
 This creates `build/javapoly.js` file.
 The javapoly.js will auto-load the js library needed(browserjs.js, doppio lib and so on) from external site(eg, www.javapoly.com)
 
-For building JavaPoly-Node-Doppio and testing it:
+You can create complete package (including JavaPoly-Node-Doppio, JavaPoly-Node-SystemJVM) by running command:
 ```sh
-$ grunt build:node-doppio
-$ ./node_modules/mocha/bin/mocha test/TestJavaPolyNodeDoppio.js
+$ grunt build
 ```
 
-For building JavaPoly-Node-SystemJVM and testing it:
+For testing JavaPoly-Node-Doppio or JavaPoly-Node-SystemJVM you can run:
 ```sh
-$ grunt build:node-system
+$ ./node_modules/mocha/bin/mocha test/TestJavaPolyNodeDoppio.js
+or
 $ ./node_modules/mocha/bin/mocha test/TestJavaPolyNodeSystem.js
 ```
 
