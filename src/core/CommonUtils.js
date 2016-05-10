@@ -26,7 +26,7 @@ class CommonUtils {
   static hexFromBuffer(buffer, from, count) {
     var str = [];
     for(let i = 0; i < count; i++) {
-      var ss = buffer.get(from + i).toString(16);
+      var ss = buffer[from + i].toString(16);
       if (ss.length < 2) ss = '0' + ss;
       str.push(ss);
     }

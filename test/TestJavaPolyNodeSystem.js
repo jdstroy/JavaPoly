@@ -8,7 +8,7 @@ const path = require('path');
 global.expect = require("expect/umd/expect.min.js");
 
 function initJavaPoly() {
-  require('../build/javapoly-node-system.js');
+  require('../build/javapoly-node-system-raw.js');
   // require('../src/node-system.js');
 
   global.isWorkerBased = false;

@@ -6,7 +6,7 @@ const CP_TAG_SIZE = 1;
 function uintFromBuffer(buffer, from, count) {
   let res = 0;
   for(let i = 0; i < count; i++) {
-    res = res * 256 + buffer.get(from + i);
+    res = res * 256 + buffer[from + i];
   }
   return res;
 }
@@ -14,7 +14,7 @@ function uintFromBuffer(buffer, from, count) {
 function stringFromBuffer(buffer, from, count) {
   let res = '';
   for(let i = 0; i < count; i++) {
-    res += String.fromCharCode(buffer.get(from + i));
+    res += String.fromCharCode(buffer[from + i]);
   }
   return res;
 }
@@ -22,7 +22,7 @@ function stringFromBuffer(buffer, from, count) {
 function hexFromBuffer(buffer, from, count) {
   let res = '';
   for(let i = 0; i < count; i++) {
-    res += buffer.get(from + i).toString(16);
+    res += buffer[from + i].toString(16);
   }
   return res;
 }
