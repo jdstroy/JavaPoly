@@ -8,7 +8,7 @@ const path = require('path');
 global.expect = require("expect/umd/expect.min.js");
 
 function initJavaPoly() {
-  require('../build/javapoly-node-doppio.js');
+  require('../build/javapoly-node-doppio-raw.js');
 
   global.isWorkerBased = false;
 
