@@ -15,6 +15,6 @@
     "ws": "^1.0.1"
   },
   "scripts": {
-    "postinstall": "node node_modules/jvminstall"
+    "postinstall": "node postInstall.js"
   }
 }
