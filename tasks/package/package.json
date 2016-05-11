@@ -15,6 +15,15 @@
     "ws": "^1.0.1"
   },
   "scripts": {
-    "postinstall": "node node_modules/jvminstall"
-  }
+    "postinstall": "node postInstall.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://git.javadeploy.net/jimsproch/JavaPoly.git"
+  },
+  "keywords": [
+    "java",
+    "javascript",
+    "doppio"
+  ]
 }

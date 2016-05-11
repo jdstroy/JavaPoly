@@ -139,7 +139,7 @@ module.exports = function (grunt) {
             package: {
                 files: [
                     {expand: true, cwd: './build/', src: ['**'], dest: './package'},
-                    {expand: true, cwd: './tasks/package', src: ['README.md', 'index.js'], dest: './package'}
+                    {expand: true, cwd: './tasks/package', src: ['README.md', 'index.js', 'postInstall.js'], dest: './package'}
                 ]
             }
         },
