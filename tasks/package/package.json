@@ -16,5 +16,14 @@
   },
   "scripts": {
     "postinstall": "node postInstall.js"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://git.javadeploy.net/jimsproch/JavaPoly.git"
+  },
+  "keywords": [
+    "java",
+    "javascript",
+    "doppio"
+  ]
 }
