@@ -5,24 +5,27 @@ const CP_TAG_SIZE = 1;
 
 function uintFromBuffer(buffer, from, count) {
   let res = 0;
+  let bufferGetter = (global.BrowserFS) ? (index) => { return buffer.get(index); } : (index) => {return buffer[index]; };
   for(let i = 0; i < count; i++) {
-    res = res * 256 + buffer.get(from + i);
+    res = res * 256 + bufferGetter(from + i);
   }
   return res;
 }
 
 function stringFromBuffer(buffer, from, count) {
   let res = '';
+  let bufferGetter = (global.BrowserFS) ? (index) => { return buffer.get(index); } : (index) => {return buffer[index]; };
   for(let i = 0; i < count; i++) {
-    res += String.fromCharCode(buffer.get(from + i));
+    res += String.fromCharCode(bufferGetter(from + i));
   }
   return res;
 }
 
 function hexFromBuffer(buffer, from, count) {
   let res = '';
+  let bufferGetter = (global.BrowserFS) ? (index) => { return buffer.get(index); } : (index) => {return buffer[index]; };
   for(let i = 0; i < count; i++) {
-    res += buffer.get(from + i).toString(16);
+    res += bufferGetter(from + i).toString(16);
   }
   return res;
 }

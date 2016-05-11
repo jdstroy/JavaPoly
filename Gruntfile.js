@@ -28,14 +28,6 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         browserify: {
-            "node-doppio": {
-                files: {'build/javapoly-node-doppio.js': ['src/node-doppio.js']},
-                options: gruntBrowserifyOptionsForNode
-            },
-            "node-system": {
-                files: {'build/javapoly-node-system.js': ['src/node-system.js']},
-                options: gruntBrowserifyOptionsForNode
-            },
             natives: {
                 files: {
                   'build/natives/DoppioBridge.js': ['src/natives/DoppioBridge.js'],
@@ -243,9 +235,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('build:java', ['mkdir:build', 'copy:jars', 'newer:browserify:natives', 'run_java:compile']);
     grunt.registerTask('build:test', ['mkdir:build', 'build:java', 'run_java:compile-test', 'compare_version', 'browserify:development', 'listings:javapoly', 'symlink:build_to_test']);
-    grunt.registerTask('build', ['mkdir:build', 'build:java', 'newer:browserify:production', 'newer:browserify:node-doppio', 'listings:javapoly']);
-    grunt.registerTask('build:node-doppio', ['mkdir:build', 'build:java', 'run_java:compile-test', 'newer:browserify:node-doppio']);
-    grunt.registerTask('build:node-system', ['mkdir:build', 'build:java', 'run_java:compile-test', 'browserify:node-system']);
+    grunt.registerTask('build', ['clean:build', 'build:java', 'run_java:compile-test', 'newer:browserify:production', 'babel', 'listings:javapoly']);
     grunt.registerTask('build:browser', ['mkdir:build', 'build:java', 'newer:browserify:production', 'listings:javapoly']);
 
     grunt.registerTask('default', ['build']);
@@ -261,6 +251,5 @@ module.exports = function (grunt) {
         grunt.file.write('./package/package.json', JSON.stringify(packageJson, null, '\t'));
         grunt.log.writeln('%s: created package.json, build version: %s', this.name, version);
     });
-    grunt.registerTask('build:package', 'Creating complete package', ['clean:build', 'build:java', 'newer:browserify:production',
-        'babel', 'listings:javapoly', 'mkdir:package', 'clean:package', 'copy:package', 'package:prepare']);
+    grunt.registerTask('build:package', 'Creating complete package', ['build', 'mkdir:package', 'clean:package', 'copy:package', 'package:prepare']);
 };
