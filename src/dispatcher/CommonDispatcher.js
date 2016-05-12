@@ -62,6 +62,7 @@ class CommonDispatcher {
           if (msg === "OK") {
             callback({success:true, returnValue: 'Add Class success'});
           } else {
+            console.log("Failed to mount java file:", msg, data);
             callback({success:false, returnValue: 'Add Class fail'});
           }
         }, (msg) => callback({success:false, cause:{stack:[msg]}})));
