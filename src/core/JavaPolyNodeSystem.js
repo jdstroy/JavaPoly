@@ -4,6 +4,7 @@ import ProxyWrapper from './ProxyWrapper';
 import NodeSystemDispatcher from '../dispatcher/NodeSystemDispatcher.js'
 import WrapperUtil from './WrapperUtil.js';
 import CommonUtils from './CommonUtils.js';
+import NodeManager from './NodeManager';
 
 const DEFAULT_JAVAPOLY_NODE_SYSTEM_OPTIONS = {
   javapolyBase: '',
@@ -18,7 +19,7 @@ const DEFAULT_JAVAPOLY_NODE_SYSTEM_OPTIONS = {
    * Directory name that stores all class-files, jars and/or java-files
    * @type {String}
    */
-  storageDir: '/tmp/data',
+  storageDir: NodeManager.getTempDirectory(),
 
   /**
    * Enable Java Assertions
