@@ -126,7 +126,7 @@ class DoppioManager {
     this.bfsReady.then(() => {
       this.mountHub.push(
         this._mountJava(src, 
-          (resolve, reject, jarStorePath) => {this.classpath.push(jarStorePath); resolve();}
+          (resolve, reject, jarStorePath) => {this.classpath.push(jarStorePath); resolve("OK");}
         )
       )
     });
@@ -198,7 +198,7 @@ class DoppioManager {
             console.error(err.message);
             reject(err.message);
           } else {
-            resolve();
+            resolve("OK");
           }
         }
       );

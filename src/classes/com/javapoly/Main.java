@@ -119,7 +119,7 @@ public class Main {
       final String url = (String) data[0];
       JavaPolyClassLoader urlClassLoader = (JavaPolyClassLoader) Thread.currentThread().getContextClassLoader();
       urlClassLoader.addUrl(url);
-      bridge.returnResult(messageId, "Add Jar success");
+      bridge.returnResult(messageId, "OK");
     } catch (Exception e) {
       returnError(messageId, e);
     }

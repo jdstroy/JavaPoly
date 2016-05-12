@@ -76,7 +76,7 @@ export default class NodeDoppioManager {
             console.error(err.message);
             reject(err.message);
           } else {
-            resolve();
+            resolve("OK");
           }
         }
       );
