@@ -14,20 +14,22 @@ let tempDirectory = (function () {
 
 process.on('exit', (code) => {
     try {
+        let path = require('path');
         let fs = require('fs');
-        let deleteFolderRecursive = function (path) {
-            if (fs.existsSync(path)) {
-                fs.readdirSync(path).forEach(function (file, index) {
-                    var curPath = path + "/" + file;
+        let deleteFolderRecursive = function (pathTo) {
+            if (fs.existsSync(pathTo)) {
+                fs.readdirSync(pathTo).forEach(function (file, index) {
+                    var curPath = pathTo + "/" + file;
                     if (fs.lstatSync(curPath).isDirectory()) { // recurse
                         deleteFolderRecursive(curPath);
                     } else { // delete file
                         fs.unlinkSync(curPath);
                     }
                 });
-                fs.rmdirSync(path);
+                fs.rmdirSync(pathTo);
             }
         };
+        deleteFolderRecursive(tempDirectory);
         console.log('Temp directory', tempDirectory, 'successfully deleted.');
     } catch (error) {
         console.error('Error on while deleting temp directory.');
