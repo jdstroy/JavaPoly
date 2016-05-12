@@ -12,7 +12,12 @@ let tempDirectory = (function () {
     return directoryPath;
 })();
 
-process.on('exit', (code) => {
+let tempAlreadyDeleted = false;
+
+let deletingTempDirectory = function () {
+    if (tempAlreadyDeleted) {
+        return;
+    }
     try {
         let path = require('path');
         let fs = require('fs');
@@ -34,8 +39,25 @@ process.on('exit', (code) => {
     } catch (error) {
         console.error('Error on while deleting temp directory.');
         console.error(error);
-        code = 113;
     }
+    tempAlreadyDeleted = true;
+};
+
+process.on('exit', () => {
+    console.log('exit');
+    deletingTempDirectory();
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT');
+    deletingTempDirectory();
+    process.exit(2);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('uncaughtException');
+    console.error(error);
+    deletingTempDirectory();
 });
 
 export default class NodeManager {
