@@ -5,8 +5,13 @@
 let tempDirectory = (function () {
     let path = require('path');
     let os = require('os');
-    return path.join(os.tmpdir(), 'javapoly', process.pid.toString());
+    let directoryPath = path.join(os.tmpdir(), 'javapoly-' + process.pid.toString());
+    let fs = require('fs');
+    fs.mkdirSync(directoryPath);
+    return directoryPath;
 })();
+
+
 
 process.on('exit', (code) => {
     try {
@@ -24,6 +29,7 @@ process.on('exit', (code) => {
                 fs.rmdirSync(path);
             }
         };
+        console.log('Temp directory was successfully deleted.');
     } catch (error) {
         console.error('Error on while deleting temp directory.');
         console.error(error);
