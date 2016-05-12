@@ -301,11 +301,7 @@ public class Main {
       System.out.println("Compiling: " + Arrays.toString(compileData));
 
       int result = compiler.run(null, null, null, compileData);
-      if (result == 0) {
-        bridge.returnResult(messageId, "Normal compilation.");
-      } else {
-        bridge.returnResult(messageId, "Compilation failed.");
-      }
+      bridge.returnResult(messageId, result == 0 ? "OK" : "FAIL");
     } catch (final IOException e) {
       returnError(messageId, new RuntimeException("Compilation failed.", e));
     }

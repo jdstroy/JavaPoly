@@ -58,8 +58,12 @@ class CommonDispatcher {
         this.doppioManager.then(dm => dm.mountJava(data.src));
         break;
       case "FS_DYNAMIC_MOUNT_JAVA":
-        this.doppioManager.then(dm => dm.dynamicMountJava(data.src).then(() => {
-          callback({success:true, returnValue: 'Add Class success'});
+        this.doppioManager.then(dm => dm.dynamicMountJava(data.src).then((msg) => {
+          if (msg === "OK") {
+            callback({success:true, returnValue: 'Add Class success'});
+          } else {
+            callback({success:false, returnValue: 'Add Class fail'});
+          }
         }, (msg) => callback({success:false, cause:{stack:[msg]}})));
         break;
       default:
