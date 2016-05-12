@@ -40,7 +40,7 @@ function apiHandler(request, response) {
 }
 
 function fileHandler(request, response) {
-  let filePath = '.' + request.url;
+  let filePath = '.' + url.parse(request.url).pathname;
   if (filePath === './') {
     filePath = './index.html';
   }
