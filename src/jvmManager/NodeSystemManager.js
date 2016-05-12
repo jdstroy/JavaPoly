@@ -1,10 +1,8 @@
 import CommonUtils from '../core/CommonUtils.js';
 import WrapperUtil from '../core/WrapperUtil.js';
 
-import http from 'http';
-
 /**
- * The NodeDoppioManager manages the Doppio JVM on Node
+ * The NodeSystemManager manages the Doppio JVM on Node
  */
 export default class NodeSystemManager {
   constructor(javapoly, secret, httpPortDeffered, jsServer) {
