@@ -4,6 +4,7 @@ import ProxyWrapper from './ProxyWrapper';
 import NodeDoppioDispatcher from '../dispatcher/NodeDoppioDispatcher.js'
 import WrapperUtil from './WrapperUtil.js';
 import CommonUtils from './CommonUtils.js';
+import NodeManager from '../jvmManager/NodeManager';
 
 const DEFAULT_JAVAPOLY_NODE_DOPPIO_OPTIONS = {
   doppioBase: '',
@@ -19,7 +20,7 @@ const DEFAULT_JAVAPOLY_NODE_DOPPIO_OPTIONS = {
    * Directory name that stores all class-files, jars and/or java-files
    * @type {String}
    */
-  storageDir: '/tmp/data',
+  storageDir: NodeManager.getTempDirectory(),
 
   /**
    * Enable Java Assertions

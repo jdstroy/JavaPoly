@@ -1,5 +1,6 @@
 import CommonUtils from '../core/CommonUtils.js';
 import WrapperUtil from '../core/WrapperUtil.js';
+import NodeManager from './NodeManager';
 
 /**
  * The NodeSystemManager manages the Doppio JVM on Node
@@ -122,7 +123,7 @@ export default class NodeSystemManager {
       const packageRoot = path.resolve(currentDirectory, "..");
 
       const classPath =  packageRoot + '/jars/java_websocket.jar:' + packageRoot + '/jars/javax.json-1.0.4.jar:' +
-          packageRoot + '/classes:/tmp/data';
+          packageRoot + '/classes:' + NodeManager.getTempDirectory();
 
       const args = ['-cp', classPath, 'com.javapoly.Main', this.javapoly.getId(), "system", this.secret, serverPort];
       // const child = spawn('java', args, {detached: true, stdio: ['ignore', 'ignore', 'ignore']});
