@@ -1,6 +1,6 @@
 import CommonUtils from '../core/CommonUtils.js';
 import WrapperUtil from '../core/WrapperUtil.js';
-import NodeManager from './NodeManager';
+import NodeManager from '../core/NodeManager';
 
 /**
  * The NodeSystemManager manages the Doppio JVM on Node

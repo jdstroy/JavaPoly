@@ -4,7 +4,7 @@ import ProxyWrapper from './ProxyWrapper';
 import NodeDoppioDispatcher from '../dispatcher/NodeDoppioDispatcher.js'
 import WrapperUtil from './WrapperUtil.js';
 import CommonUtils from './CommonUtils.js';
-import NodeManager from '../jvmManager/NodeManager';
+import NodeManager from './NodeManager';
 
 const DEFAULT_JAVAPOLY_NODE_DOPPIO_OPTIONS = {
   doppioBase: '',
