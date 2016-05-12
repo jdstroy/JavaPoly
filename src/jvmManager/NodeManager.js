@@ -3,14 +3,14 @@
  */
 "use strict";
 let tempDirectory = (function () {
-    import path from 'path';
-    import os from 'os';
+    let path = require('path');
+    let os = require('os');
     return path.join(os.tmpdir(), 'javapoly', process.pid.toString());
 })();
 
 process.on('exit', (code) => {
     try {
-        import fs from 'fs';
+        let fs = require('fs');
         let deleteFolderRecursive = function (path) {
             if (fs.existsSync(path)) {
                 fs.readdirSync(path).forEach(function (file, index) {
