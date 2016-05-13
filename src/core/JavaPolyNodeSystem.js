@@ -1,3 +1,4 @@
+"use strict";
 import * as _ from 'underscore';
 import JavaPolyBase from './JavaPolyBase';
 import ProxyWrapper from './ProxyWrapper';

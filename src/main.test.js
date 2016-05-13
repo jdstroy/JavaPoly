@@ -1,3 +1,4 @@
+"use strict";
 import JavaPoly from './core/JavaPoly';
 
 /* Parses URL search string. Eg of valid input: "?worker=true&dispatch=fast" */

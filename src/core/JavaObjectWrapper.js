@@ -1,3 +1,4 @@
+"use strict";
 import Wrapper from "./Wrapper";
 import WrapperUtil from "./WrapperUtil";
 

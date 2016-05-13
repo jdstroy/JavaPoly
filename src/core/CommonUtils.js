@@ -1,3 +1,4 @@
+"use strict";
 import JavaParser from 'jsjavaparser';
 
 const CLASS_MAGIC_NUMBER = 'cafebabe';

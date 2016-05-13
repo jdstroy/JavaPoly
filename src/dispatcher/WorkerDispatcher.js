@@ -1,3 +1,4 @@
+"use strict";
 import CommonDispatcher from './CommonDispatcher.js'
 import DoppioManager from '../jvmManager/DoppioManager.js'
 

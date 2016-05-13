@@ -1,3 +1,4 @@
+"use strict";
 import CommonUtils from '../core/CommonUtils.js';
 import CommonDispatcher from './CommonDispatcher.js'
 import NodeSystemManager from '../jvmManager/NodeSystemManager.js'

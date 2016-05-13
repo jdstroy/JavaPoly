@@ -1,3 +1,4 @@
+"use strict";
 /**
  * The WorkerCallBackDispatcher is executed in Browser side.
  * This should be init in Browser main Thread.
