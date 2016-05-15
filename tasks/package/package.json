@@ -15,7 +15,7 @@
     "ws": "^1.0.1"
   },
   "scripts": {
-    "postinstall": "node postInstall.js"
+    "postinstall": "node -e \"require('jvminstall');\""
   },
   "repository": {
     "type": "git",
