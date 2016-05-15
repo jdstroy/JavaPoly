@@ -1,3 +1,4 @@
+"use strict";
 /**
  * The CommonDispatcher is an abstract base class for other dispatchers.
  *

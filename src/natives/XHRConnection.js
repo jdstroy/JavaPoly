@@ -1,3 +1,4 @@
+"use strict";
 registerNatives({
   'com/javapoly/XHRHttpURLConnection': {
 

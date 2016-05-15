@@ -1,3 +1,4 @@
+"use strict";
 import * as _ from 'underscore';
 import JavaClassWrapper from './JavaClassWrapper';
 import JavaObjectWrapper from './JavaObjectWrapper';
