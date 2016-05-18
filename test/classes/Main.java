@@ -11,6 +11,10 @@ public class Main {
     throw new RuntimeException("Deliberate exception for testing");
   }
 
+  public static void exceptionThrowerWithNullMessage() {
+    throw new RuntimeException((String) null);
+  }
+
   // Can be used to throw a divide-by-zero exception
   public static int exceptionThrower2(int x) {
     return 100 / x;

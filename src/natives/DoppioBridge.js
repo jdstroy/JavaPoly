@@ -132,9 +132,11 @@ function javaObjToJS(thread, obj) {
 
 function flatThrowableToJS(ft) {
   var cause = ft["com/javapoly/FlatThrowable/causedBy"];
+  var name = ft["com/javapoly/FlatThrowable/name"];
+  var message = ft["com/javapoly/FlatThrowable/message"];
   return {
-    name: ft["com/javapoly/FlatThrowable/name"].toString(),
-    message: ft["com/javapoly/FlatThrowable/message"].toString(),
+    name: name === null ? null : name.toString(),
+    message: message === null ? null : message.toString(),
     stack: ft["com/javapoly/FlatThrowable/stack"].array.map(e => e.toString()),
     causedBy: cause === null ? null : flatThrowableToJS(cause)
   }
