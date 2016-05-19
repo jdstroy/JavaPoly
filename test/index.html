@@ -10,6 +10,7 @@
   <script type="application/java" src="classes/EvalTest.class"></script>
   <script type="application/java" src="classes/Counter.class"></script>
   <script type="application/java" src="classes/Overload.class"></script>
+  <script type="application/java" src="classes/ShaTest.class"></script>
   <script type="application/java" src="classes/URLConnectionTest.class"></script>
   <script type="application/java" src="classes/com/javapoly/MainWithPackage.class"></script>
   <script type="application/java" src="classes/com/javapoly/test/LongTest.class"></script>
@@ -37,6 +38,7 @@
   <script src="units/exceptions.js"></script>
   <script src="units/urls.js"></script>
   <script src="units/jars.js"></script>
+  <script src="units/crypto.js"></script>
 
   <script type="text/javascript">
     mocha.setup('bdd');
@@ -81,13 +83,7 @@
     describe('JavaPoly' + titleSuffix, function() {
       this.timeout(150000); // Let jvm to start and do not interrupt promises
 
-      describe('Test javax crypto ', function() {
-        it('Mac', function() {
-          return JavaPoly.type('javax.crypto.Mac').then(function(Mac) {
-            console.log("Got mac");
-          }, (e) => console.log(e));
-        });
-      });
+      testCrypto();
 
       // testUrls();
 
