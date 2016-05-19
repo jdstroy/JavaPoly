@@ -209,11 +209,11 @@ class DoppioManager {
   initJVM() {
     const options = this.getOptions();
     const responsiveness = this.javapoly.isJavaPolyWorker ? 100 : 10;
+    this.classpath.unshift("/javapoly/classes/");
     this.bfsReady.then(() => {
       Promise.all(this.mountHub).then(() => {
         this.javapoly.jvm = new Doppio.VM.JVM({
-          doppioHomePath: options.doppioLibUrl,
-          bootstrapClasspath: ['/sys/vendor/java_home/lib/rt.jar', "/javapoly/classes"],
+          doppioHomePath: '/sys',
           classpath: this.classpath,
           javaHomePath: '/sys/vendor/java_home',
           extractionPath: '/tmp',
