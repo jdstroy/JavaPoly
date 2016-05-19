@@ -81,6 +81,14 @@
     describe('JavaPoly' + titleSuffix, function() {
       this.timeout(150000); // Let jvm to start and do not interrupt promises
 
+      describe('Test javax crypto ', function() {
+        it('Mac', function() {
+          return JavaPoly.type('javax.crypto.Mac').then(function(Mac) {
+            console.log("Got mac");
+          }, (e) => console.log(e));
+        });
+      });
+
       testUrls();
 
       testProxy();
