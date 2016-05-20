@@ -40,7 +40,7 @@
     "underscore": "^1.8.3"
   },
   "dependencies": {
-    "@hrj/doppiojvm-snapshot": "^0.4.10",
+    "@hrj/doppiojvm-snapshot": "^0.4.11",
     "browserfs": "^0.5.12",
     "jsjavaparser": "https://github.com/sreym/jsjavaparser.git",
     "csrf": "^3.0.1",
