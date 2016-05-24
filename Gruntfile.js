@@ -84,6 +84,7 @@ module.exports = function (grunt) {
             compile: {
                 command: "javac",
                 javaOptions: {
+                    "Xlint": "unchecked",
                     "d": "build/classes/",
                     "cp": ["build/jars/java_websocket.jar:build/jars/javax.json-1.0.4.jar"]
                 },
@@ -98,6 +99,7 @@ module.exports = function (grunt) {
             "compile-test": {
                 command: "javac",
                 javaOptions: {
+                    "Xlint": "unchecked",
                     "d": "test/classes",
                     "cp": "build/classes"
                 },
