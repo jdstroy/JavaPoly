@@ -1,9 +1,10 @@
-package com.javapoly.reflect;
+package com.javapoly;
 
 import com.javapoly.Main;
+import com.javapoly.reflect.*;
 
-public class DoppioJSObject extends DoppioJSValue implements JSObject {
-  public DoppioJSObject(final Object rawValue) {
+class DoppioJSObject extends DoppioJSValue implements JSObject {
+  DoppioJSObject(final Object rawValue) {
     super(rawValue);
   }
 

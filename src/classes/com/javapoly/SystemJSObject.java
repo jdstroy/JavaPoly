@@ -1,12 +1,11 @@
-package com.javapoly.reflect;
+package com.javapoly;
 
-import com.javapoly.Main;
-import com.javapoly.SystemBridge;
+import com.javapoly.reflect.*;
 
-public class SystemJSObject extends SystemJSValue implements JSObject {
+class SystemJSObject extends SystemJSValue implements JSObject {
   private final SystemBridge bridge;
 
-  public SystemJSObject(final Object rawValue, final SystemBridge bridge) {
+  SystemJSObject(final Object rawValue, final SystemBridge bridge) {
     super(rawValue);
     this.bridge = bridge;
   }

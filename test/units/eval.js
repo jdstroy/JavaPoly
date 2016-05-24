@@ -5,7 +5,7 @@ function testEval() {
       return JavaPoly.type('EvalTest').then(function(EvalTest) {
         return EvalTest.test().then(function(result) {
           expect(result).toEqual(true);
-        });
+        }, (error) => console.log(error));
       });
     });
 

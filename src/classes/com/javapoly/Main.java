@@ -19,6 +19,11 @@ public final class Main {
   public static void main(final String[] args) {
     System.out.println("Java Main started");
 
+    // This is to prevent being called a second time (by unprivleged code)
+    if (bridge != null) {
+      return;
+    }
+
     initClassLoader();
 
     if (args.length > 2 && "system".equals(args[1])) {

@@ -24,7 +24,7 @@ import java.lang.ref.WeakReference;
 
 import com.javapoly.reflect.*;
 
-public class SystemBridge implements Bridge {
+class SystemBridge implements Bridge {
   private final Base64.Encoder encoder = Base64.getUrlEncoder();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> msgQueue = new java.util.concurrent.LinkedBlockingQueue<>();
   private final java.util.concurrent.LinkedBlockingQueue<JsonObject> responseQueue = new java.util.concurrent.LinkedBlockingQueue<>();
@@ -360,7 +360,7 @@ public class SystemBridge implements Bridge {
       }
       return Json.createObjectBuilder()
         .add("name", ft.name)
-        .add("message", ft.message)
+        .add("message", ft.message == )
         .add("stack", stackArrayBuilder.build())
         .add("causedBy", toJsonObj(ft.causedBy))
         .build();

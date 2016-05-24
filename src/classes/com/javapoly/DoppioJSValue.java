@@ -1,6 +1,8 @@
-package com.javapoly.reflect;
+package com.javapoly;
 
-public abstract class DoppioJSValue implements JSValue {
+import com.javapoly.reflect.*;
+
+abstract class DoppioJSValue implements JSValue {
   final Object rawValue;
   DoppioJSValue(final Object rawValue) {
     this.rawValue = rawValue;

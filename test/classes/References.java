@@ -1,10 +1,10 @@
-import com.javapoly.reflect.SystemJSValue;
+import com.javapoly.reflect.JSValue;
 
 public class References {
 
-  private static SystemJSValue obj = null;
+  private static JSValue obj = null;
 
-  public static void hold(SystemJSValue objParam) {
+  public static void hold(JSValue objParam) {
     obj = objParam;
     System.gc();
   }

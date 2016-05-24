@@ -1,9 +1,10 @@
-package com.javapoly.reflect;
+package com.javapoly;
 
 import com.javapoly.Eval;
+import com.javapoly.reflect.*;
 
-public class DoppioJSPrimitive extends DoppioJSValue implements JSPrimitive {
-  public DoppioJSPrimitive(final Object rawValue) {
+class DoppioJSPrimitive extends DoppioJSValue implements JSPrimitive {
+  DoppioJSPrimitive(final Object rawValue) {
     super(rawValue);
   }
 

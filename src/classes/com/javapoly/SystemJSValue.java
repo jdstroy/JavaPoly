@@ -1,6 +1,8 @@
-package com.javapoly.reflect;
+package com.javapoly;
 
-public abstract class SystemJSValue implements JSValue {
+import com.javapoly.reflect.*;
+
+abstract class SystemJSValue implements JSValue {
   final protected Object rawValue;
 
   public SystemJSValue(final Object rawValue) {

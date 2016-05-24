@@ -1,8 +1,9 @@
-package com.javapoly.reflect;
+package com.javapoly;
 
 import com.javapoly.Eval;
+import com.javapoly.reflect.*;
 
-public class SystemJSPrimitive extends SystemJSValue implements JSPrimitive {
+final class SystemJSPrimitive extends SystemJSValue implements JSPrimitive {
   public SystemJSPrimitive(final Object rawValue) {
     super(rawValue);
   }

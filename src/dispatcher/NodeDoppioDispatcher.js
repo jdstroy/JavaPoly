@@ -26,8 +26,8 @@ export default class NodeDoppioDispatcher extends CommonDispatcher {
   unreflect(result) {
     if ((!!result) && (typeof(result) === "object") && (!!result._javaObj)) {
       const className = result._javaObj.getClass().className;
-      if (className === "Lcom/javapoly/reflect/DoppioJSObject;" || className === "Lcom/javapoly/reflect/DoppioJSPrimitive;") {
-        return result._javaObj["com/javapoly/reflect/DoppioJSValue/rawValue"];
+      if (className === "Lcom/javapoly/DoppioJSObject;" || className === "Lcom/javapoly/DoppioJSPrimitive;") {
+        return result._javaObj["com/javapoly/DoppioJSValue/rawValue"];
       }
     }
     return result;
