@@ -12,7 +12,7 @@ import com.javapoly.invoke.ConstructorUtils;
 
 import com.javapoly.reflect.*;
 
-public class Main {
+public final class Main {
   private static Bridge bridge;
   private static int initialActiveCount = 0;
 
@@ -339,7 +339,7 @@ public class Main {
     return bridge.wrapValue((String) res[0], res[1]);
   }
 
-  public static JSValue bridgedEval(final String s) {
+  static final JSValue bridgedEval(final String s) {
     return bridge.eval(s);
   }
 
