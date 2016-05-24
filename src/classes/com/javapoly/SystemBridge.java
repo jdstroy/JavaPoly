@@ -358,9 +358,21 @@ class SystemBridge implements Bridge {
       for (int i=0; i< ft.stack.length; i++) {
         stackArrayBuilder.add(ft.stack[i]);
       }
-      return Json.createObjectBuilder()
-        .add("name", ft.name)
-        .add("message", ft.message == )
+      JsonObjectBuilder builder = Json.createObjectBuilder();
+
+      if (ft.name != null) {
+        builder.add("name", ft.name);
+      } else {
+        builder.addNull("name");
+      }
+
+      if (ft.message != null) {
+        builder.add("message", ft.message);
+      } else {
+        builder.addNull("message");
+      }
+
+      return builder
         .add("stack", stackArrayBuilder.build())
         .add("causedBy", toJsonObj(ft.causedBy))
         .build();
